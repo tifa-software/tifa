@@ -177,7 +177,7 @@ export default function Page() {
                                 className={`w-full text-white bg-[#6cb049] py-3 px-5 rounded-md hover:bg-[#57a23e] ${loading ? 'cursor-not-allowed' : ''}`}
                                 disabled={loading}
                             >
-                                {loading ? 'Creating...' : 'Create Branch Admin'}
+                                {loading ? 'Creating...' : 'Create Branch Staff'}
                             </button>
                         </div>
                     </form>
