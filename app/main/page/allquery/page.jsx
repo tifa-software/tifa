@@ -130,16 +130,18 @@ export default function AllQuery() {
 
   // Apply filters and sort queries
   const filteredqueries = sortqueries(
-    queries
-      .filter(querie =>
-        (querie.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          querie.studentContact.phoneNumber.includes(searchTerm) ||
-          querie.referenceid.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        (filterCourse === "" || querie.branch.includes(filterCourse)) &&
-        filterByDeadline(querie) && // Ensure the deadline filter is applied
-        (filterByGrade === "" || grades[querie._id]?.grade === filterByGrade) // Add filter by grade
-      )
+    queries.filter(querie => 
+      (
+        (querie.studentName && querie.studentName.toLowerCase().includes(searchTerm.toLowerCase())) || 
+        (querie.studentContact?.phoneNumber?.includes(searchTerm)) || 
+        (querie.referenceid && querie.referenceid.toLowerCase().includes(searchTerm.toLowerCase()))
+      ) &&
+      (filterCourse === "" || querie.branch?.includes(filterCourse)) &&
+      filterByDeadline(querie) && // Ensure the deadline filter is applied
+      (filterByGrade === "" || grades[querie._id]?.grade === filterByGrade) // Add filter by grade
+    )
   );
+  
 
 
 
