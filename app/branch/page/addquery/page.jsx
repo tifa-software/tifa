@@ -726,9 +726,9 @@ export default function Page() {
                                         className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                                     >
                                         <option value="" disabled>Select Interest Status</option>
-                                        <option value="admission">Enrolled</option>
+                                   
                                         <option value="not_interested">Not Interested</option>
-                                        <option value="ready_visit">Ready for Visit</option>
+                                 
                                         <option value="not_connected">Not Connected</option>
                                         <option value="not_lifting">Not Lifting</option>
                                         <option value="wrong_no">Wrong Number</option>
@@ -780,9 +780,9 @@ export default function Page() {
                                 >
                                     <option value="" disabled>Select Interest Status</option>
                                     <option value="Interested">Interested</option>
-                                    <option value="admission">Enrolled</option>
+                                   
                                     <option value="not_interested">Not Interested</option>
-                                    <option value="ready_visit">Ready for Visit</option>
+                                   
                                     <option value="not_connected">Not Connected</option>
                                     <option value="not_lifting">Not Lifting</option>
                                     <option value="wrong_no">Wrong Number</option>
