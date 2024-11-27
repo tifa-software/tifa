@@ -35,7 +35,7 @@ export const Menulist = [
     }, 
     {
         id: "2",
-        title: "Branchs",
+        title: "Branches",
         icon: MapPinHouse,
         submenu: [
             { name: "Register Staff", icon: ShieldCheck,href:"/branch/page/registerstaff" },

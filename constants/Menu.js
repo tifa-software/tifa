@@ -40,7 +40,7 @@ export const Menulist = [
     }, 
     {
         id: "2",
-        title: "Branchs",
+        title: "Branches",
         icon: MapPinHouse,
         submenu: [
             { name: "All Branch", icon: MapPinHouse,href:"/main/page/branch" },
