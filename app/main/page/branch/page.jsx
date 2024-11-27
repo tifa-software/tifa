@@ -8,6 +8,7 @@ import Link from 'next/link';
 
 export default function Branch() {
     const [branches, setBranches] = useState([]);
+    const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [branchesPerPage] = useState(8);
@@ -18,24 +19,30 @@ export default function Branch() {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
 
     useEffect(() => {
-        const fetchBranchData = async () => {
+        const fetchData = async () => {
             try {
-                const response = await axios.get('/api/branch/fetchall/branch');
-                setBranches(response.data.fetch);
+                // Fetch branches data
+                const branchesResponse = await axios.get('/api/branch/fetchall/branch');
+                setBranches(branchesResponse.data.fetch);
+
+                // Fetch courses data
+                const coursesResponse = await axios.get('/api/course/fetchall/ds');
+                setCourses(coursesResponse.data.fetch);
             } catch (error) {
-                console.error('Error fetching branch data:', error);
+                console.error('Error fetching data:', error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchBranchData();
+        fetchData();
     }, []);
 
     const router = useRouter();
     const handleRowClick = (id) => {
         router.push(`/main/page/branch/${id}`);
     };
+
     const toggleFilterPopup = () => {
         setIsFilterOpen(!isFilterOpen);
     };
@@ -74,27 +81,11 @@ export default function Branch() {
         }
     };
 
-    // Handle bulk delete
-    // const handleBulkDelete = async () => {
-    //     try {
-    //         // Make a DELETE request to the API with the selected branches' IDs in the request body
-    //         await axios.delete('/api/branch/delete', {
-    //             data: { ids: selectedBranches } // Pass the ids in the 'data' field for DELETE request
-    //         });
-
-    //         // Filter out the deleted branches from the state
-    //         setBranches(branches.filter(branch => !selectedBranches.includes(branch._id)));
-
-    //         // Clear the selected branches after deletion
-    //         setSelectedBranches([]);
-
-    //         alert('Branches deleted successfully');
-    //     } catch (error) {
-    //         console.error('Error deleting branches:', error);
-    //         alert('Error occurred while deleting branches');
-    //     }
-    // };
-
+    // Function to get course name by course ID
+    const getCourseName = (courseId) => {
+        const course = courses.find(course => course._id === courseId);
+        return course ? course.course_name : 'No course found';
+    };
 
     return (
         <div className='container lg:w-[95%] mx-auto py-5'>
@@ -107,64 +98,13 @@ export default function Branch() {
                     <input
                         type="text"
                         placeholder="Search branch"
-                        className="border px-3 py-2 pl-10 text-sm focus:outline-none    "
+                        className="border px-3 py-2 pl-10 text-sm focus:outline-none"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
 
-                <button className="lg:hidden text-gray-600 px-3 py-2 border rounded-md" onClick={toggleFilterPopup}>
-                    <Filter size={16} />
-                </button>
-
-                {/* Popup for Filters on Mobile */}
-                {isFilterOpen && (
-                    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 z-50">
-                        <div className="fixed top-0 right-0 w-64 h-full bg-white shadow-lg p-4 z-50">
-                            <button className="text-gray-600 mb-4" onClick={toggleFilterPopup}>
-                                <X size={20} />
-                            </button>
-
-                            <div className="flex flex-col space-y-3">
-                                <select
-                                    className="border px-3 py-2 focus:outline-none text-sm"
-                                    value={filterCourse}
-                                    onChange={(e) => setFilterCourse(e.target.value)}
-                                >
-                                    <option value="">All Courses</option>
-                                    {Array.from(new Set(branches.flatMap(branch => branch.courses))).map((course, index) => (
-                                        <option key={index} value={course}>{course}</option>
-                                    ))}
-                                </select>
-
-                                <select
-                                    className="border px-3 py-2 focus:outline-none text-sm"
-                                    value={sortOrder}
-                                    onChange={(e) => setSortOrder(e.target.value)}
-                                >
-                                    <option value="newest">Newest</option>
-                                    <option value="oldest">Oldest</option>
-                                </select>
-
-                                <Link href={'/main/page/addbranch'}>
-                                    <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2">
-                                        <CirclePlus size={16} className='me-1' /> Add Branch
-                                    </button>
-                                </Link>
-                                {/* 
-                                <button
-                                    className="text-red-500 rounded-md border border-red-500 px-3 py-2"
-                                    onClick={handleBulkDelete}
-                                    disabled={selectedBranches.length === 0}
-                                >
-                                    <Trash2 size={16} />
-                                </button> */}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Desktop Filter Section */}
+                {/* Filter buttons for desktop */}
                 <div className="hidden lg:flex space-x-3">
                     <select
                         className="border px-3 py-2 focus:outline-none text-sm"
@@ -172,8 +112,8 @@ export default function Branch() {
                         onChange={(e) => setFilterCourse(e.target.value)}
                     >
                         <option value="">All Courses</option>
-                        {Array.from(new Set(branches.flatMap(branch => branch.courses))).map((course, index) => (
-                            <option key={index} value={course}>{course}</option>
+                        {Array.from(new Set(courses.map(course => course.course_name))).map((courseName, index) => (
+                            <option key={index} value={courseName}>{courseName}</option>
                         ))}
                     </select>
 
@@ -187,27 +127,18 @@ export default function Branch() {
                     </select>
 
                     <Link href={'/main/page/addbranch'}>
-                        <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
+                        <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2">
                             <CirclePlus size={16} className='me-1' /> Add Branch
                         </button>
                     </Link>
-
-                    {/* <button
-                        className="text-red-500 rounded-md border border-red-500 px-3 py-2"
-                        onClick={handleBulkDelete}
-                        disabled={selectedBranches.length === 0}
-                    >
-                        <Trash2 size={16} />
-                    </button> */}
                 </div>
             </div>
 
             {/* Branch Table */}
-            <div className="relative overflow-x-auto shadow-md  bg-white   border border-gray-200">
+            <div className="relative overflow-x-auto shadow-md bg-white border border-gray-200">
                 <table className="w-full text-sm text-left rtl:text-right text-gray-600 font-sans">
                     <thead className="bg-[#29234b] text-white uppercase">
                         <tr>
-
                             <th scope="col" className="px-4 font-medium capitalize py-2">Branch Name</th>
                             <th scope="col" className="px-4 font-medium capitalize py-2">Location</th>
                             <th scope="col" className="px-4 font-medium capitalize py-2">Courses Offered</th>
@@ -218,7 +149,7 @@ export default function Branch() {
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan="6" className="px-6 py-4">
+                                <td colSpan="5" className="px-6 py-4">
                                     <div className="flex justify-center items-center h-[300px]">
                                         <Loader />
                                     </div>
@@ -229,19 +160,30 @@ export default function Branch() {
                                 <tr
                                     key={branch._id}
                                     onClick={() => handleRowClick(branch._id)}
-                                    className={`border-b cursor-pointer hover:bg-gray-100 odd:bg-gray-50 even:bg-gray-100 transition-colors duration-200`}
+                                    className="border-b cursor-pointer hover:bg-gray-100 odd:bg-gray-50 even:bg-gray-100 transition-colors duration-200"
                                 >
-                                    <td
-                                        className="px-4 py-2 font-semibold text-gray-900 text-sm whitespace-nowrap"
-                                      
-                                    >
+                                    <td className="px-4 py-2 font-semibold text-gray-900 text-sm whitespace-nowrap">
                                         {branch.branch_name}
                                     </td>
                                     <td className="px-4 py-2 text-[12px]">
                                         {branch.location.street}, {branch.location.city}, {branch.location.state}, {branch.location.zipCode}
                                     </td>
-                                    <td className="px-4 py-2 truncate text-[12px]">
-                                        {branch.courses.length > 0 ? branch.courses[0] : 'No courses'}...
+                                    {/* <td className="px-4 py-2  text-[12px]">
+                                        {branch.courses.length > 0 ? getCourseName(branch.courses[0]) : 'No courses'}
+                                    </td> */}
+
+                                    <td className="px-4 py-2 text-[12px]">
+                                        {branch.courses.length > 0 
+                                            ? branch.courses.map((courseId, index) => {
+                                                const course = courses.find(course => course._id === courseId);
+                                                return (
+                                                    <span key={courseId}>
+                                                        {course ? course.course_name : 'Unknown course'}
+                                                        {index < branch.courses.length - 1 && ', '}
+                                                    </span>
+                                                );
+                                            })
+                                            : 'No courses'}
                                     </td>
                                     <td className="px-4 py-2 text-[12px]">{branch.student_count}</td>
                                     <td className="px-4 py-2 text-[12px]">{branch.staff_count}</td>
@@ -249,7 +191,7 @@ export default function Branch() {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                                <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
                                     No branches available
                                 </td>
                             </tr>
@@ -268,6 +210,7 @@ export default function Branch() {
     );
 }
 
+// Pagination component remains the same
 const Pagination = ({ currentPage, totalPages, paginate }) => {
     return (
         <div className="flex justify-center my-4">

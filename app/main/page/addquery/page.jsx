@@ -726,6 +726,7 @@ export default function Page() {
                                     >
                                         <option value="" disabled>Select Interest Status</option>
                                       
+                                        <option value="interested">Interested</option>
                                         <option value="not_interested">Not Interested</option>
                                        
                                         <option value="not_connected">Not Connected</option>
