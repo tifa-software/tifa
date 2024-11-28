@@ -518,29 +518,79 @@ export default function Page() {
                                 className="w-full rounded-0"
                             />
                         </div>
+                        <div className="sm:col-span-6 col-span-12">
+                            <label className="block text-[15px] text-gray-700">Whatsapp Number</label>
+                            <PhoneInput
+                                country={"in"}
+                                value={formData.studentContact.whatsappNumber}
+                                inputProps={{
+                                    ref: (el) => (inputRefs.current[4] = el), // Assign ref
+                                    onKeyDown: (e) => handleKeyDown(e, 4),
+                                }}
+                                onChange={(phone) =>
+                                    setFormData({
+                                        ...formData,
+                                        studentContact: { ...formData.studentContact, whatsappNumber: phone },
+                                    })
+                                }
+                                className="w-full rounded-0"
+                            />
+                        </div>
 
+
+                        {formData.studentContact.city === 'Jaipur' ? (
+                            <div className="sm:col-span-6 col-span-12">
+                                <label htmlFor="city" className="block text-[15px] text-gray-700">
+                                    City
+                                </label>
+                                <select name="studentContact.city" ref={(el) => (inputRefs.current[9] = el)} // Assign ref
+                                    onKeyDown={(e) => handleKeyDown(e, 9)} value={formData.studentContact.city} onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
+                                    <option value="" disabled selected>Select City</option>
+                                    <option value="Jaipur" >Jaipur</option>
+                                    <option value="Out of Jaipur" >Out of Jaipur</option>
+
+                                </select>
+
+                            </div>
+
+                        ) : (
+
+                            <div className="sm:col-span-6 col-span-12">
+                                <label htmlFor="city" className="block text-[15px] text-gray-700">
+                                    City
+                                </label>
+                                <select name="studentContact.city" ref={(el) => (inputRefs.current[10] = el)} // Assign ref
+                                    onKeyDown={(e) => handleKeyDown(e, 10)} value={formData.studentContact.city} onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
+                                    <option value="" disabled selected>Select City</option>
+                                    {Citylist.map((stateItem, index) =>
+                                        stateItem.cities.map((city, cityIndex) => (
+                                            <option key={cityIndex} value={city}>
+                                                {city}
+                                            </option>
+                                        ))
+                                    )}
+                                </select>
+
+                            </div>
+                        )}
+
+
+                        <div className="sm:col-span-6 col-span-12">
+                            <label htmlFor="studentContact.address" className="block text-[15px] text-gray-700">
+                                Address
+                            </label>
+                            <Address
+                                value={formData.studentContact.address}
+                                onChange={handleChange}
+                                ref={(el) => (inputRefs.current[10] = el)} // Assign ref
+                                onKeyDown={(e) => handleKeyDown(e, 10)}
+                            />
+                        </div>
+                        
                         {formData.referenceid !== 'Online' || interestStatus === 'Interested' ? (
                             <>
 
 
-                                <div className="sm:col-span-6 col-span-12">
-                                    <label className="block text-[15px] text-gray-700">Whatsapp Number</label>
-                                    <PhoneInput
-                                        country={"in"}
-                                        value={formData.studentContact.whatsappNumber}
-                                        inputProps={{
-                                            ref: (el) => (inputRefs.current[4] = el), // Assign ref
-                                            onKeyDown: (e) => handleKeyDown(e, 4),
-                                        }}
-                                        onChange={(phone) =>
-                                            setFormData({
-                                                ...formData,
-                                                studentContact: { ...formData.studentContact, whatsappNumber: phone },
-                                            })
-                                        }
-                                        className="w-full rounded-0"
-                                    />
-                                </div>
 
 
                                 <div className="sm:col-span-6 col-span-12">
@@ -601,7 +651,7 @@ export default function Page() {
                                     </label>
                                     <select name="category" ref={(el) => (inputRefs.current[7] = el)} // Assign ref
                                         onKeyDown={(e) => handleKeyDown(e, 7)} value={formData.category} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
-                                        <option value=""  selected>Select category</option>
+                                        <option value="" selected>Select category</option>
                                         <option value="General">General</option>
                                         <option value="ST">ST</option>
                                         <option value="SC">SC</option>
@@ -626,54 +676,7 @@ export default function Page() {
 
                                 </div>
 
-                                {formData.studentContact.city === 'Jaipur' ? (
-                                    <div className="sm:col-span-6 col-span-12">
-                                        <label htmlFor="city" className="block text-[15px] text-gray-700">
-                                            City
-                                        </label>
-                                        <select name="studentContact.city" ref={(el) => (inputRefs.current[9] = el)} // Assign ref
-                                            onKeyDown={(e) => handleKeyDown(e, 9)} value={formData.studentContact.city} onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
-                                            <option value="" disabled selected>Select City</option>
-                                            <option value="Jaipur" >Jaipur</option>
-                                            <option value="Out of Jaipur" >Out of Jaipur</option>
 
-                                        </select>
-
-                                    </div>
-
-                                ) : (
-
-                                    <div className="sm:col-span-6 col-span-12">
-                                        <label htmlFor="city" className="block text-[15px] text-gray-700">
-                                            City
-                                        </label>
-                                        <select name="studentContact.city" ref={(el) => (inputRefs.current[10] = el)} // Assign ref
-                                            onKeyDown={(e) => handleKeyDown(e, 10)} value={formData.studentContact.city} onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
-                                            <option value="" disabled selected>Select City</option>
-                                            {Citylist.map((stateItem, index) =>
-                                                stateItem.cities.map((city, cityIndex) => (
-                                                    <option key={cityIndex} value={city}>
-                                                        {city}
-                                                    </option>
-                                                ))
-                                            )}
-                                        </select>
-
-                                    </div>
-                                )}
-
-
-                                <div className="sm:col-span-6 col-span-12">
-                                    <label htmlFor="studentContact.address" className="block text-[15px] text-gray-700">
-                                        Address
-                                    </label>
-                                    <Address
-                                        value={formData.studentContact.address}
-                                        onChange={handleChange}
-                                        ref={(el) => (inputRefs.current[10] = el)} // Assign ref
-                                        onKeyDown={(e) => handleKeyDown(e, 10)}
-                                    />
-                                </div>
 
 
                                 <div className="sm:col-span-6 col-span-12">
