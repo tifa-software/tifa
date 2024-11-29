@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import Loader from "@/components/Loader/Loader";
-import { Phone, MapPin, Calendar, CheckCircle, MessageCircle } from "lucide-react";
+import { Phone, MapPin, Calendar, CheckCircle, MessageCircle,Edit } from "lucide-react";
 import Link from "next/link";
 import UpdateQuere from "@/app/main/component/Updatequere/UpdateQuere";
 import AssignedQuery from "@/components/AssignedQuery/AssignedQuery";
@@ -81,6 +81,9 @@ export default function Page({ params }) {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 p-6 bg-gray-50 min-h-screen">
             {/* Left Sidebar */}
             <div className="col-span-1 bg-white shadow-lg rounded-lg p-6">
+                <Link href={`/branch/page/update/${query._id}`}>
+                    <Edit size={15} className=" mb-2 text-[#29234b]" />
+                </Link>
                 <div className="sticky top-5">
                     <div className="flex flex-col">
                         <button
