@@ -271,7 +271,9 @@ export default function Assigned() {
                 <div className="w-full lg:w-1/3 space-y-6">
                     {/* Branch Filter */}
                     <div className="shadow-lg rounded-lg bg-white p-4">
-                        <h2 className="text-xl font-semibold mb-4 text-gray-800">Branch Statistics</h2>
+                        <h2 className="text-xl font-semibold mb-4 text-gray-800 flex justify-between">Branch Statistics 
+                        <span className="text-sm text-gray-600 mb-4">Total <span className="font-bold">{totalRequests}</span></span>
+                        </h2>
                         <ul className="space-y-2 text-sm">
 
                             {branches.map(branch => {
