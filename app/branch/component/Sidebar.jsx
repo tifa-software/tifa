@@ -10,7 +10,7 @@ export default function Sidebar({ onToggleSidebar }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
 
-  
+
 
 
   const handleClick = (id) => {
@@ -102,7 +102,7 @@ export default function Sidebar({ onToggleSidebar }) {
                   <ListTodo size={18} />
                   Under Visit Querys
                 </li>
-                </Link>
+              </Link>
 
               <Link href="/branch/page/assigned" onClick={handleLinkClick}>
                 <li
@@ -110,7 +110,7 @@ export default function Sidebar({ onToggleSidebar }) {
                     }`}
                 >
                   <ListTodo size={18} />
-                  Assigned Query
+                  Received Query
                 </li>
               </Link>
 
@@ -121,7 +121,7 @@ export default function Sidebar({ onToggleSidebar }) {
                     }`}
                 >
                   <ListTodo size={18} />
-                  Assigned Sent Query
+                  Sent Query
                 </li>
               </Link>
 

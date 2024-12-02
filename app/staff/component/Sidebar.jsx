@@ -98,7 +98,7 @@ export default function Sidebar({ onToggleSidebar }) {
                     }`}
                 >
                   <ListTodo size={18} />
-                  Assigned Query
+                  Received Query
                 </li>
               </Link>
 
@@ -108,7 +108,7 @@ export default function Sidebar({ onToggleSidebar }) {
                     }`}
                 >
                   <ListTodo size={18} />
-                  Assigned Sent Query
+                   Sent Query
                 </li>
               </Link>
 

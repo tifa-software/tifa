@@ -309,33 +309,33 @@ export default function Page() {
                     }
                 }
 
-                // // Reset form data after successful submission
-                // setFormData({
-                //     userid: adminData._id,
-                //     studentName: "",
-                //     gender: "Not_Defined",
-                //     category: "Not_Defined",
-                //     // assignedTo: "Not-Assigned",
-                //     assignedToreq: "",
-                //     assignedreceivedhistory: "",
-                //     assignedsenthistory: "",
-                //     referenceid: "",
-                //     suboption: "",
-                //     studentContact: {
-                //         phoneNumber: "",
-                //         whatsappNumber: "",
-                //         address: "",
-                //         city: ""
-                //     },
-                //     courseInterest: "",
-                //     deadline: "",
-                //     branch: "",
-                //     notes: "",
-                //     qualification: "",
-                //     profession: "",
-                //     professiontype: "",
-                //     reference_name: "",
-                // });
+                // Reset form data after successful submission
+                setFormData({
+                    userid: adminData._id,
+                    studentName: "",
+                    gender: "Not_Defined",
+                    category: "Not_Defined",
+                    // assignedTo: "Not-Assigned",
+                    assignedToreq: "",
+                    assignedreceivedhistory: "",
+                    assignedsenthistory: "",
+                    referenceid: "",
+                    suboption: "",
+                    studentContact: {
+                        phoneNumber: "",
+                        whatsappNumber: "",
+                        address: "",
+                        city: ""
+                    },
+                    courseInterest: "",
+                    deadline: "",
+                    branch: "",
+                    notes: "",
+                    qualification: "",
+                    profession: "",
+                    professiontype: "",
+                    reference_name: "",
+                });
             }
         } catch (err) {
             setError("Failed to Add Query. Please try again.");
