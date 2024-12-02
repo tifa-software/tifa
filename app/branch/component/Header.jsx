@@ -7,13 +7,20 @@ import Smallbtn from '@/components/Button/Smallbtn'
 import Image from 'next/image'
 import { Menulist } from '@/constants/BranchMenu'
 import Link from 'next/link'
-
+import { useSession } from 'next-auth/react';
+import axios from 'axios';
 export default function Header() {
     const [openSubmenu, setOpenSubmenu] = useState(null);
     const [isLgScreen, setIsLgScreen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [count, setCount] = useState("");
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    const [showAlert, setShowAlert] = useState(false);
+    const [adminId, setAdminId] = useState(null);
+    const { data: session } = useSession();
 
+    const [loading, setLoading] = useState(true);
+    const [queriesnotification, setQueriesnotification] = useState([]);
     useEffect(() => {
         const handleResize = () => {
             setIsLgScreen(window.innerWidth >= 1278);
@@ -23,6 +30,66 @@ export default function Header() {
 
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+
+    useEffect(() => {
+        const fetchQueryData = async () => {
+            if (adminId) {
+                try {
+                    const { data } = await axios.get(`/api/alert/${adminId}`);
+                    setCount(data.count);
+
+                    if (data.count > 0) {
+                        setShowAlert(true);  // Show the alert
+                        setTimeout(() => setShowAlert(false), 10000); // Hide the alert after 10 seconds
+                    }
+                } catch (error) {
+                    console.error('Error fetching query data:', error);
+                }
+            }
+        };
+
+        fetchQueryData(); // Initial fetch
+
+        const intervalId = setInterval(fetchQueryData, 60000); // Fetch every 60 seconds
+
+        return () => clearInterval(intervalId); // Cleanup on unmount
+    }, [adminId]);
+
+
+    useEffect(() => {
+        const fetchAdminData = async () => {
+            if (session?.user?.email) {
+                try {
+                    const { data } = await axios.get(`/api/admin/find-admin-byemail/${session.user.email}`);
+                    setAdminId(data._id);
+                } catch (error) {
+                    console.error(error.message);
+                }
+            }
+        };
+        fetchAdminData();
+    }, [session]);
+
+    useEffect(() => {
+        const fetchQueryData = async () => {
+            if (adminId) {
+                try {
+                    setLoading(true);
+                    const { data } = await axios.get(`/api/queries/assignedreq/${adminId}?autoclosed=open`);
+                    const filteredQueries = data.fetch.filter(query => query.assignedTostatus);
+                    setQueriesnotification(filteredQueries);
+                } catch (error) {
+                    console.error('Error fetching query data:', error);
+                } finally {
+                    setLoading(false);
+                }
+            }
+        };
+        fetchQueryData();
+    }, [adminId]);
+
+
 
     const handleMouseEnter = (id) => {
         if (isLgScreen) setOpenSubmenu(id);
@@ -96,6 +163,12 @@ export default function Header() {
                                                     Demo
                                                 </li>
                                             </Link>
+                                            {queriesnotification.length > 0 && (
+                                                <span className="bg-red-600 text-black font-bold rounded-full px-4 py-1 text-sm shadow-lg relative inline-flex items-center animated-border">
+                                                    <span className='mr-2 bg-white text-red-600 p-1 rounded-full'> {queriesnotification.length}</span>
+                                                    Assigned Request
+                                                </span>
+                                            )}
                                         </ul>
 
                                     </div>
@@ -111,13 +184,12 @@ export default function Header() {
                                 <div onClick={toggleNotification}>
                                     <Smallbtn icon={Bell} href="javascript:void(0)" />
                                 </div>
-                                {isNotificationOpen && (
-                                    <div className="absolute top-16 right-4 w-[300px] bg-white rounded-md shadow-sm  border p-4 z-50 h-[70vh] overflow-y-auto">
-                                        <h4 className="text-lg font-semibold mb-2">Notifications</h4>
-                                        <ul className="space-y-2">
-                                            <li className="text-gray-700">No new notifications</li>
-                                            {/* You can dynamically add notification items here */}
-                                        </ul>
+                                {showAlert && count > 0 && (
+                                    <div className="bg-yellow-400 text-black font-bold rounded-full px-4 py-2 text-sm shadow-lg relative inline-flex items-center animated-border">
+                                        <span className="absolute -top-1 -right-1 bg-red-800 text-white rounded-full h-4 w-4 flex items-center justify-center text-xs">
+                                            {count}
+                                        </span>
+                                        Urgent Attention Required!
                                     </div>
                                 )}
                                 <div className='sm:block hidden'>

@@ -75,7 +75,8 @@ export default function Assigned() {
                 try {
                     setLoading(true);
                     const { data } = await axios.get(`/api/queries/assignedreq/${adminId}?autoclosed=open`);
-                    setQueries(data.fetch);
+                    const filteredQueries = data.fetch.filter(query => query.assignedTostatus);
+                    setQueries(filteredQueries);
                 } catch (error) {
                     console.error('Error fetching query data:', error);
                 } finally {
@@ -83,8 +84,18 @@ export default function Assigned() {
                 }
             }
         };
+    
+        // Initial fetch
         fetchQueryData();
+    
+        // Set up an interval to fetch data every 30 seconds
+        const intervalId = setInterval(fetchQueryData, 30000); // 30000 ms = 30 seconds
+    
+        // Clean up the interval on component unmount
+        return () => clearInterval(intervalId);
+    
     }, [adminId]);
+    
 
     const handleRowClick = (id) => {
         router.push(`/staff/page/allquery/${id}`);

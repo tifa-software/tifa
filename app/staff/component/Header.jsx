@@ -18,6 +18,8 @@ export default function Header() {
     const [showAlert, setShowAlert] = useState(false); // State to control alert visibility
     const { data: session } = useSession();
     const [adminId, setAdminId] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [queriesnotification, setQueriesnotification] = useState([]);
 
     useEffect(() => {
         const fetchAdminData = async () => {
@@ -56,6 +58,24 @@ export default function Header() {
         const intervalId = setInterval(fetchQueryData, 60000); // Fetch every 60 seconds
 
         return () => clearInterval(intervalId); // Cleanup on unmount
+    }, [adminId]);
+
+    useEffect(() => {
+        const fetchQueryData = async () => {
+            if (adminId) {
+                try {
+                    setLoading(true);
+                    const { data } = await axios.get(`/api/queries/assignedreq/${adminId}?autoclosed=open`);
+                    const filteredQueries = data.fetch.filter(query => query.assignedTostatus);
+                    setQueriesnotification(filteredQueries);
+                } catch (error) {
+                    console.error('Error fetching query data:', error);
+                } finally {
+                    setLoading(false);
+                }
+            }
+        };
+        fetchQueryData();
     }, [adminId]);
 
     useEffect(() => {
@@ -141,23 +161,28 @@ export default function Header() {
                                             </li>
                                         </Link>
                                     </ul>
-
+                                    {queriesnotification.length > 0 && (
+                                        <span className="bg-red-600 text-black font-bold rounded-full px-4 py-1 text-sm shadow-lg relative inline-flex items-center animated-border">
+                                            <span className='mr-2 bg-white text-red-600 p-1 rounded-full'> {queriesnotification.length}</span>
+                                            Assigned Request
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div className="lg:col-span-3 sm:col-span-1 col-span-1">
                         <div className='flex items-center justify-end gap-1 lg:gap-1'>
-                         
-                                {showAlert && count > 0 && (
-                                    <div className="bg-yellow-400 text-black font-bold rounded-full px-4 py-2 text-sm shadow-lg relative inline-flex items-center animated-border">
-                                        <span className="absolute -top-1 -right-1 bg-red-800 text-white rounded-full h-4 w-4 flex items-center justify-center text-xs">
-                                            {count}
-                                        </span>
-                                        Urgent Attention Required!
-                                    </div>
-                                )}
-                          
+
+                            {showAlert && count > 0 && (
+                                <div className="bg-yellow-400 text-black font-bold rounded-full px-4 py-2 text-sm shadow-lg relative inline-flex items-center animated-border">
+                                    <span className="absolute -top-1 -right-1 bg-red-800 text-white rounded-full h-4 w-4 flex items-center justify-center text-xs">
+                                        {count}
+                                    </span>
+                                    Urgent Attention Required!
+                                </div>
+                            )}
+
 
                             <div className='sm:block hidden'>
                                 <Smallbtn icon={Settings} href="/staff/page/profile" />
