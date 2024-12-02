@@ -10,11 +10,16 @@ export default function UpdateQuery({ query, audit }) {
   const [subOption, setSubOption] = useState('');
   const [message, setMessage] = useState('');
   const [deadline, setDeadline] = useState('');
+  const [grade, setGrade] = useState('Null'); // New state for grade
+
   const router = useRouter();
   const handleOptionChange = (event) => {
     setSelectedOption(event.target.value);
     setSubOption('');
     setMessage('');
+  };
+  const handleGradeChange = (event) => {
+    setGrade(event.target.value); // Handle grade selection
   };
 
   const handleSubOptionChange = (event) => {
@@ -40,6 +45,7 @@ export default function UpdateQuery({ query, audit }) {
       not_liftingsubStatus: selectedOption === 'not_lifting' ? subOption : undefined,
       autoClose: selectedOption === 'wrong_no' ? true : false, // Set autoClose if wrong_no is selected
       deadline: deadline || undefined, // Include deadline if provided
+      grade: grade,
     };
 
     if (selectedOption === 'connected' && subOption === 'interested') {
@@ -111,7 +117,7 @@ export default function UpdateQuery({ query, audit }) {
           }
         }
 
-       
+
         router.push("./")
         // window.location.reload();
       } else {
@@ -191,7 +197,22 @@ export default function UpdateQuery({ query, audit }) {
           </select>
         </div>
       )}
-
+      <div className="mb-6">
+        <label htmlFor="gradeSelect" className="block text-lg font-medium text-gray-700 mb-2">
+          Student Visit Grade:
+        </label>
+        <select
+          id="gradeSelect"
+          value={grade}
+          onChange={handleGradeChange}
+          className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+        >
+          <option value="Null">-- Select Grade --</option>
+          <option value="A">Grade A (Student will visit in 1–2 days)</option>
+          <option value="B">Grade B (Student will visit in 3–7 days)</option>
+          <option value="C">Grade C (Student will visit beyond 7 days)</option>
+        </select>
+      </div>
       <div className="mb-6 transition-opacity duration-300 ease-in-out">
         <label htmlFor="deadline" className="block text-lg font-medium text-gray-700 mb-2">Deadline:</label>
         <input

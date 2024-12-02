@@ -10,8 +10,10 @@ export default function Assigned() {
     const [branches, setBranches] = useState([]);
     const [loading, setLoading] = useState(true);
     const [adminId, setAdminId] = useState(null);
+    const [adminBranch, setAdminBranch] = useState(null);
     const { data: session } = useSession();
     const router = useRouter();
+    const [user, setuser] = useState([]);
 
     // Filter states
     const [selectedBranch, setSelectedBranch] = useState('All');
@@ -20,12 +22,25 @@ export default function Assigned() {
     const [openBranchDetails, setOpenBranchDetails] = useState(null);
     const [showPopup, setShowPopup] = useState(false);
     const [selectedQuery, setSelectedQuery] = useState(null);
+    useEffect(() => {
+        const fetchuserData = async () => {
+            try {
+                const response = await axios.get('/api/admin/fetchall/admin');
+                setuser(response.data.fetch);
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
+        fetchuserData();
+    }, []);
     const handleAcceptQuery = async () => {
         if (!selectedQuery) return;
 
         try {
-            const data = { id: selectedQuery._id, assignedTo: adminId, assignedTostatus: false }; // Update status to "Accepted"
+            const data = { id: selectedQuery._id, assignedTo: adminId, assignedTostatus: false, branch: adminBranch }; // Update status to "Accepted"
             const response = await axios.patch('/api/queries/update', data);
 
             if (response.status === 200) {
@@ -49,6 +64,7 @@ export default function Assigned() {
                 try {
                     const { data } = await axios.get(`/api/admin/find-admin-byemail/${session.user.email}`);
                     setAdminId(data._id);
+                    setAdminBranch(data.branch)
                 } catch (error) {
                     console.error(error.message);
                 }
@@ -84,18 +100,18 @@ export default function Assigned() {
                 }
             }
         };
-    
+
         // Initial fetch
         fetchQueryData();
-    
+
         // Set up an interval to fetch data every 30 seconds
         const intervalId = setInterval(fetchQueryData, 30000); // 30000 ms = 30 seconds
-    
+
         // Clean up the interval on component unmount
         return () => clearInterval(intervalId);
-    
+
     }, [adminId]);
-    
+
 
     const handleRowClick = (id) => {
         router.push(`/staff/page/allquery/${id}`);
@@ -167,6 +183,7 @@ export default function Assigned() {
                                             <th className="px-6 py-4">Sr. No.</th>
                                             <th className="px-6 py-4">Student Name</th>
                                             <th className="px-6 py-4">Branch</th>
+                                            <th className="px-6 py-4">Assgned From</th>
                                             <th className="px-6 py-4">Deadline</th>
                                             <th className="px-6 py-4">Status</th>
                                         </tr>
@@ -202,7 +219,7 @@ export default function Assigned() {
                                                                 : isIn24Hours ? 'bg-[#fcccba] text-black'
                                                                     : isIn48Hours ? 'bg-[#ffe9bf] text-black'
                                                                         : '';
-
+                                                                        const matchedUser = user.find((u) => u._id == query.assignedsenthistory);
                                                     return (
                                                         <tr
                                                             key={query._id}
@@ -212,6 +229,7 @@ export default function Assigned() {
                                                             <td className="px-6 py-1 font-semibold">{(indexOfFirstQuery + index + 1)}</td>
                                                             <td className="px-6 py-1 font-semibold">{query.studentName}</td>
                                                             <td className="px-6 py-1">{query.branch}</td>
+                                                            <td className="px-6 py-1">{matchedUser.name} ({matchedUser.branch}) Branch</td>
                                                             <td className="px-6 py-1">{deadline.toLocaleDateString()}</td>
                                                             <td
                                                                 className="px-6 py-1 text-blue-500 cursor-pointer"
@@ -327,7 +345,7 @@ export default function Assigned() {
 
 
 
-                 
+
                 </div>
             </div>
         </div>

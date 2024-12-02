@@ -86,7 +86,12 @@ export default function Header() {
                 }
             }
         };
-        fetchQueryData();
+    
+        fetchQueryData(); // Initial fetch
+    
+        const intervalId = setInterval(fetchQueryData, 60000); // Fetch every 60 seconds
+    
+        return () => clearInterval(intervalId); // Cleanup on unmount
     }, [adminId]);
 
 

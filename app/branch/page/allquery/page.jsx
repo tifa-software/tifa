@@ -435,6 +435,8 @@ const filteredqueries = sortqueries(
               <th scope="col" className="px-4 font-medium capitalize py-2">Branch</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Phone Number</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Grade</th>
+              <th scope="col" className="px-4 font-medium capitalize py-2">Assigned from</th>
+              <th scope="col" className="px-4 font-medium capitalize py-2">Assigned To</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">DeadLine</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Address</th>
             </tr>
@@ -456,6 +458,9 @@ const filteredqueries = sortqueries(
                 }
 
                 const matchedUser = user.find((u) => u._id === querie.userid);
+                const matchedassignedUser = user.find((u) => u._id == querie.assignedreceivedhistory);
+                const matchedassignedsenderUser = user.find((u) => u._id == querie.assignedsenthistory);
+
 
                 return (
                   <>
@@ -499,7 +504,13 @@ const filteredqueries = sortqueries(
                         {grades[querie._id]?.grade === 'Null' ? 'N/A' : grades[querie._id]?.grade || 'Loading...'}
                       </td>
 
+                      <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
+                        {matchedassignedsenderUser ? matchedassignedsenderUser.name : ''}
+                      </td>
+                      <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
 
+                        {matchedassignedUser ? matchedassignedUser.name : ''}
+                      </td>
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
                         {`${String(new Date(querie.deadline).getDate()).padStart(2, '0')}-${String(new Date(querie.deadline).getMonth() + 1).padStart(2, '0')}-${String(new Date(querie.deadline).getFullYear()).slice(-2)}`}
                       </td>
@@ -526,7 +537,7 @@ const filteredqueries = sortqueries(
 
                     {grades[querie._id]?.history?.length > 0 && (
                       <tr className="border-b bg-gray-200">
-                        <td colSpan="8" className="px-4">
+                        <td colSpan="10" className="px-4">
                           <div className="flex flex-wrap gap-4">
                             <p className="font-bold text-xs">Last Action</p>
 

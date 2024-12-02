@@ -51,6 +51,7 @@ export default function Page() {
         autoclosed: "open"
     });
     const [interestStatus, setInterestStatus] = useState("");
+    const [gradeStatus, setGradeStatus] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
@@ -253,6 +254,17 @@ export default function Page() {
             autoclosed: selectedStatus === "not_interested" || selectedStatus === "wrong_no" ? "close" : "open"
         }));
     };
+    const handleGradeChange = (e) => {
+        const selectedStatus = e.target.value;
+        setGradeStatus(selectedStatus);
+
+        // Update formData based on the selected status
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            grade: selectedStatus,
+        }));
+    };
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -286,6 +298,10 @@ export default function Page() {
                 }
                 if (interestStatus === "ready_visit") {
                     await axios.patch("/api/audit/update", { queryId, stage: 5 });
+                }
+
+                if (gradeStatus) {
+                    await axios.patch("/api/audit/update", { queryId, grade: gradeStatus });
                 }
                 // Now check if the query needs to be auto-closed based on additional criteria
                 if (
@@ -342,7 +358,7 @@ export default function Page() {
             console.error("Error adding query:", err);
         } finally {
             setLoading(false);
-            // window.location.reload();
+            window.location.reload();
         }
     };
 
@@ -575,6 +591,7 @@ export default function Page() {
                             </label>
                             <select name="assignedToreq" value={formData.assignedToreq} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
                                 <option value="" disabled >Select name</option>
+
                                 {user
                                     .filter((user) => user.usertype !== "2") // Exclude "Tifa Admin"
                                     .map((filteredUser) => (
@@ -585,6 +602,28 @@ export default function Page() {
                                 }
                             </select>
 
+                        </div>
+
+
+                        <div className="sm:col-span-6 col-span-12">
+                            <label htmlFor="gradeStatus" className="block text-[15px] text-gray-700">
+                                Grade
+                            </label>
+                            <select
+                                name="gradeStatus"
+                                value={gradeStatus}
+                                id="gradeStatus"
+                                onChange={handleGradeChange}
+                                className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
+                            >
+                                <option value="" disabled>
+                                    Select Grade
+                                </option>
+                                <option value="Null">Not Defined</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                            </select>
                         </div>
 
                         {formData.studentContact.city === 'Jaipur' ? (

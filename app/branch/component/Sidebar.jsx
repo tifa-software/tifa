@@ -106,7 +106,7 @@ export default function Sidebar({ onToggleSidebar }) {
 
               <Link href="/branch/page/assigned" onClick={handleLinkClick}>
                 <li
-                  className={`cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md ${isActiveLink("") ? "bg-[#6cb049] text-white" : "hover:bg-gray-100 text-gray-700"
+                  className={`cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md ${isActiveLink("/branch/page/assigned") ? "bg-[#6cb049] text-white" : "hover:bg-gray-100 text-gray-700"
                     }`}
                 >
                   <ListTodo size={18} />
@@ -117,7 +117,7 @@ export default function Sidebar({ onToggleSidebar }) {
 
               <Link href="/branch/page/assignedsent" onClick={handleLinkClick}>
                 <li
-                  className={`cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md ${isActiveLink("/staff/page/assignedsent") ? "bg-[#6cb049] text-white" : "hover:bg-gray-100 text-gray-700"
+                  className={`cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md ${isActiveLink("/branch/page/assignedsent") ? "bg-[#6cb049] text-white" : "hover:bg-gray-100 text-gray-700"
                     }`}
                 >
                   <ListTodo size={18} />

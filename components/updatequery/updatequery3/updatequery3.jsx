@@ -15,6 +15,7 @@ export default function UpdateQuery3({ query, audit }) {
   const [selectedOption, setSelectedOption] = useState('');
   const [message, setMessage] = useState('');
   const [deadline, setDeadline] = useState('');
+  const [grade, setGrade] = useState('Null'); // New state for grade
 
   const handleOptionChange = (event) => {
     setSelectedOption(event.target.value);
@@ -24,7 +25,9 @@ export default function UpdateQuery3({ query, audit }) {
     }
   };
   const router = useRouter();
-
+  const handleGradeChange = (event) => {
+    setGrade(event.target.value); // Handle grade selection
+  };
   const handleDeadlineChange = (event) => {
     setDeadline(event.target.value);
   };
@@ -32,7 +35,7 @@ export default function UpdateQuery3({ query, audit }) {
     // API call for fees update
     const feesData = {
       id: queryid,
-      
+
       fees: {
         feesType,
         feesAmount: parseFloat(feesAmount),
@@ -61,9 +64,10 @@ export default function UpdateQuery3({ query, audit }) {
       queryId: queryid,
       actionby: session?.user?.name,
       oflinesubStatus: selectedOption,
-      message: message , 
-      stage:  selectedOption === 'ready_visit' ? 5 : undefined, // Update stage based on selection
+      message: message,
+      stage: selectedOption === 'ready_visit' ? 5 : undefined, // Update stage based on selection
       deadline: deadline || undefined, // Include deadline if provided
+      grade: grade,
 
     };
 
@@ -96,7 +100,7 @@ export default function UpdateQuery3({ query, audit }) {
       if (selectedOption === 'admission' || selectedOption === 'ready_visit') {
         const queryUpdateData = {
           id: queryid,
-         
+
         };
 
         const queryResponse = await axios.patch('/api/queries/update', queryUpdateData);
@@ -105,7 +109,7 @@ export default function UpdateQuery3({ query, audit }) {
         } else {
           console.error('Error updating query:', queryResponse.statusText);
         }
-      } 
+      }
       // Auto-close query if status count threshold is reached
       else if (statusCountsUpdate.interested_but_not_proper_response >= 3) {
         const queryUpdateData = {
@@ -135,7 +139,7 @@ export default function UpdateQuery3({ query, audit }) {
 
       <div className="mb-6">
         <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
-           Status:
+          Status:
         </label>
         <select
           id="statusSelect"
@@ -161,19 +165,34 @@ export default function UpdateQuery3({ query, audit }) {
           className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
         />
       </div>
-  
-        <div className="mb-6 transition-opacity duration-300 ease-in-out">
-          <h4 className="text-lg font-semibold mb-3 text-[#29234b]">Message:</h4>
-          <textarea
-            className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
-            rows="4"
-            name="message"
-            placeholder="Please enter your message..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-          />
-        </div>
-      
+      <div className="mb-6">
+        <label htmlFor="gradeSelect" className="block text-lg font-medium text-gray-700 mb-2">
+          Student Visit Grade:
+        </label>
+        <select
+          id="gradeSelect"
+          value={grade}
+          onChange={handleGradeChange}
+          className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+        >
+          <option value="Null">-- Select Grade --</option>
+          <option value="A">Grade A (Student will visit in 1–2 days)</option>
+          <option value="B">Grade B (Student will visit in 3–7 days)</option>
+          <option value="C">Grade C (Student will visit beyond 7 days)</option>
+        </select>
+      </div>
+      <div className="mb-6 transition-opacity duration-300 ease-in-out">
+        <h4 className="text-lg font-semibold mb-3 text-[#29234b]">Message:</h4>
+        <textarea
+          className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+          rows="4"
+          name="message"
+          placeholder="Please enter your message..."
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+        />
+      </div>
+
 
       <button
         type="submit"

@@ -101,7 +101,7 @@ export default function Sidebar({ onToggleSidebar }) {
                     }`}
                 >
                   <CopyPlus size={18} />
-                 Assigned
+                 Sent Query
                 </li>
               </Link>
 

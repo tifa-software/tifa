@@ -12,12 +12,15 @@ export default function UpdateQuery1({ query, audit }) {
   const [message, setMessage] = useState('');
   const [deadline, setDeadline] = useState('');
   const router = useRouter();
+  const [grade, setGrade] = useState('Null'); // New state for grade
 
   const handleOptionChange = (event) => {
     setSelectedOption(event.target.value);
     setMessage(''); // Reset message when the option changes
   };
-
+  const handleGradeChange = (event) => {
+    setGrade(event.target.value); // Handle grade selection
+  };
   const handleDeadlineChange = (event) => {
     setDeadline(event.target.value);
   };
@@ -33,6 +36,7 @@ export default function UpdateQuery1({ query, audit }) {
       message: message,
       stage: selectedOption === 'online' ? 2 : selectedOption === 'ofline' ? 3 : undefined,
       deadline: deadline || undefined, // Include deadline if provided
+      grade: grade,
 
     };
 
@@ -87,7 +91,22 @@ export default function UpdateQuery1({ query, audit }) {
           className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
         />
       </div>
-
+      <div className="mb-6">
+        <label htmlFor="gradeSelect" className="block text-lg font-medium text-gray-700 mb-2">
+          Student Visit Grade:
+        </label>
+        <select
+          id="gradeSelect"
+          value={grade}
+          onChange={handleGradeChange}
+          className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+        >
+          <option value="Null">-- Select Grade --</option>
+          <option value="A">Grade A (Student will visit in 1–2 days)</option>
+          <option value="B">Grade B (Student will visit in 3–7 days)</option>
+          <option value="C">Grade C (Student will visit beyond 7 days)</option>
+        </select>
+      </div>
       <div className="mb-6 transition-opacity duration-300 ease-in-out">
         <h4 className="text-lg font-semibold mb-3 text-[#29234b]">Message:</h4>
         <textarea
