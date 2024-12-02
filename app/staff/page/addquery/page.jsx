@@ -17,6 +17,7 @@ export default function Page() {
 
     const [adminData, setAdminData] = useState(null);
     const [adminid, setAdminid] = useState(null);
+    const [adminbranch, setAdminbranch] = useState(null);
     const { data: session } = useSession();
     const [formData, setFormData] = useState({
         userid: "",
@@ -100,8 +101,8 @@ export default function Page() {
                 );
                 const adminBranch = response.data;
                 setAdminData(adminBranch);
-                setAdminid(response.data._id)
-
+                setAdminid(response.data._id);
+                setAdminbranch(response.data.branch);
                 // Update the formData with the fetched admin branch
                 setFormData((prevFormData) => ({
                     ...prevFormData,
@@ -168,7 +169,7 @@ export default function Page() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-    
+
         if (name === "deadline") {
             const formattedDate = new Date(value).toLocaleDateString("en-GB", {
                 day: "numeric",
@@ -177,18 +178,18 @@ export default function Page() {
             });
             setDisplayDate(formattedDate); // Set formatted date for display
         }
-    
+
         setFormData((prevFormData) => {
             if (name === "assignedToreq") {
                 return {
                     ...prevFormData,
                     assignedToreq: value,
                     assignedreceivedhistory: value, // Mirror assignedToreq value
-                    assignedTostatus:true,
-                    assignedsenthistory:adminid
+                    assignedTostatus: true,
+                    assignedsenthistory: adminid
                 };
             }
-    
+
             if (name.includes("studentContact.")) {
                 const [_, key] = name.split("."); // Extract nested key
                 return {
@@ -199,11 +200,15 @@ export default function Page() {
                     },
                 };
             }
-    
-            return { ...prevFormData, [name]: value }; // Handle other fields
+
+            return {
+                ...prevFormData,
+                [name]: value,
+                branch: adminbranch // Automatically set branch for any other form changes as well
+            };
         });
     };
-    
+
 
 
 
@@ -215,10 +220,10 @@ export default function Page() {
                 formData.studentName &&
                 formData.gender &&
                 // formData.assignedTo &&
-                formData.assignedToreq&&
-                formData.assignedreceivedhistory&&
-                formData.assignedsenthistory&&
-                
+                // formData.assignedToreq &&
+                // formData.assignedreceivedhistory &&
+                // formData.assignedsenthistory &&
+
                 formData.referenceid &&
                 formData.studentContact.phoneNumber &&
                 formData.studentContact.whatsappNumber &&
@@ -226,7 +231,7 @@ export default function Page() {
                 formData.studentContact.city &&
                 formData.courseInterest &&
                 formData.deadline &&
-                formData.branch &&
+                // formData.branch &&
                 formData.notes &&
                 formData.qualification &&
                 formData.profession
@@ -304,40 +309,40 @@ export default function Page() {
                     }
                 }
 
-                // Reset form data after successful submission
-                setFormData({
-                    userid: adminData._id,
-                    studentName: "",
-                    gender: "Not_Defined",
-                    category: "Not_Defined",
-                    // assignedTo: "Not-Assigned",
-                    assignedToreq: "",
-                    assignedreceivedhistory: "",
-                    assignedsenthistory: "",
-                    referenceid: "",
-                    suboption: "",
-                    studentContact: {
-                        phoneNumber: "",
-                        whatsappNumber: "",
-                        address: "",
-                        city: ""
-                    },
-                    courseInterest: "",
-                    deadline: "",
-                    branch: "",
-                    notes: "",
-                    qualification: "",
-                    profession: "",
-                    professiontype: "",
-                    reference_name: "",
-                });
+                // // Reset form data after successful submission
+                // setFormData({
+                //     userid: adminData._id,
+                //     studentName: "",
+                //     gender: "Not_Defined",
+                //     category: "Not_Defined",
+                //     // assignedTo: "Not-Assigned",
+                //     assignedToreq: "",
+                //     assignedreceivedhistory: "",
+                //     assignedsenthistory: "",
+                //     referenceid: "",
+                //     suboption: "",
+                //     studentContact: {
+                //         phoneNumber: "",
+                //         whatsappNumber: "",
+                //         address: "",
+                //         city: ""
+                //     },
+                //     courseInterest: "",
+                //     deadline: "",
+                //     branch: "",
+                //     notes: "",
+                //     qualification: "",
+                //     profession: "",
+                //     professiontype: "",
+                //     reference_name: "",
+                // });
             }
         } catch (err) {
             setError("Failed to Add Query. Please try again.");
             console.error("Error adding query:", err);
         } finally {
             setLoading(false);
-            window.location.reload();
+            // window.location.reload();
         }
     };
 
@@ -564,7 +569,24 @@ export default function Page() {
                                 className="w-full rounded-0"
                             />
                         </div>
+                        <div className="sm:col-span-6 col-span-12">
+                            <label htmlFor="assignedToreq" className="block text-[15px] text-gray-700">
+                                Assigned To
+                            </label>
+                            <select name="assignedToreq" value={formData.assignedToreq} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
+                                <option value="" disabled >Select name</option>
 
+                                {user
+                                    .filter((user) => user.usertype !== "2") // Exclude "Tifa Admin"
+                                    .map((filteredUser) => (
+                                        <option key={filteredUser._id} value={filteredUser._id}>
+                                            {filteredUser.name}
+                                        </option>
+                                    ))
+                                }
+                            </select>
+
+                        </div>
 
                         {formData.studentContact.city === 'Jaipur' ? (
                             <div className="sm:col-span-6 col-span-12">
@@ -614,6 +636,8 @@ export default function Page() {
                                 onKeyDown={(e) => handleKeyDown(e, 10)}
                             />
                         </div>
+
+
 
                         {formData.referenceid !== 'Online' || interestStatus === 'Interested' ? (
                             <>
@@ -735,12 +759,10 @@ export default function Page() {
                                     <label htmlFor="branch" className="block text-[15px] text-gray-700">
                                         Branch
                                     </label>
-                                    <select name="branch" ref={(el) => (inputRefs.current[12] = el)} // Assign ref
+                                    <select name="branch" disabled ref={(el) => (inputRefs.current[12] = el)} // Assign ref
                                         onKeyDown={(e) => handleKeyDown(e, 12)} value={formData.branch} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
-                                        <option value="" disabled selected>Select Branch</option>
-                                        {branches.map((branch, index) => (
-                                            <option key={index} value={branch.branch_name}>{branch.branch_name}</option>
-                                        ))}
+                                        <option value={adminbranch} disabled selected>{adminbranch}</option>
+
                                     </select>
 
                                 </div>
@@ -768,19 +790,7 @@ export default function Page() {
                                     </select>
                                 </div>
 
-                                <div className="sm:col-span-6 col-span-12">
-                                    <label htmlFor="assignedToreq" className="block text-[15px] text-gray-700">
-                                        Assigned To
-                                    </label>
-                                    <select name="assignedToreq" value={formData.assignedToreq} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
-                                        <option value="" disabled selected>Select name</option>
-                                        <option value="Not-Assigned" disabled selected>Not Assign</option>
-                                        {user.map((user, index) => (
-                                            <option key={index} value={user._id}>{user.name}</option>
-                                        ))}
-                                    </select>
 
-                                </div>
 
 
                                 <div className="col-span-12">
