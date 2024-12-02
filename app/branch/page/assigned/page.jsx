@@ -91,8 +91,8 @@ export default function Assigned() {
                 try {
                     setLoading(true);
                     const { data } = await axios.get(`/api/queries/assignedreq/${adminId}?autoclosed=open`);
-                    const filteredQueries = data.fetch.filter(query => query.assignedTostatus);
-                    setQueries(filteredQueries);
+                    // const filteredQueries = data.fetch.filter(query => query.assignedTostatus);
+                    setQueries(data.fetch);
                 } catch (error) {
                     console.error('Error fetching query data:', error);
                 } finally {
