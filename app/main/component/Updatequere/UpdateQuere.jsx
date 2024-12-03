@@ -44,7 +44,7 @@ export default function UpdateQuery({ isOpen, onClose, initialData = {}, refresh
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg h-svh overflow-auto">
         <div className=" flex justify-between items-center mb-4">
           <h2 className="text-2xl font-semibold">Update Query</h2>
           <button
