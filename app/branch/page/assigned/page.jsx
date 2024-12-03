@@ -182,8 +182,9 @@ export default function Assigned() {
                                         <tr>
                                             <th className="px-6 py-4">Sr. No.</th>
                                             <th className="px-6 py-4">Student Name</th>
-                                            <th className="px-6 py-4">Branch</th>
+                                            <th className="px-6 py-4">Current Branch</th>
                                             <th className="px-6 py-4">Assgned From</th>
+                                            <th className="px-6 py-4">Assgned From Branch</th>
                                             <th className="px-6 py-4">Deadline</th>
                                             <th className="px-6 py-4">Status</th>
                                         </tr>
@@ -219,7 +220,7 @@ export default function Assigned() {
                                                                 : isIn24Hours ? 'bg-[#fcccba] text-black'
                                                                     : isIn48Hours ? 'bg-[#ffe9bf] text-black'
                                                                         : '';
-                                                                        const matchedUser = user.find((u) => u._id == query.assignedsenthistory);
+                                                    const matchedUser = user.find((u) => u._id == query.assignedsenthistory);
                                                     return (
                                                         <tr
                                                             key={query._id}
@@ -229,7 +230,8 @@ export default function Assigned() {
                                                             <td className="px-6 py-1 font-semibold">{(indexOfFirstQuery + index + 1)}</td>
                                                             <td className="px-6 py-1 font-semibold">{query.studentName}</td>
                                                             <td className="px-6 py-1">{query.branch}</td>
-                                                            <td className="px-6 py-1">{matchedUser.name} ({matchedUser.branch}) Branch</td>
+                                                            <td className="px-6 py-1">{matchedUser.name}</td>
+                                                            <td className="px-6 py-1">{matchedUser.branch}</td>
                                                             <td className="px-6 py-1">{deadline.toLocaleDateString()}</td>
                                                             <td
                                                                 className="px-6 py-1 text-blue-500 cursor-pointer"
