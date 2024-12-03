@@ -22,7 +22,7 @@ export default function AllQuery() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [user, setuser] = useState([]);
   const [deadlineFilter, setDeadlineFilter] = useState(""); // State for deadline filter
-  const [grades, setGrades] = useState({});
+
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -43,17 +43,17 @@ export default function AllQuery() {
   }, [session]);
 
   useEffect(() => {
+    // Fetch queries data once the adminData is available
     const fetchQueryData = async () => {
       if (adminData) {
         try {
           setLoading(true);
-          const autoclosedStatus = 'open'; // Adjust based on your logic
+          const autoclosedStatus = 'open'; // or 'close', based on your logic
           const response = await axios.get(`/api/queries/fetchall-byuser/${adminData}?autoclosed=${autoclosedStatus}`);
-          
           const today = new Date();
           const tomorrow = new Date(today);
           tomorrow.setDate(today.getDate() + 1);
-  
+
           // Filter for queries with deadlines today, tomorrow, or in the past
           const filteredQueries = response.data.fetch.filter(query => {
             const deadline = new Date(query.deadline);
@@ -61,7 +61,7 @@ export default function AllQuery() {
               deadline <= tomorrow
             );
           });
-  
+
           setqueries(filteredQueries);
         } catch (error) {
           console.error('Error fetching query data:', error);
@@ -70,22 +70,9 @@ export default function AllQuery() {
         }
       }
     };
-  
+
     fetchQueryData();
   }, [adminData]);
-  
-  
-  const fetchGrade = async (id) => {
-    try {
-      const response = await axios.get(`/api/audit/findsingle/${id}`);
-      setGrades((prevGrades) => ({
-        ...prevGrades,
-        [id]: response.data, // Assuming the grade is returned in response.data.grade
-      }));
-    } catch (error) {
-      console.error("Error fetching grade", error);
-    }
-  };
 
 
   useEffect(() => {
@@ -171,16 +158,18 @@ export default function AllQuery() {
 
   // Apply filters and sort queries
   const filteredqueries = sortqueries(
-    queries
-      .filter(querie =>
-        (querie.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          querie.studentContact.phoneNumber.includes(searchTerm) ||
-          querie.referenceid.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        (filterCourse === "" || querie.branch.includes(filterCourse)) &&
-        filterByDeadline(querie) && // Ensure the deadline filter is applied
-        (filterByGrade === "" || grades[querie._id]?.grade === filterByGrade) // Add filter by grade
-      )
+    queries.filter(querie =>
+      (
+        (querie.studentName && querie.studentName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (querie.studentContact?.phoneNumber?.includes(searchTerm)) ||
+        (querie.referenceid && querie.referenceid.toLowerCase().includes(searchTerm.toLowerCase()))
+      ) &&
+      (filterCourse === "" || querie.branch?.includes(filterCourse)) &&
+      filterByDeadline(querie) && // Ensure the deadline filter is applied
+      (filterByGrade === "" || querie.lastgrade === filterByGrade) // Add filter by grade
+    )
   );
+
 
 
 
@@ -209,7 +198,7 @@ export default function AllQuery() {
 
       try {
         // Make a DELETE request to the API with the selected branches' IDs in the request body
-        await axios.delete('/api/queries/delete', {
+        await axios.delete('/api/queries/trash', {
           data: { ids: selectedqueries } // Pass the ids in the 'data' field for DELETE request
         });
 
@@ -334,7 +323,7 @@ export default function AllQuery() {
             <option value="A">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
-         
+
           </select>
 
           <select
@@ -446,6 +435,8 @@ export default function AllQuery() {
               <th scope="col" className="px-4 font-medium capitalize py-2">Branch</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Phone Number</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Grade</th>
+              <th scope="col" className="px-4 font-medium capitalize py-2">Assigned from</th>
+              <th scope="col" className="px-4 font-medium capitalize py-2">Assigned To</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">DeadLine</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Address</th>
             </tr>
@@ -461,12 +452,12 @@ export default function AllQuery() {
               </tr>
             ) : filteredqueries.length > 0 ? (
               filteredqueries.map((querie, index) => {
-                // Fetch grade if it's not already fetched
-                if (!grades[querie._id]) {
-                  fetchGrade(querie._id);
-                }
+
+
 
                 const matchedUser = user.find((u) => u._id === querie.userid);
+                const matchedassignedUser = user.find((u) => u._id == querie.assignedreceivedhistory);
+                const matchedassignedsenderUser = user.find((u) => u._id == querie.assignedsenthistory);
 
                 return (
                   <>
@@ -507,10 +498,16 @@ export default function AllQuery() {
                       </td>
 
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
-                        {grades[querie._id]?.grade === 'Null' ? 'N/A' : grades[querie._id]?.grade || 'Loading...'}
+                        {querie.lastgrade}
                       </td>
 
+                      <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
+                        {matchedassignedsenderUser ? matchedassignedsenderUser.name : ''}
+                      </td>
+                      <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
 
+                        {matchedassignedUser ? matchedassignedUser.name : ''}
+                      </td>
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
                         {`${String(new Date(querie.deadline).getDate()).padStart(2, '0')}-${String(new Date(querie.deadline).getMonth() + 1).padStart(2, '0')}-${String(new Date(querie.deadline).getFullYear()).slice(-2)}`}
                       </td>
@@ -535,27 +532,27 @@ export default function AllQuery() {
                     </tr>
 
 
-                    {grades[querie._id]?.history?.length > 0 && (
-                      <tr className="border-b bg-gray-200">
-                        <td colSpan="8" className="px-4">
-                          <div className="flex flex-wrap gap-4">
-                            <p className="font-bold text-xs">Last Action</p>
+
+                    <tr className="border-b bg-gray-200">
+                      <td colSpan="10" className="px-4">
+                        <div className="flex flex-wrap gap-4">
+                          <p className="font-bold text-xs">Last Action</p>
 
 
-                            <p className=' text-xs'><strong>Action By = </strong> {grades[querie._id]?.history[0]?.actionBy}</p>
+                          <p className=' text-xs'><strong>Action By = </strong>{querie.lastactionby} </p>
 
-                            <ul>
-                              {grades[querie._id]?.history[grades[querie._id].history.length - 1]?.changes?.message?.newValue && (
-                                <li className=' text-xs'>
-                                  <strong>Message = </strong> {grades[querie._id]?.history[grades[querie._id].history.length - 1]?.changes?.message?.newValue}
-                                </li>
-                              )}
-                            </ul>
+                          <ul>
 
-                          </div>
-                        </td>
-                      </tr>
-                    )}
+                            <li className=' text-xs'>
+                              <strong>Message = </strong> {querie.lastmessage}
+                            </li>
+
+                          </ul>
+
+                        </div>
+                      </td>
+                    </tr>
+
 
 
                   </>

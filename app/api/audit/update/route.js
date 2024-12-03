@@ -72,19 +72,25 @@ export const PATCH = async (request) => {
             }
         );
 
+        // Determine the last message based on the history entry
+        const lastMessage = changes.message ? changes.message.newValue : "N/A";
+
         // Determine the deadline: use the provided one or set to tomorrow's date if not given
         const deadline = data.deadline ? new Date(data.deadline) : new Date();
         if (!data.deadline) {
             deadline.setDate(deadline.getDate() + 1); // Set to tomorrow if no deadline is provided
         }
 
-        // Now update the deadline in the related QueryModel document
+        // Now update the deadline and last message in the related QueryModel document
         await QueryModel.updateOne(
             { _id: data.queryId }, // Find the related QueryModel document
             {
-                $set: { 
+                $set: {
                     deadline: deadline.toISOString(),
-                    lastDeadline: new Date().toISOString() 
+                    lastDeadline: new Date().toISOString(),
+                    lastgrade: data.grade || "N/A",
+                    lastmessage: lastMessage,
+                    lastactionby: data.actionby || "system",
                 }
             }
         );

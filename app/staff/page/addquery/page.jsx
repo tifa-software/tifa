@@ -24,7 +24,7 @@ export default function Page() {
         referenceid: "",
         suboption: "null",
         studentName: "",
-
+        lastgrade: "",
         // assignedTo: "Not-Assigned",
         assignedToreq: "",
         assignedreceivedhistory: "",
@@ -606,14 +606,14 @@ export default function Page() {
 
 
                         <div className="sm:col-span-6 col-span-12">
-                            <label htmlFor="gradeStatus" className="block text-[15px] text-gray-700">
+                            <label htmlFor="lastgrade" className="block text-[15px] text-gray-700">
                                 Grade
                             </label>
                             <select
-                                name="gradeStatus"
-                                value={gradeStatus}
-                                id="gradeStatus"
-                                onChange={handleGradeChange}
+                                name="lastgrade"
+                                value={formData.lastgrade}
+                                id="lastgrade"
+                                onChange={handleChange}
                                 className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                             >
                                 <option value="" disabled>

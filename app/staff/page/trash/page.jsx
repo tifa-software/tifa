@@ -22,7 +22,7 @@ export default function AllQuery() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [user, setuser] = useState([]);
   const [deadlineFilter, setDeadlineFilter] = useState(""); // State for deadline filter
-  const [grades, setGrades] = useState({});
+
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -61,17 +61,6 @@ export default function AllQuery() {
 
     fetchQueryData();
   }, [adminData]);
-  const fetchGrade = async (id) => {
-    try {
-      const response = await axios.get(`/api/audit/findsingle/${id}`);
-      setGrades((prevGrades) => ({
-        ...prevGrades,
-        [id]: response.data, // Assuming the grade is returned in response.data.grade
-      }));
-    } catch (error) {
-      console.error("Error fetching grade", error);
-    }
-  };
 
 
   useEffect(() => {
@@ -165,7 +154,7 @@ export default function AllQuery() {
       ) &&
       (filterCourse === "" || querie.branch?.includes(filterCourse)) &&
       filterByDeadline(querie) && // Ensure the deadline filter is applied
-      (filterByGrade === "" || grades[querie._id]?.grade === filterByGrade) // Add filter by grade
+      (filterByGrade === "" || querie.lastgrade === filterByGrade) // Add filter by grade
     )
   );
 
@@ -451,10 +440,7 @@ export default function AllQuery() {
               </tr>
             ) : filteredqueries.length > 0 ? (
               filteredqueries.map((querie, index) => {
-                // Fetch grade if it's not already fetched
-                if (!grades[querie._id]) {
-                  fetchGrade(querie._id);
-                }
+
 
 
                 const matchedUser = user.find((u) => u._id === querie.userid);
@@ -500,7 +486,7 @@ export default function AllQuery() {
                       </td>
 
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
-                        {grades[querie._id]?.grade === 'Null' ? 'N/A' : grades[querie._id]?.grade || 'Loading...'}
+                        {querie.lastgrade}
                       </td>
 
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
@@ -534,27 +520,27 @@ export default function AllQuery() {
                     </tr>
 
 
-                    {grades[querie._id]?.history?.length > 0 && (
-                      <tr className="border-b bg-gray-200">
-                        <td colSpan="10" className="px-4">
-                          <div className="flex flex-wrap gap-4">
-                            <p className="font-bold text-xs">Last Action</p>
+
+                    <tr className="border-b bg-gray-200">
+                      <td colSpan="10" className="px-4">
+                        <div className="flex flex-wrap gap-4">
+                          <p className="font-bold text-xs">Last Action</p>
 
 
-                            <p className=' text-xs'><strong>Action By = </strong> {grades[querie._id]?.history[0]?.actionBy}</p>
+                          <p className=' text-xs'><strong>Action By = </strong>{querie.lastactionby} </p>
 
-                            <ul>
-                              {grades[querie._id]?.history[grades[querie._id].history.length - 1]?.changes?.message?.newValue && (
-                                <li className=' text-xs'>
-                                  <strong>Message = </strong> {grades[querie._id]?.history[grades[querie._id].history.length - 1]?.changes?.message?.newValue}
-                                </li>
-                              )}
-                            </ul>
+                          <ul>
 
-                          </div>
-                        </td>
-                      </tr>
-                    )}
+                            <li className=' text-xs'>
+                              <strong>Message = </strong> {querie.lastmessage}
+                            </li>
+
+                          </ul>
+
+                        </div>
+                      </td>
+                    </tr>
+
 
 
                   </>

@@ -128,6 +128,22 @@ const querySchema = new Schema({
         type: String,
         default: "Not_Provided"
     },
+    lastgrade: {
+        type: String,
+
+        default: 'Null',
+
+    },
+    lastmessage: {
+        type: String,
+        default: "null",
+        required: true
+    },
+    lastactionby: {
+        type: String,
+        default: "null",
+        required: true
+    },
 
     autoclosed: {
         type: String,
@@ -164,6 +180,6 @@ querySchema.pre('save', function (next) {
 
 const QueryModel =
 
-    mongoose.models.Queries38 || mongoose.model('Queries38', querySchema);
+    mongoose.models.Queries40 || mongoose.model('Queries40', querySchema);
 
 export default QueryModel;
