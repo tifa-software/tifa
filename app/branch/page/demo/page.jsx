@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import { useRouter } from "next/navigation";
+import { useSession } from 'next-auth/react';
 
 export default function Assigned() {
   const [queries, setQueries] = useState([]);
@@ -10,6 +11,8 @@ export default function Assigned() {
   const [selectedBranch, setSelectedBranch] = useState("All");
   const [selectedDeadline, setSelectedDeadline] = useState("All");
   const [selectedEnrollStatus, setSelectedEnrollStatus] = useState("All");
+  const [adminbranch, setAdminbranch] = useState(null);
+  const { data: session } = useSession();
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -17,20 +20,35 @@ export default function Assigned() {
   const router = useRouter();
 
   useEffect(() => {
-    const fetchQueryData = async () => {
-      try {
-        setLoading(true);
-        const { data } = await axios.get(`/api/queries/demo/1`);
-        setQueries(data.fetch);
-      } catch (error) {
-        console.error("Error fetching query data:", error);
-      } finally {
-        setLoading(false);
+    const fetchAdminData = async () => {
+      if (session?.user?.email) {
+        try {
+          const { data } = await axios.get(`/api/admin/find-admin-byemail/${session.user.email}`);
+          setAdminbranch(data.branch);
+        } catch (error) {
+          console.error(error.message);
+        }
       }
     };
+    fetchAdminData();
+  }, [session]);
 
-    fetchQueryData();
-  }, []);
+  useEffect(() => {
+    if (adminbranch) {
+      const fetchQueryData = async () => {
+        try {
+          setLoading(true);
+          const { data } = await axios.get(`/api/queries/demobybranch/${adminbranch}`);
+          setQueries(data.fetch || []);
+        } catch (error) {
+          console.error('Error fetching query data:', error.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchQueryData();
+    }
+  }, [adminbranch]);
 
   const handleRowClick = (id) => {
     router.push(`/branch/page/allquery/${id}`);
@@ -47,7 +65,7 @@ export default function Assigned() {
         queryDeadline.toDateString() === new Date().toDateString()) ||
       (selectedDeadline === "Tomorrow" &&
         queryDeadline.toDateString() ===
-          new Date(Date.now() + 86400000).toDateString()) ||
+        new Date(Date.now() + 86400000).toDateString()) ||
       (selectedDeadline === "Past" &&
         queryDeadline < new Date() &&
         queryDeadline.toDateString() !== new Date().toDateString());
@@ -125,7 +143,7 @@ export default function Assigned() {
                         </td>
                       </tr>
                     ) : currentQueries.length > 0 ? (
-                      currentQueries.map((query,index) => {
+                      currentQueries.map((query, index) => {
                         const deadline = new Date(query.deadline);
                         const isToday = deadline.toDateString() === new Date().toDateString();
                         const isPastDeadline = deadline < new Date();
@@ -140,14 +158,14 @@ export default function Assigned() {
                         const rowClass = query.addmission
                           ? "bg-[#6cb049] text-white"
                           : isToday
-                          ? "bg-red-500 text-white"
-                          : isPastDeadline
-                          ? "bg-gray-800 text-white animate-blink"
-                          : isIn24Hours
-                          ? "bg-[#fcccba] text-black"
-                          : isIn48Hours
-                          ? "bg-[#ffe9bf] text-black"
-                          : "";
+                            ? "bg-red-500 text-white"
+                            : isPastDeadline
+                              ? "bg-gray-800 text-white animate-blink"
+                              : isIn24Hours
+                                ? "bg-[#fcccba] text-black"
+                                : isIn48Hours
+                                  ? "bg-[#ffe9bf] text-black"
+                                  : "";
 
                         return (
                           <tr
@@ -155,7 +173,7 @@ export default function Assigned() {
                             className={`border-b cursor-pointer transition-colors duration-200 hover:opacity-90 ${rowClass}`}
                             onClick={() => handleRowClick(query._id)}
                           >
-                               <td className="px-6 py-1 font-semibold">{indexOfFirstQuery + index + 1}</td>
+                            <td className="px-6 py-1 font-semibold">{indexOfFirstQuery + index + 1}</td>
                             <td className="px-6 py-1 font-semibold">{query.studentName}</td>
                             <td className="px-6 py-1">{query.branch}</td>
                             <td className="px-6 py-1">
@@ -210,9 +228,8 @@ export default function Assigned() {
             <div className="space-y-2">
               <button
                 onClick={() => setSelectedBranch("All")}
-                className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${
-                  selectedBranch === "All" ? "bg-gray-200 font-semibold" : "hover:bg-gray-100"
-                }`}
+                className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${selectedBranch === "All" ? "bg-gray-200 font-semibold" : "hover:bg-gray-100"
+                  }`}
               >
                 <span>All</span>
                 <span className="ml-2 text-gray-500">{selectedBranch === "All" ? "-" : "+"}</span>
@@ -223,9 +240,8 @@ export default function Assigned() {
                   <button
                     key={branch}
                     onClick={() => setSelectedBranch(branch)}
-                    className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${
-                      selectedBranch === branch ? "bg-gray-200 font-semibold" : "hover:bg-gray-100"
-                    }`}
+                    className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${selectedBranch === branch ? "bg-gray-200 font-semibold" : "hover:bg-gray-100"
+                      }`}
                   >
                     <span>
                       {branch} ({totalCount})
@@ -268,7 +284,7 @@ export default function Assigned() {
             </select>
           </div>
 
-          
+
         </div>
       </div>
     </div>

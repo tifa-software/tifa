@@ -170,7 +170,7 @@ export default function AllQuery() {
 
       try {
         // Make a DELETE request to the API with the selected branches' IDs in the request body
-        await axios.delete('/api/queries/delete', {
+        await axios.delete('/api/queries/trash', {
           data: { ids: selectedqueries } // Pass the ids in the 'data' field for DELETE request
         });
 

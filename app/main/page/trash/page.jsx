@@ -15,10 +15,23 @@ export default function AllQuery() {
   const [selectedqueries, setSelectedqueries] = useState([]);
   const [sortOrder, setSortOrder] = useState("newest");
   const [filterCourse, setFilterCourse] = useState("");
+  const [filterByGrade, setFilterByGrade] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [user, setuser] = useState([]);
   const [deadlineFilter, setDeadlineFilter] = useState(""); // State for deadline filter
+  const [grades, setGrades] = useState({});
 
+  const fetchGrade = async (id) => {
+    try {
+      const response = await axios.get(`/api/audit/findsingle/${id}`);
+      setGrades((prevGrades) => ({
+        ...prevGrades,
+        [id]: response.data, // Assuming the grade is returned in response.data.grade
+      }));
+    } catch (error) {
+      console.error("Error fetching grade", error);
+    }
+  };
 
 
   useEffect(() => {
@@ -60,13 +73,37 @@ export default function AllQuery() {
   };
 
   // Sort queries based on selected order
+  // Sort queries based on selected order
   const sortqueries = (queries) => {
-    return queries.sort((a, b) => {
-      return sortOrder === "newest"
-        ? new Date(b.createdAt) - new Date(a.createdAt)
-        : new Date(a.createdAt) - new Date(b.createdAt);
+    const today = new Date().setHours(0, 0, 0, 0);
+
+    const sortedQueries = queries.sort((a, b) => {
+      const dateA = new Date(a.deadline).setHours(0, 0, 0, 0);
+      const dateB = new Date(b.deadline).setHours(0, 0, 0, 0);
+
+      // Sort today’s dates first
+      if (dateA === today && dateB === today) return 0;
+      if (dateA === today) return -1;
+      if (dateB === today) return 1;
+
+      // Sort past dates next (in descending order)
+      if (dateA < today && dateB < today) return dateB - dateA;
+
+      // Sort future dates last (in ascending order)
+      if (dateA > today && dateB > today) return dateA - dateB;
+
+      // Place past dates before future dates
+      return dateA < today ? -1 : 1;
     });
+
+    return sortedQueries;
   };
+
+
+
+
+
+
 
   // Filter queries based on course and search term
   const filterByDeadline = (querie) => {
@@ -91,24 +128,30 @@ export default function AllQuery() {
     }
   };
 
+  // Apply filters and sort queries
   const filteredqueries = sortqueries(
-    queries
-      .filter(querie =>
-        (querie.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          querie.studentContact.phoneNumber.includes(searchTerm)) &&
-        (filterCourse === "" || querie.branch.includes(filterCourse)) &&
-        filterByDeadline(querie)
-      )
+    queries.filter(querie =>
+      (
+        (querie.studentName && querie.studentName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (querie.studentContact?.phoneNumber?.includes(searchTerm)) ||
+        (querie.referenceid && querie.referenceid.toLowerCase().includes(searchTerm.toLowerCase()))
+      ) &&
+      (filterCourse === "" || querie.branch?.includes(filterCourse)) &&
+      filterByDeadline(querie) && // Ensure the deadline filter is applied
+      (filterByGrade === "" || grades[querie._id]?.grade === filterByGrade) // Add filter by grade
+    )
   );
 
 
-  // Pagination logic
-  const indexOfLastquerie = currentPage * queriesPerPage;
-  const indexOfFirstquerie = indexOfLastquerie - queriesPerPage;
-  const currentqueries = filteredqueries.slice(indexOfFirstquerie, indexOfLastquerie);
-  const totalPages = Math.ceil(filteredqueries.length / queriesPerPage);
 
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Pagination logic
+  // const indexOfLastquerie = currentPage * queriesPerPage;
+  // const indexOfFirstquerie = indexOfLastquerie - queriesPerPage;
+  // const currentqueries = filteredqueries.slice(indexOfFirstquerie, indexOfLastquerie);
+  // const totalPages = Math.ceil(filteredqueries.length / queriesPerPage);
+
+  // const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   // Handle multi-select for bulk actions
   const handleSelectquerie = (id) => {
@@ -157,7 +200,7 @@ export default function AllQuery() {
           </span>
           <input
             type="text"
-            placeholder="Search By Student Name and Phone Number"
+            placeholder="Search By Student Name , Reference and Phone Number"
             className="border px-3 py-2 pl-10 text-sm focus:outline-none  w-full  "
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -232,7 +275,7 @@ export default function AllQuery() {
         )}
 
         {/* Desktop Filter Section */}
-        <div className="hidden lg:flex space-x-3">
+        <div className="hidden lg:flex flex-wrap space-x-3">
           <select
             className="border px-3 py-2 focus:outline-none text-sm"
             value={filterCourse}
@@ -242,6 +285,17 @@ export default function AllQuery() {
             {Array.from(new Set(queries.flatMap(querie => querie.branch))).map((branch, index) => (
               <option key={index} value={branch}>{branch}</option>
             ))}
+          </select>
+          <select
+            value={filterByGrade}
+            onChange={(e) => setFilterByGrade(e.target.value)}
+            className="px-2 py-1 border"
+          >
+            <option value="">All Grades</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+
           </select>
 
           <select
@@ -256,6 +310,8 @@ export default function AllQuery() {
             <option value="dayAfterTomorrow">Day After Tomorrow</option>
             <option value="past">Past Date</option>
           </select>
+
+
 
           <select
             className="border px-3 py-2 focus:outline-none text-sm"
@@ -288,36 +344,48 @@ export default function AllQuery() {
         </div>
 
       </div>
-      <div className="flex flex-wrap gap-4 mt-2 text-sm py-1">
+      <div className="flex flex-wrap justify-between gap-4 mt-2 text-sm py-1">
+
+
+        <div>
+          <div className="flex items-center gap-1 bg-gray-200 px-2 rounded-md">
+            <span className="">Total Queries =</span>
+            <span className=" font-semibold">{queries.length}</span>
+          </div>
+        </div>
+
         {/* Legend Item */}
-        <div className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full animate-blink"></span>
-          <span className="text-gray-600">Past Due</span>
-        </div>
+        <div className=' flex flex-wrap gap-4'>
+          <div className="flex items-center gap-1">
+            <span className="h-2 w-2 rounded-full animate-blink"></span>
+            <span className="text-gray-600">Past Due</span>
+          </div>
 
-        <div className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-red-500"></span>
-          <span className="text-gray-600">Due Today</span>
-        </div>
+          <div className="flex items-center gap-1">
+            <span className="h-2 w-2 rounded-full bg-red-500"></span>
+            <span className="text-gray-600">Due Today</span>
+          </div>
 
-        <div className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-[#fcccba]"></span>
-          <span className="text-gray-600">Due Tomorrow</span>
-        </div>
+          <div className="flex items-center gap-1">
+            <span className="h-2 w-2 rounded-full bg-[#fcccba]"></span>
+            <span className="text-gray-600">Due Tomorrow</span>
+          </div>
 
-        <div className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-[#ffe9bf]"></span>
-          <span className="text-gray-600">Due Day After Tomorrow</span>
-        </div>
+          <div className="flex items-center gap-1">
+            <span className="h-2 w-2 rounded-full bg-[#ffe9bf]"></span>
+            <span className="text-gray-600">Due Day After Tomorrow</span>
+          </div>
 
-        <div className="flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-[#6cb049]"></span>
-          <span className="text-gray-600">Enrolled</span>
+          <div className="flex items-center gap-1">
+            <span className="h-2 w-2 rounded-full bg-[#6cb049]"></span>
+            <span className="text-gray-600">Enrolled</span>
+          </div>
         </div>
       </div>
 
       {/* querie Table */}
       <div className="relative overflow-x-auto shadow-md  bg-white   border border-gray-200">
+
         <table className="w-full text-sm text-left rtl:text-right text-gray-600 font-sans">
           <thead className="bg-[#29234b] text-white uppercase">
             <tr>
@@ -335,9 +403,12 @@ export default function AllQuery() {
                 />
               </th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Staff Name</th> {/* Added User Name column */}
-              <th scope="col" className="px-4 font-medium capitalize py-2">Student Name</th>
+              <th scope="col" className="px-4 font-medium capitalize py-2">Student Name <span className=' text-xs'>(Reference)</span></th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Branch</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Phone Number</th>
+              <th scope="col" className="px-4 font-medium capitalize py-2">Grade</th>
+              <th scope="col" className="px-4 font-medium capitalize py-2">Assigned from</th>
+              <th scope="col" className="px-4 font-medium capitalize py-2">Assigned To</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">DeadLine</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Address</th>
             </tr>
@@ -345,68 +416,120 @@ export default function AllQuery() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="7" className="px-6 py-4"> {/* Updated colspan to 7 */}
+                <td colSpan="7" className="px-6 py-4">
                   <div className="flex justify-center items-center h-[300px]">
                     <Loader />
                   </div>
                 </td>
               </tr>
-            ) : currentqueries.length > 0 ? (
-              currentqueries.map((querie, index) => {
-                // Find the user that matches the querie.userid
+            ) : filteredqueries.length > 0 ? (
+              filteredqueries.map((querie, index) => {
+                // Fetch grade if it's not already fetched
+                if (!grades[querie._id]) {
+                  fetchGrade(querie._id);
+                }
+
                 const matchedUser = user.find((u) => u._id === querie.userid);
+                const matchedassignedUser = user.find((u) => u._id == querie.assignedreceivedhistory);
+                const matchedassignedsenderUser = user.find((u) => u._id == querie.assignedsenthistory);
 
                 return (
-                  <tr
-                    key={querie._id}
-                    className={`border-b cursor-pointer transition-colors duration-200 relative
-                    ${querie.addmission ? 'bg-[#6cb049] text-white' :
-                        new Date(querie.deadline).toDateString() === new Date().toDateString() ? 'bg-red-500 text-white' :
-                          new Date(querie.deadline) < new Date() ? ' text-white animate-blink' :
-                            new Date(querie.deadline).toDateString() === new Date(Date.now() + 24 * 60 * 60 * 1000).toDateString() ? 'bg-[#fcccba] text-black' :
-                              new Date(querie.deadline).toDateString() === new Date(Date.now() + 48 * 60 * 60 * 1000).toDateString() ? 'bg-[#ffe9bf] text-black' :
-                                ''
-                      }`}
-                  >
-                    <td className="px-4 py-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedqueries.includes(querie._id)}
-                        onChange={() => handleSelectquerie(querie._id)}
-                      />
-                    </td>
-
-                    {/* Display the matched user's name */}
-                    <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px] font-semibold">
-                      {matchedUser ? matchedUser.name : 'Tifa Admin'}
-                    </td>
-
-                    <td
-                      className="px-4 py-2 font-semibold text-sm whitespace-nowrap"
-                      onClick={() => handleRowClick(querie._id)}
+                  <>
+                    <tr
+                      key={querie._id}
+                      className={`border-b cursor-pointer transition-colors duration-200 relative
+          ${querie.addmission ? 'bg-[#6cb049] text-white' :
+                          new Date(querie.deadline).toDateString() === new Date().toDateString() ? 'bg-red-500 text-white' :
+                            new Date(querie.deadline) < new Date() ? 'text-white animate-blink' :
+                              new Date(querie.deadline).toDateString() === new Date(Date.now() + 24 * 60 * 60 * 1000).toDateString() ? 'bg-[#fcccba] text-black' :
+                                new Date(querie.deadline).toDateString() === new Date(Date.now() + 48 * 60 * 60 * 1000).toDateString() ? 'bg-[#ffe9bf] text-black' :
+                                  ''
+                        }`}
                     >
-                      {querie.studentName}
-                    </td>
+                      <td className="px-4 py-2 relative">
+                        <input
+                          type="checkbox"
+                          checked={selectedqueries.includes(querie._id)}
+                          onChange={() => handleSelectquerie(querie._id)}
+                        />
+                        <span className="ms-2">{index + 1}</span>
+                      </td>
 
-                    <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
-                      {querie.branch}
-                    </td>
+                      <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px] font-semibold">
+                        {matchedUser ? matchedUser.name : 'Tifa Admin'}
+                      </td>
 
-                    <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
-                      {querie.studentContact.phoneNumber}
-                    </td>
+                      <td className="px-4 py-2 font-semibold text-sm whitespace-nowrap" onClick={() => handleRowClick(querie._id)}>
+                        {querie.studentName} <span className="text-xs">({querie.referenceid})</span>
+                      </td>
 
-                    <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
-                      {`${String(new Date(querie.deadline).getDate()).padStart(2, '0')}-${String(new Date(querie.deadline).getMonth() + 1).padStart(2, '0')}-${String(new Date(querie.deadline).getFullYear()).slice(-2)}`}
-                    </td>
+                      <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
+                        {querie.branch}
+                      </td>
 
-                    <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
-                      {querie.studentContact.address}
-                    </td>
+                      <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
+                        {querie.studentContact.phoneNumber}
+                      </td>
+
+                      <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
+                        {grades[querie._id]?.grade === 'Null' ? 'N/A' : grades[querie._id]?.grade || 'Loading...'}
+                      </td>
+                      <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
+                      {matchedassignedsenderUser ? matchedassignedsenderUser.name : ''}
+                      </td>
+                      <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
+                      
+                        {matchedassignedUser ? matchedassignedUser.name : ''}
+                      </td>
+
+                      <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
+                        {`${String(new Date(querie.deadline).getDate()).padStart(2, '0')}-${String(new Date(querie.deadline).getMonth() + 1).padStart(2, '0')}-${String(new Date(querie.deadline).getFullYear()).slice(-2)}`}
+                      </td>
+
+                      <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
+                        {querie.studentContact.address}
+                      </td>
+
+                      <span className="absolute right-0 top-0 bottom-0 flex items-center">
+                        {!querie.addmission && (
+                          new Date(querie.lastDeadline) < new Date() && new Date(querie.lastDeadline).toDateString() !== new Date().toDateString() ? (
+                            <span className="inline-flex items-center px-2 text-[10px] font-semibold text-red-600 bg-red-200 rounded-full shadow-md">
+                              ✖️ Today Update
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 text-[10px] font-semibold text-green-600 bg-green-200 rounded-full shadow-md">
+                              ✔️ Checked
+                            </span>
+                          )
+                        )}
+                      </span>
+                    </tr>
 
 
-                  </tr>
+                    {grades[querie._id]?.history?.length > 0 && (
+                      <tr className="border-b bg-gray-200">
+                        <td colSpan="10" className="px-4">
+                          <div className="flex flex-wrap gap-4">
+                            <p className="font-bold text-xs">Last Action</p>
 
+
+                            <p className=' text-xs'><strong>Action By = </strong> {grades[querie._id]?.history[0]?.actionBy}</p>
+
+                            <ul>
+                              {grades[querie._id]?.history[grades[querie._id].history.length - 1]?.changes?.message?.newValue && (
+                                <li className=' text-xs'>
+                                  <strong>Message = </strong> {grades[querie._id]?.history[grades[querie._id].history.length - 1]?.changes?.message?.newValue}
+                                </li>
+                              )}
+                            </ul>
+
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+
+
+                  </>
                 );
               })
             ) : (
@@ -417,41 +540,42 @@ export default function AllQuery() {
               </tr>
             )}
           </tbody>
+
         </table>
 
-        {/* Pagination */}
+        {/* Pagination
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
           paginate={paginate}
-        />
+        /> */}
       </div>
     </div>
   );
 }
 
-const Pagination = ({ currentPage, totalPages, paginate }) => {
-  return (
-    <div className="flex justify-center my-4">
-      <button
-        onClick={() => paginate(currentPage - 1)}
-        disabled={currentPage === 1}
-        className={`px-3 py-1 mx-1 text-sm border rounded ${currentPage === 1 ? 'cursor-not-allowed bg-gray-200' : 'bg-[#6cb049] text-white'}`}
-      >
-        <ArrowLeft size={18} />
-      </button>
+// const Pagination = ({ currentPage, totalPages, paginate }) => {
+//   return (
+//     <div className="flex justify-center my-4">
+//       <button
+//         onClick={() => paginate(currentPage - 1)}
+//         disabled={currentPage === 1}
+//         className={`px-3 py-1 mx-1 text-sm border rounded ${currentPage === 1 ? 'cursor-not-allowed bg-gray-200' : 'bg-[#6cb049] text-white'}`}
+//       >
+//         <ArrowLeft size={18} />
+//       </button>
 
-      <span className="px-3 py-1 mx-1 text-sm border rounded bg-gray-200">
-        Page {currentPage} of {totalPages}
-      </span>
+//       <span className="px-3 py-1 mx-1 text-sm border rounded bg-gray-200">
+//         Page {currentPage} of {totalPages}
+//       </span>
 
-      <button
-        onClick={() => paginate(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className={`px-3 py-1 mx-1 text-sm border rounded ${currentPage === totalPages ? 'cursor-not-allowed bg-gray-200' : 'bg-[#6cb049] text-white'}`}
-      >
-        <ArrowRight size={18} />
-      </button>
-    </div>
-  );
-};
+//       <button
+//         onClick={() => paginate(currentPage + 1)}
+//         disabled={currentPage === totalPages}
+//         className={`px-3 py-1 mx-1 text-sm border rounded ${currentPage === totalPages ? 'cursor-not-allowed bg-gray-200' : 'bg-[#6cb049] text-white'}`}
+//       >
+//         <ArrowRight size={18} />
+//       </button>
+//     </div>
+//   );
+// };
