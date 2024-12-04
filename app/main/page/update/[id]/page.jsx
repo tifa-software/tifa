@@ -17,13 +17,19 @@ export default function Page({ params }) {
     const [user, setuser] = useState([]);
 
     const [adminData, setAdminData] = useState(null);
+    const [adminid, setAdminid] = useState(null);
+    const [adminbranch, setAdminbranch] = useState(null);
     const { data: session } = useSession();
     const [formData, setFormData] = useState({
-        userid: "",
+        // userid: "",
         referenceid: "",
         suboption: "null",
         studentName: "",
-        assignedTo: "Not-Assigned",
+        lastgrade: "",
+        // assignedTo: "Not-Assigned",
+        assignedToreq: "",
+        assignedreceivedhistory: "",
+        assignedsenthistory: "",
 
         gender: "Not_Defined",
         category: "Not_Defined",
@@ -38,7 +44,7 @@ export default function Page({ params }) {
         branch: "",
         notes: "",
 
-        qualification: "",
+        qualification: "Not Provided",
         profession: "",
         professiontype: "null",
         reference_name: "null",
@@ -46,10 +52,11 @@ export default function Page({ params }) {
         autoclosed: "open"
     });
     const [interestStatus, setInterestStatus] = useState("");
+    const [gradeStatus, setGradeStatus] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-    const [isFormValid, setIsFormValid] = useState(true);
+    const [isFormValid, setIsFormValid] = useState(false);
 
     // const today = new Date().toISOString().split('T')[0];
     const currentYear = new Date().getFullYear();
@@ -69,6 +76,8 @@ export default function Page({ params }) {
         }
     };
 
+
+    
     const fetchExistingData = useCallback(async () => {
         try {
             setLoading(true);
@@ -86,7 +95,6 @@ export default function Page({ params }) {
     useEffect(() => {
         fetchExistingData();
     }, [fetchExistingData]);
-
 
 
     useEffect(() => {
@@ -116,7 +124,8 @@ export default function Page({ params }) {
                 );
                 const adminBranch = response.data;
                 setAdminData(adminBranch);
-
+                setAdminid(response.data._id);
+                setAdminbranch(response.data.branch);
                 // Update the formData with the fetched admin branch
                 setFormData((prevFormData) => ({
                     ...prevFormData,
@@ -190,22 +199,69 @@ export default function Page({ params }) {
                 month: "long",
                 year: "numeric",
             });
-            setDisplayDate(formattedDate);
-            setFormData({ ...formData, [name]: value });
-        } else if (name.includes("studentContact.")) {
-            setFormData({
-                ...formData,
-                studentContact: {
-                    ...formData.studentContact,
-                    [name.split(".")[1]]: value,
-                },
-            });
-        } else {
-            setFormData({ ...formData, [name]: value });
+            setDisplayDate(formattedDate); // Set formatted date for display
         }
+
+        setFormData((prevFormData) => {
+            if (name === "assignedToreq") {
+                return {
+                    ...prevFormData,
+                    assignedToreq: value,
+                    assignedreceivedhistory: value, // Mirror assignedToreq value
+                    assignedTostatus: true,
+                    assignedsenthistory: adminid
+                };
+            }
+
+            if (name.includes("studentContact.")) {
+                const [_, key] = name.split("."); // Extract nested key
+                return {
+                    ...prevFormData,
+                    studentContact: {
+                        ...prevFormData.studentContact,
+                        [key]: value,
+                    },
+                };
+            }
+
+            return {
+                ...prevFormData,
+                [name]: value,
+                branch: adminbranch // Automatically set branch for any other form changes as well
+            };
+        });
     };
 
 
+
+
+
+    useEffect(() => {
+        const isFormFilled =
+            (formData.referenceid === 'Online' && formData.studentContact.phoneNumber) || // Only phone number required if referenceid is 'Online'
+            (
+                formData.studentName &&
+                formData.gender &&
+                // formData.assignedTo &&
+                // formData.assignedToreq &&
+                // formData.assignedreceivedhistory &&
+                // formData.assignedsenthistory &&
+
+                formData.referenceid &&
+                formData.studentContact.phoneNumber &&
+                formData.studentContact.whatsappNumber &&
+                formData.studentContact.address &&
+                formData.studentContact.city &&
+                formData.courseInterest &&
+                formData.deadline &&
+                // formData.branch &&
+                formData.notes &&
+                formData.qualification &&
+                formData.profession
+            );
+
+        setIsFormValid(isFormFilled);
+    }, [formData]);
 
 
 
@@ -218,6 +274,16 @@ export default function Page({ params }) {
             ...prevFormData,
             addmission: selectedStatus === "admission",
             autoclosed: selectedStatus === "not_interested" || selectedStatus === "wrong_no" ? "close" : "open"
+        }));
+    };
+    const handleGradeChange = (e) => {
+        const selectedStatus = e.target.value;
+        setGradeStatus(selectedStatus);
+
+        // Update formData based on the selected status
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            grade: selectedStatus,
         }));
     };
 
@@ -266,7 +332,6 @@ export default function Page({ params }) {
     };
     
 
-
     return (
         <div className="container lg:w-[90%] mx-auto py-5">
             <Toaster />
@@ -275,7 +340,7 @@ export default function Page({ params }) {
             >
 
                 <div className="bg-[#29234b] text-white px-7 py-3 flex justify-between w-full">
-                    <h1 className="text-lg font-bold">Update Query</h1>
+                    <h1 className="text-lg font-bold">Add New Query</h1>
                 </div>
 
 
@@ -376,7 +441,7 @@ export default function Page({ params }) {
                                 </label>
                                 <select name="reference_name" value={formData.reference_name} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
                                     <option value="" disabled selected>Select Reference name</option>
-                                    <option value={adminData.name}>Self</option>
+                                    <option value= {adminData?.name ? adminData.name : 'Loading...'}>Self</option>
                                     {user.map((user, index) => (
                                         <option key={index} value={user.name}>{user.name}</option>
                                     ))}
@@ -489,7 +554,46 @@ export default function Page({ params }) {
                                 className="w-full rounded-0"
                             />
                         </div>
+                        <div className="sm:col-span-6 col-span-12">
+                            <label htmlFor="assignedToreq" className="block text-[15px] text-gray-700">
+                                Assigned To
+                            </label>
+                            <select name="assignedToreq" value={formData.assignedToreq} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
+                                <option value="" disabled >Select name</option>
 
+                                {user
+                                    .filter((user) => user.usertype !== "2" && user._id !== adminid)
+                                    .map((filteredUser) => (
+                                        <option key={filteredUser._id} value={filteredUser._id}>
+                                            {filteredUser.name}
+                                        </option>
+                                    ))
+                                }
+                            </select>
+
+                        </div>
+
+
+                        <div className="sm:col-span-6 col-span-12">
+                            <label htmlFor="lastgrade" className="block text-[15px] text-gray-700">
+                                Grade
+                            </label>
+                            <select
+                                name="lastgrade"
+                                value={formData.lastgrade}
+                                id="lastgrade"
+                                onChange={handleChange}
+                                className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
+                            >
+                                <option value="" disabled>
+                                    Select Grade
+                                </option>
+                                <option value="Null">Not Defined</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                            </select>
+                        </div>
 
                         {formData.studentContact.city === 'Jaipur' ? (
                             <div className="sm:col-span-6 col-span-12">
@@ -539,6 +643,8 @@ export default function Page({ params }) {
                                 onKeyDown={(e) => handleKeyDown(e, 10)}
                             />
                         </div>
+
+
 
                         {formData.referenceid !== 'Online' || interestStatus === 'Interested' ? (
                             <>
@@ -660,12 +766,10 @@ export default function Page({ params }) {
                                     <label htmlFor="branch" className="block text-[15px] text-gray-700">
                                         Branch
                                     </label>
-                                    <select name="branch" ref={(el) => (inputRefs.current[12] = el)} // Assign ref
+                                    <select name="branch" disabled ref={(el) => (inputRefs.current[12] = el)} // Assign ref
                                         onKeyDown={(e) => handleKeyDown(e, 12)} value={formData.branch} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
-                                        <option value="" disabled selected>Select Branch</option>
-                                        {branches.map((branch, index) => (
-                                            <option key={index} value={branch.branch_name}>{branch.branch_name}</option>
-                                        ))}
+                                        <option value={adminbranch} disabled selected>{adminbranch}</option>
+
                                     </select>
 
                                 </div>
@@ -693,19 +797,7 @@ export default function Page({ params }) {
                                     </select>
                                 </div>
 
-                                <div className="sm:col-span-6 col-span-12">
-                                    <label htmlFor="assignedTo" className="block text-[15px] text-gray-700">
-                                        AssignedTo
-                                    </label>
-                                    <select name="assignedTo" value={formData.assignedTo} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
-                                        <option value="" disabled selected>Select name</option>
-                                        <option value="Not-Assigned" disabled selected>Not Assign</option>
-                                        {user.map((user, index) => (
-                                            <option key={index} value={user._id}>{user.name}</option>
-                                        ))}
-                                    </select>
 
-                                </div>
 
 
                                 <div className="col-span-12">

@@ -5,10 +5,11 @@ export const PATCH = async (request) => {
     await dbConnect();
     try {
         const data = await request.json();
+        
+        // Find the existing query to ensure it exists and get current data
+        const existingQuery = await QueryModel.findOne({ _id: data.id });
 
-        const Query = await QueryModel.findOne({ _id: data.id });
-
-        if (!Query) {
+        if (!existingQuery) {
             return new Response(
                 JSON.stringify({
                     message: "Received invalid Query id!",
@@ -18,9 +19,12 @@ export const PATCH = async (request) => {
             );
         }
 
+        // Remove userid from the data to ensure it is not updated
+        const { userid, ...updateData } = data;
+
         await QueryModel.updateOne(
             { _id: data.id },
-            { $set: data }   
+            { $set: updateData }
         );
 
         return new Response(
