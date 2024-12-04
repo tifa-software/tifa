@@ -181,7 +181,7 @@ export default function AllQuery() {
 
 
   const handleBulkDelete = async () => {
-    const isConfirmed = window.confirm("Are you sure you want to delete this Queries?");
+    const isConfirmed = window.confirm("Are you sure you want to Send in Trash this Queries?");
     if (isConfirmed) {
 
       try {
@@ -196,7 +196,7 @@ export default function AllQuery() {
         // Clear the selected branches after deletion
         setSelectedqueries([]);
 
-        alert('queries deleted successfully');
+        alert('Queries Send in Trash successfully');
       } catch (error) {
         console.error('Error deleting queries:', error);
         alert(error);

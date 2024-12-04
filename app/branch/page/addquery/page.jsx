@@ -593,7 +593,7 @@ export default function Page() {
                                 <option value="" disabled >Select name</option>
 
                                 {user
-                                    .filter((user) => user.usertype !== "2") // Exclude "Tifa Admin"
+                                    .filter((user) => user.usertype !== "2" && user._id !== adminid)
                                     .map((filteredUser) => (
                                         <option key={filteredUser._id} value={filteredUser._id}>
                                             {filteredUser.name}

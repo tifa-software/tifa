@@ -180,29 +180,29 @@ const filteredqueries = sortqueries(
 
 
 
-  const handleBulkDelete = async () => {
-    const isConfirmed = window.confirm("Are you sure you want to delete this Queries?");
-    if (isConfirmed) {
+  // const handleBulkDelete = async () => {
+  //   const isConfirmed = window.confirm("Are you sure you want to delete this Queries?");
+  //   if (isConfirmed) {
 
-      try {
-        // Make a DELETE request to the API with the selected branches' IDs in the request body
-        await axios.delete('/api/queries/delete', {
-          data: { ids: selectedqueries } // Pass the ids in the 'data' field for DELETE request
-        });
+  //     try {
+  //       // Make a DELETE request to the API with the selected branches' IDs in the request body
+  //       await axios.delete('/api/queries/delete', {
+  //         data: { ids: selectedqueries } // Pass the ids in the 'data' field for DELETE request
+  //       });
 
-        // Filter out the deleted branches from the state
-        setQueries(queries.filter(querie => !selectedqueries.includes(querie._id)));
+  //       // Filter out the deleted branches from the state
+  //       setQueries(queries.filter(querie => !selectedqueries.includes(querie._id)));
 
-        // Clear the selected branches after deletion
-        setSelectedqueries([]);
+  //       // Clear the selected branches after deletion
+  //       setSelectedqueries([]);
 
-        alert('queries deleted successfully');
-      } catch (error) {
-        console.error('Error deleting queries:', error);
-        alert(error);
-      }
-    }
-  };
+  //       alert('queries deleted successfully');
+  //     } catch (error) {
+  //       console.error('Error deleting queries:', error);
+  //       alert(error);
+  //     }
+  //   }
+  // };
 
   return (
     <div className='container lg:w-[95%] mx-auto py-5'>
@@ -278,13 +278,13 @@ const filteredqueries = sortqueries(
                   </button>
                 </Link>
 
-                <button
+                {/* <button
                   className="text-red-500 rounded-md border border-red-500 px-3 py-2"
                   onClick={handleBulkDelete}
                   disabled={selectedqueries.length === 0}
                 >
                   <Trash2 size={16} />
-                </button>
+                </button> */}
               </div>
             </div>
           </div>
@@ -350,13 +350,13 @@ const filteredqueries = sortqueries(
             </button>
           </Link>
 
-          <button
+          {/* <button
             className="text-red-500 rounded-md border border-red-500 px-3 py-2"
             onClick={handleBulkDelete}
             disabled={selectedqueries.length === 0}
           >
             <Trash2 size={16} />
-          </button>
+          </button> */}
         </div>
 
       </div>
@@ -405,7 +405,7 @@ const filteredqueries = sortqueries(
         <table className="w-full text-sm text-left rtl:text-right text-gray-600 font-sans">
           <thead className="bg-[#29234b] text-white uppercase">
             <tr>
-              <th scope="col" className="px-4 font-medium capitalize py-2">
+              {/* <th scope="col" className="px-4 font-medium capitalize py-2">
                 <input
                   type="checkbox"
                   onChange={(e) =>
@@ -417,7 +417,7 @@ const filteredqueries = sortqueries(
                   }
                   checked={selectedqueries.length === queries.length}
                 />
-              </th>
+              </th> */}
               <th scope="col" className="px-4 font-medium capitalize py-2">Staff Name</th> {/* Added User Name column */}
               <th scope="col" className="px-4 font-medium capitalize py-2">Student Name <span className=' text-xs'>(Reference)</span></th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Branch</th>
@@ -459,14 +459,14 @@ const filteredqueries = sortqueries(
                                   ''
                         }`}
                     >
-                      <td className="px-4 py-2 relative">
+                      {/* <td className="px-4 py-2 relative">
                         <input
                           type="checkbox"
                           checked={selectedqueries.includes(querie._id)}
                           onChange={() => handleSelectquerie(querie._id)}
                         />
                         <span className="ms-2">{index + 1}</span>
-                      </td>
+                      </td> */}
 
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px] font-semibold">
                         {matchedUser ? matchedUser.name : 'Tifa Admin'}

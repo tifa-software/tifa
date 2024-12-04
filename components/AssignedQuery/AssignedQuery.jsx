@@ -17,7 +17,26 @@ export default function AssignedQuery({ initialData, refreshData }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [message, setMessage] = useState(''); // State for the message
     const { data: session } = useSession();
+    const [adminid, setAdminid] = useState(null);
+    useEffect(() => {
+        const fetchAdminData = async () => {
+            try {
+                setLoading(true);  // Start loading
+                const response = await axios.get(
+                    `/api/admin/find-admin-byemail/${session?.user?.email}`
+                );
 
+                setAdminid(response.data._id);
+
+            } catch (err) {
+                
+            } finally {
+                setLoading(false);  // Stop loading
+            }
+        };
+
+        if (session?.user?.email) fetchAdminData();
+    }, [session]);
     useEffect(() => {
         const fetchUserData = async () => {
             setLoading(true);
@@ -47,26 +66,26 @@ export default function AssignedQuery({ initialData, refreshData }) {
     }, [initialData.assignedToreq, initialData.userid]);
     const displayName = matchorignaluser?.name || '...';
 
-    
+
     const handleUpdate = async () => {
         setLoading(true);
         setError('');
         setSuccess('');
-    
+
         try {
             const adminId = matchorignaluser; // Get the ID of the user performing the update
             const assignedUserId = assignedToreq; // The ID of the assigned user
-    
+
             // Update query assignment with actionBy (who is performing the update)
             const queryResponse = await axios.patch('/api/queries/update', {
                 id: initialData._id,
                 assignedToreq,
-                assignedsenthistory: [adminId], 
+                assignedsenthistory: [adminId],
                 assignedreceivedhistory: [assignedUserId], // Add assigned user ID to received history
                 assignedTostatus: true,
                 actionBy: session?.user?.name
             });
-    
+
             // Update audit log with actionBy, assignedBy, and message
             const auditResponse = await axios.patch('/api/audit/update', {
                 queryId: initialData._id,
@@ -74,7 +93,7 @@ export default function AssignedQuery({ initialData, refreshData }) {
                 assignedToreq,
                 assignedBy: session?.user?.name,
             });
-    
+
             if (queryResponse.status === 200 && auditResponse.status === 200) {
                 const updatedUser = users.find(user => user._id === assignedToreq);
                 setAssignedUserDetails(updatedUser || null);
@@ -88,7 +107,7 @@ export default function AssignedQuery({ initialData, refreshData }) {
             setLoading(false);
         }
     };
-    
+
 
     const toggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
@@ -168,9 +187,9 @@ export default function AssignedQuery({ initialData, refreshData }) {
 
                             {isDropdownOpen && (
                                 <div className="absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-auto">
-                                    {filteredUsers.filter(user => user.usertype !== "2").length > 0 ? (
+                                    {filteredUsers.filter(user => user.usertype !== "2" && user._id !== adminid).length > 0 ? (
                                         filteredUsers
-                                            .filter(user => user.usertype !== "2")
+                                            .filter(user => user.usertype !== "2" && user._id !== adminid)
                                             .map((user) => (
                                                 <div
                                                     key={user._id}
@@ -185,6 +204,7 @@ export default function AssignedQuery({ initialData, refreshData }) {
                                     ) : (
                                         <p className="p-4 text-sm text-gray-500">No users found</p>
                                     )}
+
                                 </div>
                             )}
                         </div>
