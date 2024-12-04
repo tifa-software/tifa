@@ -240,8 +240,13 @@ export default function Assigned() {
                                                             <td className="px-6 py-1 font-semibold">{(indexOfFirstQuery + index + 1)}</td>
                                                             <td className="px-6 py-1 font-semibold">{query.studentName}</td>
                                                             <td className="px-6 py-1">{query.branch}</td>
-                                                            <td className="px-6 py-1">{matchedUser.name}</td>
-                                                            <td className="px-6 py-1">{matchedUser.branch}</td>
+                                                            {matchedUser.name && (
+                                                                <td className="px-6 py-1">{matchedUser.name}</td>
+                                                            )}
+                                                            {matchedUser.branch && (
+                                                                <td className="px-6 py-1">{matchedUser.branch}</td>
+                                                            )}
+
                                                             <td className="px-6 py-1">{deadline.toLocaleDateString()}</td>
                                                             <td
                                                                 className="px-6 py-1 text-blue-500 cursor-pointer"
