@@ -12,6 +12,8 @@ export default function UpdateQuery3({ query, audit }) {
 
   const queryid = query._id;
   const userid = query.userid;
+  const [connectionOption, setConnectionOption] = useState('');
+
   const [selectedOption, setSelectedOption] = useState('');
   const [message, setMessage] = useState('');
   const [deadline, setDeadline] = useState('');
@@ -23,6 +25,11 @@ export default function UpdateQuery3({ query, audit }) {
     if (event.target.value === 'admission') {
       setIsModalOpen(true); // Open the modal when "Enroll" is selected
     }
+  };
+
+
+  const handleConnectionOptionChange = (event) => {
+    setConnectionOption(event.target.value);
   };
   const router = useRouter();
   const handleGradeChange = (event) => {
@@ -63,6 +70,7 @@ export default function UpdateQuery3({ query, audit }) {
     const data = {
       queryId: queryid,
       actionby: session?.user?.name,
+      connectionStatus: connectionOption,
       oflinesubStatus: selectedOption,
       message: message,
       stage: selectedOption === 'ready_visit' ? 5 : undefined, // Update stage based on selection
@@ -136,7 +144,23 @@ export default function UpdateQuery3({ query, audit }) {
   return (
     <form onSubmit={handleSubmit} className="mx-auto bg-white shadow-xl rounded-lg">
       <h3 className="text-xl font-semibold mb-2 text-indigo-700">Select a Status</h3>
+      <div className="mb-6">
+        <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
+          Connection Status:
+        </label>
+        <select
+          id="statusSelect"
+          value={connectionOption}
+          onChange={handleConnectionOptionChange}
+          className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+        >
+          <option value="" disabled>-- Select Status --</option>
+          <option value="connected">Connected</option>
+          <option value="no_connected">No Connected</option>
+          <option value="not_lifting">Not Lifting</option>
 
+        </select>
+      </div>
       <div className="mb-6">
         <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
           Status:

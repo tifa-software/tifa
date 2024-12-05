@@ -7,6 +7,8 @@ export default function UpdateQuery5({ query, audit }) {
   const { data: session } = useSession();
   const queryid = query._id;
   const userid = query.userid;
+  const [connectionOption, setConnectionOption] = useState('');
+
   const [selectedOption, setSelectedOption] = useState('');
   const [message, setMessage] = useState('');
   const [deadline, setDeadline] = useState('');
@@ -18,6 +20,10 @@ export default function UpdateQuery5({ query, audit }) {
     setMessage(''); // Reset message when the option changes
   };
 
+
+  const handleConnectionOptionChange = (event) => {
+    setConnectionOption(event.target.value);
+  };
   const handleGradeChange = (event) => {
     setGrade(event.target.value); // Handle grade selection
   };
@@ -33,6 +39,7 @@ export default function UpdateQuery5({ query, audit }) {
     const data = {
       queryId: queryid,
       actionby: session?.user?.name,
+      connectionStatus: connectionOption,
       oflinesubStatus: selectedOption,
       message: message,
       stage: selectedOption === 'visited' ? 6 : undefined, // Update stage to 6 if 'visited' is selected
@@ -116,7 +123,23 @@ export default function UpdateQuery5({ query, audit }) {
   return (
     <form onSubmit={handleSubmit} className="mx-auto bg-white shadow-xl rounded-lg">
       <h3 className="text-xl font-semibold mb-2 text-indigo-700">Select a Status</h3>
+      <div className="mb-6">
+        <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
+          Connection Status:
+        </label>
+        <select
+          id="statusSelect"
+          value={connectionOption}
+          onChange={handleConnectionOptionChange}
+          className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+        >
+          <option value="" disabled>-- Select Status --</option>
+          <option value="connected">Connected</option>
+          <option value="no_connected">No Connected</option>
+          <option value="not_lifting">Not Lifting</option>
 
+        </select>
+      </div>
       <div className="mb-6">
         <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
           Status:

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 export default function UpdateQuery6({ query, audit }) {
   const queryid = query._id;
   const userid = query.userid;
+  const [connectionOption, setConnectionOption] = useState('');
+
   const [selectedOption, setSelectedOption] = useState('');
   const [message, setMessage] = useState('');
   const [deadline, setDeadline] = useState('');
@@ -28,14 +30,16 @@ export default function UpdateQuery6({ query, audit }) {
   const handleDeadlineChange = (event) => {
     setDeadline(event.target.value);
   };
-
+  const handleConnectionOptionChange = (event) => {
+    setConnectionOption(event.target.value);
+  };
 
 
   const handleModalSubmit = async () => {
     // API call for fees update
     const feesData = {
       id: queryid,
-      
+
       fees: {
         feesType,
         feesAmount: parseFloat(feesAmount),
@@ -65,9 +69,10 @@ export default function UpdateQuery6({ query, audit }) {
     const data = {
       queryId: queryid,
       actionby: userid,
+      connectionStatus: connectionOption,
       oflinesubStatus: selectedOption,
-      message:message, 
-     
+      message: message,
+
       deadline: deadline || undefined, // Include deadline if provided
       grade: grade,
 
@@ -93,16 +98,16 @@ export default function UpdateQuery6({ query, audit }) {
       }
 
       if (selectedOption === 'demo') {
-          const queryUpdateData = {
-            id: queryid,
-            demo: true, // Set demo to true
-          };
-          const queryResponse = await axios.patch('/api/queries/update', queryUpdateData);
-          if (queryResponse.status === 200) {
-            console.log('Query updated with demo successfully:', queryResponse.data);
-          } else {
-            console.error('Error updating query for demo:', queryResponse.statusText);
-          }
+        const queryUpdateData = {
+          id: queryid,
+          demo: true, // Set demo to true
+        };
+        const queryResponse = await axios.patch('/api/queries/update', queryUpdateData);
+        if (queryResponse.status === 200) {
+          console.log('Query updated with demo successfully:', queryResponse.data);
+        } else {
+          console.error('Error updating query for demo:', queryResponse.statusText);
+        }
       } else if (selectedOption === 'not_interested') {
         const queryUpdateData = {
           id: queryid,
@@ -124,7 +129,23 @@ export default function UpdateQuery6({ query, audit }) {
   return (
     <form onSubmit={handleSubmit} className="mx-auto bg-white shadow-xl rounded-lg">
       <h3 className="text-xl font-semibold mb-2 text-indigo-700">Select a Status</h3>
+      <div className="mb-6">
+        <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
+          Connection Status:
+        </label>
+        <select
+          id="statusSelect"
+          value={connectionOption}
+          onChange={handleConnectionOptionChange}
+          className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+        >
+          <option value="" disabled>-- Select Status --</option>
+          <option value="connected">Connected</option>
+          <option value="no_connected">No Connected</option>
+          <option value="not_lifting">Not Lifting</option>
 
+        </select>
+      </div>
       <div className="mb-6">
         <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
           Interested Status:
@@ -171,18 +192,18 @@ export default function UpdateQuery6({ query, audit }) {
           <option value="C">Grade C (Student will visit beyond 7 days)</option>
         </select>
       </div>
-        <div className="mb-6 transition-opacity duration-300 ease-in-out">
-          <h4 className="text-lg font-semibold mb-3 text-[#29234b]">Message:</h4>
-          <textarea
-            className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
-            rows="4"
-            name="message"
-            placeholder="Please enter your message..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-          />
-        </div>
-      
+      <div className="mb-6 transition-opacity duration-300 ease-in-out">
+        <h4 className="text-lg font-semibold mb-3 text-[#29234b]">Message:</h4>
+        <textarea
+          className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+          rows="4"
+          name="message"
+          placeholder="Please enter your message..."
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+        />
+      </div>
+
 
       <button
         type="submit"
@@ -192,8 +213,8 @@ export default function UpdateQuery6({ query, audit }) {
       </button>
 
 
-       {/* Modal for Fees Update */}
-       {isModalOpen && (
+      {/* Modal for Fees Update */}
+      {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
             <h3 className="text-lg font-bold mb-4">Update User Fees</h3>
