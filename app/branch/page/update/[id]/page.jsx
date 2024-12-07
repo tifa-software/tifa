@@ -559,7 +559,7 @@ export default function Page({ params }) {
                                 Assigned To
                             </label>
                             <select name="assignedToreq" value={formData.assignedToreq} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
-                                <option value="" disabled >Select name</option>
+                            <option value=""  >Select name (Not Assign)</option>
 
                                 {user
                                     .filter((user) => user.usertype !== "2" && user._id !== adminid)
