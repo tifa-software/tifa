@@ -71,7 +71,7 @@ export default function Fees({ id }) {
 
 
             <div className="mt-4 text-right text-xl font-semibold text-gray-800">
-              Total: ${calculateTotal()}
+              Total: ₹{calculateTotal()}
             </div>
           </div>
         </div>

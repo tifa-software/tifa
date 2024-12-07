@@ -101,7 +101,7 @@ export default function Sidebar({ onToggleSidebar }) {
                     }`}
                 >
                   <CopyPlus size={18} />
-                 Sent Query
+                  Sent Query
                 </li>
               </Link>
 
@@ -113,27 +113,31 @@ export default function Sidebar({ onToggleSidebar }) {
                   <ListTodo size={18} />
                   Under Visit Querys
                 </li>
-                </Link>
-                <li
-                  className={`cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md ${isActiveLink("") ? "bg-[#6cb049] text-white" : "hover:bg-gray-100 text-gray-700"
-                    }`}
-                >
-                  <Rocket size={18} />
-                  Important Queries
-                </li>
+              </Link>
+              <li
+                className={`cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md ${isActiveLink("") ? "bg-[#6cb049] text-white" : "hover:bg-gray-100 text-gray-700"
+                  }`}
+              >
+                <Rocket size={18} />
+                Important Queries
+              </li>
 
-                <Link href="/main/page/staff" onClick={handleLinkClick}>
-                  <li
-                    className={`cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md ${isActiveLink("/main/page/staff") ? "bg-[#6cb049] text-white" : "hover:bg-gray-100 text-gray-700"
-                      }`}>
-                    <Users size={18} />
-                    Team
-                  </li>
-                </Link>
-                <li className="cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md hover:bg-gray-100 text-gray-700">
-                  <Gauge size={18} />
-                  Daily Report
+              <Link href="/main/page/staff" onClick={handleLinkClick}>
+                <li
+                  className={`cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md ${isActiveLink("/main/page/staff") ? "bg-[#6cb049] text-white" : "hover:bg-gray-100 text-gray-700"
+                    }`}>
+                  <Users size={18} />
+                  Team
                 </li>
+              </Link>
+              <Link href="/main/page/report" onClick={handleLinkClick}>
+              <li
+                  className={`cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md ${isActiveLink("/main/page/report") ? "bg-[#6cb049] text-white" : "hover:bg-gray-100 text-gray-700"
+                    }`}>
+                  <Gauge size={18} />
+                  Report
+                </li>
+              </Link>
             </ul>
 
             <ul className="flex h-full flex-col relative xl:hidden overflow-y-auto" style={{ maxHeight: "calc(100vh - 120px)" }}>
