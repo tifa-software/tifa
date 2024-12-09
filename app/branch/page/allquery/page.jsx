@@ -16,6 +16,7 @@ export default function AllQuery() {
   const [selectedqueries, setSelectedqueries] = useState([]);
   const [sortOrder, setSortOrder] = useState("newest");
   const [filterCourse, setFilterCourse] = useState("");
+  const [filteradmin, setFilteradmin] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [user, setuser] = useState([]);
   const [deadlineFilter, setDeadlineFilter] = useState(""); // State for deadline filter
@@ -48,6 +49,7 @@ export default function AllQuery() {
       try {
         const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
         setAdminData(response.data); // Make sure response.data contains branch and _id
+        setFilterCourse(response.data.branch)
       } catch (err) {
         setError(err.message);
       } finally {
@@ -147,7 +149,7 @@ export default function AllQuery() {
     }
   };
 
-  
+
   // Apply filters and sort queries
   const filteredqueries = sortqueries(
     queries.filter(querie =>
@@ -274,7 +276,7 @@ export default function AllQuery() {
                   />
                 )}
 
-               
+
                 <Link href={'/branch/page/importquery'}>
                   <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
                     <CirclePlus size={16} className='me-1' /> Import Query

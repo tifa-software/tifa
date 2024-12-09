@@ -14,6 +14,7 @@ export default function Page() {
     const [referenceData, setReferenceData] = useState([]);
     const [displayDate, setDisplayDate] = useState("");
     const [user, setuser] = useState([]);
+    const [errors, setErrors] = useState({});
 
     const [adminData, setAdminData] = useState(null);
     const [adminid, setAdminid] = useState(null);
@@ -215,31 +216,36 @@ export default function Page() {
 
 
     useEffect(() => {
-        const isFormFilled =
-            (formData.referenceid === 'Online' && formData.studentContact.phoneNumber) || // Only phone number required if referenceid is 'Online'
-            (
-                formData.studentName &&
-                formData.gender &&
-                // formData.assignedTo &&
-                // formData.assignedToreq &&
-                // formData.assignedreceivedhistory &&
-                // formData.assignedsenthistory &&
+        const newErrors = {};
 
-                formData.referenceid &&
-                formData.studentContact.phoneNumber &&
-                formData.studentContact.whatsappNumber &&
-                formData.studentContact.address &&
-                formData.studentContact.city &&
-                formData.courseInterest &&
-                formData.deadline &&
-                // formData.branch &&
-                formData.notes &&
-                formData.qualification &&
-                formData.profession
-            );
+        // Base validation: referenceid === 'Online' only requires phoneNumber
+        if (formData.referenceid === 'Online') {
+            if (!formData.studentContact.phoneNumber) {
+                newErrors.phoneNumber = "Phone Number is required for online reference";
+            }
+        } else {
+            // Full validation for other reference types
+            if (!formData.studentName) newErrors.studentName = "Student Name is required";
+            if (!formData.gender) newErrors.gender = "Gender is required";
+            if (!formData.referenceid) newErrors.referenceid = "Reference ID is required";
+            if (!formData.studentContact.phoneNumber) newErrors.phoneNumber = "Phone Number is required";
+            if (!formData.studentContact.whatsappNumber) newErrors.whatsappNumber = "WhatsApp Number is required";
+            if (!formData.studentContact.address) newErrors.address = "Address is required";
+            if (!formData.studentContact.city) newErrors.city = "City is required";
+            if (!formData.courseInterest) newErrors.courseInterest = "Course Interest is required";
+            if (!formData.deadline) newErrors.deadline = "Deadline is required";
+            if (!formData.notes) newErrors.notes = "Notes are required";
+            if (!formData.qualification) newErrors.qualification = "Qualification is required";
+            if (!formData.profession) newErrors.profession = "Profession is required";
+        }
 
+        // Determine overall form validity based on the absence of errors
+        const isFormFilled = Object.keys(newErrors).length === 0;
+
+        setErrors(newErrors);
         setIsFormValid(isFormFilled);
     }, [formData]);
+
 
 
 
@@ -440,6 +446,9 @@ export default function Page() {
                                     <option key={index} value={data.referencename}>{data.referencename}</option>
                                 ))}
                             </select>
+                            {errors.referenceid && (
+                                <p className="text-red-500 text-[8px] mt-1">{errors.referenceid}</p>
+                            )}
 
                         </div>
 
@@ -501,6 +510,9 @@ export default function Page() {
                                 onKeyDown={(e) => handleKeyDown(e, 1)}
                                 className="block capitalize w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                             />
+                            {errors.studentName && (
+                                <p className="text-red-500 text-[8px] mt-1">{errors.studentName}</p>
+                            )}
                         </div>
 
                         <div className="sm:col-span-6 col-span-12">
@@ -544,6 +556,9 @@ export default function Page() {
                                     <span className="ml-2 text-sm">Other</span>
                                 </label>
                             </div>
+                            {errors.gender && (
+                                <p className="text-red-500 text-[8px] mt-1">{errors.gender}</p>
+                            )}
                         </div>
 
 
@@ -565,6 +580,9 @@ export default function Page() {
                                 }
                                 className="w-full rounded-0"
                             />
+                            {errors.phoneNumber && (
+                                <p className="text-red-500 text-[8px] mt-1">{errors.phoneNumber}</p>
+                            )}
                         </div>
 
                         <div className="sm:col-span-6 col-span-12">
@@ -584,13 +602,16 @@ export default function Page() {
                                 }
                                 className="w-full rounded-0"
                             />
+                            {errors.whatsappNumber && (
+                                <p className="text-red-500 text-[8px] mt-1">{errors.whatsappNumber}</p>
+                            )}
                         </div>
                         <div className="sm:col-span-6 col-span-12">
                             <label htmlFor="assignedToreq" className="block text-[15px] text-gray-700">
                                 Assigned To
                             </label>
                             <select name="assignedToreq" value={formData.assignedToreq} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
-                            <option value=""  >Select name (Not Assign)</option>
+                                <option value=""  >Select name (Not Assign)</option>
 
                                 {user
                                     .filter((user) => user.usertype !== "2" && user._id !== adminid)
@@ -601,6 +622,7 @@ export default function Page() {
                                     ))
                                 }
                             </select>
+
 
                         </div>
 
@@ -624,6 +646,9 @@ export default function Page() {
                                 <option value="B">B</option>
                                 <option value="C">C</option>
                             </select>
+                            {errors.lastgrade && (
+                                <p className="text-red-500 text-[8px] mt-1">{errors.lastgrade}</p>
+                            )}
                         </div>
 
                         {formData.studentContact.city === 'Jaipur' ? (
@@ -638,6 +663,9 @@ export default function Page() {
                                     <option value="Out of Jaipur" >Out of Jaipur</option>
 
                                 </select>
+                                {errors.city && (
+                                    <p className="text-red-500 text-[8px] mt-1">{errors.city}</p>
+                                )}
 
                             </div>
 
@@ -673,6 +701,9 @@ export default function Page() {
                                 ref={(el) => (inputRefs.current[10] = el)} // Assign ref
                                 onKeyDown={(e) => handleKeyDown(e, 10)}
                             />
+                            {errors.address && (
+                                <p className="text-red-500 text-[8px] mt-1">{errors.address}</p>
+                            )}
                         </div>
 
 
@@ -698,6 +729,9 @@ export default function Page() {
                                         onChange={handleChange}
                                         className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                                     />
+                                    {errors.qualification && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.qualification}</p>
+                                    )}
                                 </div>
 
 
@@ -717,6 +751,9 @@ export default function Page() {
                                         <option value="Student">Student</option>
                                         <option value="Working">Working</option>
                                     </select>
+                                    {errors.profession && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.profession}</p>
+                                    )}
                                 </div>
 
                                 {formData.profession === 'Working' && (
@@ -732,6 +769,9 @@ export default function Page() {
                                             onChange={handleChange}
                                             className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                                         />
+                                        {errors.professiontype && (
+                                            <p className="text-red-500 text-[8px] mt-1">{errors.professiontype}</p>
+                                        )}
                                     </div>
                                 )}
 
@@ -749,7 +789,9 @@ export default function Page() {
                                         <option value="OBC">OBC</option>
                                         <option value="Other">Other</option>
                                     </select>
-
+                                    {errors.category && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.category}</p>
+                                    )}
                                 </div>
 
                                 <div className="sm:col-span-6 col-span-12">
@@ -764,6 +806,9 @@ export default function Page() {
                                             <option key={index} value={allCourses._id}>{allCourses.course_name}</option>
                                         ))}
                                     </select>
+                                    {errors.courseInterest && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.courseInterest}</p>
+                                    )}
 
                                 </div>
 
@@ -790,6 +835,9 @@ export default function Page() {
                                             {displayDate ? displayDate : "select deadline"}
                                         </span>
                                     </div>
+                                    {errors.deadline && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.deadline}</p>
+                                    )}
                                 </div>
 
 
@@ -802,7 +850,9 @@ export default function Page() {
                                         <option value={adminbranch} disabled selected>{adminbranch}</option>
 
                                     </select>
-
+                                    {errors.branch && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.branch}</p>
+                                    )}
                                 </div>
 
                                 <div className="sm:col-span-6 col-span-12">
@@ -826,6 +876,9 @@ export default function Page() {
                                         <option value="not_lifting">Not Lifting</option>
                                         <option value="wrong_no">Wrong Number</option>
                                     </select>
+                                    {errors.interestStatus && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.interestStatus}</p>
+                                    )}
                                 </div>
 
 
@@ -845,6 +898,9 @@ export default function Page() {
                                         onChange={handleChange}
                                         className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                                     />
+                                    {errors.notes && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.notes}</p>
+                                    )}
                                 </div>
 
                             </>
