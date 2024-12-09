@@ -22,7 +22,7 @@ export default function AllQuery() {
   const [deadlineFilter, setDeadlineFilter] = useState(""); // State for deadline filter
   const [adminData, setAdminData] = useState(null);
   const { data: session } = useSession();
-
+  const [filterAssignedFrom, setFilterAssignedFrom] = useState('');
   const [filterByGrade, setFilterByGrade] = useState("");
 
 
@@ -49,7 +49,8 @@ export default function AllQuery() {
       try {
         const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
         setAdminData(response.data); // Make sure response.data contains branch and _id
-        setFilterCourse(response.data.branch)
+        setFilterCourse(response.data.branch);
+        setFilterAssignedFrom(response.data._id)
       } catch (err) {
         setError(err.message);
       } finally {
@@ -160,7 +161,8 @@ export default function AllQuery() {
       ) &&
       (filterCourse === "" || querie.branch?.includes(filterCourse)) &&
       filterByDeadline(querie) && // Ensure the deadline filter is applied
-      (filterByGrade === "" || querie.lastgrade === filterByGrade) // Add filter by grade
+      (filterByGrade === "" || querie.lastgrade === filterByGrade) && // Add filter by grade
+      (filterAssignedFrom === "" || querie.assignedreceivedhistory == filterAssignedFrom)
     )
   );
 
@@ -252,6 +254,7 @@ export default function AllQuery() {
                     <option key={index} value={branch}>{branch}</option>
                   ))}
                 </select>
+
                 <select
                   className="border px-3 py-2 focus:outline-none text-sm"
                   value={deadlineFilter} // Binding the deadline filter state
@@ -312,6 +315,21 @@ export default function AllQuery() {
               <option key={index} value={branch}>{branch}</option>
             ))}
           </select>
+
+          <select
+            className="border px-3 py-2 focus:outline-none text-sm"
+            value={filterAssignedFrom}
+            onChange={(e) => setFilterAssignedFrom(e.target.value)}
+          >
+            <option value="">All Assigned </option>
+            {Array.from(new Set(queries.flatMap(querie => querie.assignedreceivedhistory))).map((assignedFrom, index) => {
+              const userName = user.find(u => u._id === assignedFrom)?.name || 'Unknown';
+              return (
+                <option key={index} value={assignedFrom}>{userName}</option>
+              );
+            })}
+          </select>
+
           <select
             value={filterByGrade}
             onChange={(e) => setFilterByGrade(e.target.value)}
