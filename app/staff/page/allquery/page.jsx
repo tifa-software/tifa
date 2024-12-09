@@ -121,7 +121,7 @@ export default function AllQuery() {
 
 
 
-  // Filter queries based on course and search term
+  const [customDate, setCustomDate] = React.useState(""); // State for custom date
   const filterByDeadline = (querie) => {
     const currentDate = new Date();
     const querieDeadline = new Date(querie.deadline);
@@ -139,10 +139,14 @@ export default function AllQuery() {
         return querieDeadline.toDateString() === dayAfterTomorrow.toDateString();
       case "past":
         return querieDeadline < new Date(currentDate.setHours(0, 0, 0, 0));
+      case "custom":
+        const customDateObj = new Date(customDate);
+        return querieDeadline.toDateString() === customDateObj.toDateString();
       default:
         return true; // 'All' will display all queries
     }
   };
+
 
   // Apply filters and sort queries
   const filteredqueries = sortqueries(
@@ -252,21 +256,25 @@ export default function AllQuery() {
                   onChange={(e) => setDeadlineFilter(e.target.value)} // Update the deadline filter state
                 >
                   <option value="" disabled>Deadline</option>
-                  <option value="">All </option>
+                  <option value="">All</option>
                   <option value="today">Today</option>
                   <option value="tomorrow">Tomorrow</option>
                   <option value="dayAfterTomorrow">Day After Tomorrow</option>
                   <option value="past">Past Date</option>
+                  <option value="custom">Custom Date</option> {/* Add Custom Date option */}
                 </select>
 
-                <select
-                  className="border px-3 py-2 focus:outline-none text-sm"
-                  value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value)}
-                >
-                  <option value="newest">Newest</option>
-                  <option value="oldest">Oldest</option>
-                </select>
+                {/* Show custom date picker when "Custom Date" is selected */}
+                {deadlineFilter === "custom" && (
+                  <input
+                    type="date"
+                    className="border px-3 py-2 focus:outline-none text-sm"
+                    value={customDate}
+                    onChange={(e) => setCustomDate(e.target.value)} // Update custom date state
+                  />
+                )}
+
+            
                 <Link href={'/staff/page/importquery'}>
                   <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
                     <CirclePlus size={16} className='me-1' /> Import Query
@@ -315,28 +323,32 @@ export default function AllQuery() {
           </select>
 
           <select
-            className="border px-3 py-2 focus:outline-none text-sm"
-            value={deadlineFilter} // Binding the deadline filter state
-            onChange={(e) => setDeadlineFilter(e.target.value)} // Update the deadline filter state
-          >
-            <option value="" disabled>Deadline</option>
-            <option value="">All </option>
-            <option value="today">Today</option>
-            <option value="tomorrow">Tomorrow</option>
-            <option value="dayAfterTomorrow">Day After Tomorrow</option>
-            <option value="past">Past Date</option>
-          </select>
+                  className="border px-3 py-2 focus:outline-none text-sm"
+                  value={deadlineFilter} // Binding the deadline filter state
+                  onChange={(e) => setDeadlineFilter(e.target.value)} // Update the deadline filter state
+                >
+                  <option value="" disabled>Deadline</option>
+                  <option value="">All</option>
+                  <option value="today">Today</option>
+                  <option value="tomorrow">Tomorrow</option>
+                  <option value="dayAfterTomorrow">Day After Tomorrow</option>
+                  <option value="past">Past Date</option>
+                  <option value="custom">Custom Date</option> {/* Add Custom Date option */}
+                </select>
+
+                {/* Show custom date picker when "Custom Date" is selected */}
+                {deadlineFilter === "custom" && (
+                  <input
+                    type="date"
+                    className="border px-3 py-2 focus:outline-none text-sm"
+                    value={customDate}
+                    onChange={(e) => setCustomDate(e.target.value)} // Update custom date state
+                  />
+                )}
 
 
 
-          <select
-            className="border px-3 py-2 focus:outline-none text-sm"
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-          >
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-          </select>
+         
 
           <Link href={'/staff/page/importquery'}>
             <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">

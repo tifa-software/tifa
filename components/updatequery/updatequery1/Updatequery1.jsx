@@ -82,7 +82,7 @@ export default function UpdateQuery1({ query, audit }) {
           <option value="connected">Connected</option>
           <option value="no_connected">No Connected</option>
           <option value="not_lifting">Not Lifting</option>
-          
+
         </select>
       </div>
       <div className="mb-6">

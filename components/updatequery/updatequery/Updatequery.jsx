@@ -8,6 +8,7 @@ export default function UpdateQuery({ query, audit }) {
   const userid = query.userid;
   const [selectedOption, setSelectedOption] = useState('');
   const [subOption, setSubOption] = useState('');
+  const [interestedselectedOption, setInterestedselectedOption] = useState('');
   const [message, setMessage] = useState('');
   const [deadline, setDeadline] = useState('');
   const [grade, setGrade] = useState('Null'); // New state for grade
@@ -25,6 +26,11 @@ export default function UpdateQuery({ query, audit }) {
   const handleSubOptionChange = (event) => {
     setSubOption(event.target.value);
   };
+
+  const handleinterestedOptionChange = (event) => {
+    setInterestedselectedOption(event.target.value);
+  };
+
 
   const handleDeadlineChange = (event) => {
     setDeadline(event.target.value);
@@ -47,10 +53,12 @@ export default function UpdateQuery({ query, audit }) {
       deadline: deadline || undefined, // Include deadline if provided
       grade: grade,
     };
-
-    if (selectedOption === 'connected' && subOption === 'interested') {
-      data.stage = 1; // Set stage to 1 when connected and interested
+    if (interestedselectedOption === 'online') {
+      data.stage = 2; // Set stage to 2 when online
+    } else if (interestedselectedOption === 'ofline') {
+      data.stage = 3; // Set stage to 3 when offline
     }
+
 
     // Safely access and increment status counts
     const statusCountsUpdate = {
@@ -152,19 +160,46 @@ export default function UpdateQuery({ query, audit }) {
 
       {/* Sub-options for 'Connected' */}
       {selectedOption === 'connected' && (
-        <div className="mb-6 transition-opacity duration-300 ease-in-out">
-          <h4 className="text-lg font-semibold mb-3 text-[#29234b]">Connected Options:</h4>
+
+        <>
+
+          <div className="mb-6 transition-opacity duration-300 ease-in-out">
+            <h4 className="text-lg font-semibold mb-3 text-[#29234b]">Connected Options:</h4>
+            <select
+              value={subOption}
+              onChange={handleSubOptionChange}
+              className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+            >
+              <option value="" disabled>-- Select Sub Option --</option>
+              <option value="interested">Interested</option>
+              <option value="not_interested">Not Interested</option>
+            </select>
+          </div>
+
+
+        </>
+      )}
+
+      {subOption === 'interested' && (
+        <div className="mb-6">
+          <label htmlFor="interestedselectedOption" className="block text-lg font-medium text-gray-700 mb-2">
+            Interested Status:
+          </label>
           <select
-            value={subOption}
-            onChange={handleSubOptionChange}
+            id="interestedselectedOption"
+            value={interestedselectedOption}
+            onChange={handleinterestedOptionChange}
             className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
           >
-            <option value="" disabled>-- Select Sub Option --</option>
-            <option value="interested">Interested</option>
-            <option value="not_interested">Not Interested</option>
+            <option value="" disabled>-- Select Interested Status --</option>
+            <option value="online">Online</option>
+            <option value="ofline">Offline</option>
+            <option value="response">Response</option>
+
           </select>
         </div>
       )}
+
 
       {/* Sub-options for 'Not Lifting' */}
       {selectedOption === 'not_lifting' && (
