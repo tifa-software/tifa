@@ -180,13 +180,13 @@ export default function Assigned() {
                                 <table className="min-w-full text-xs text-left text-gray-600 font-sans">
                                     <thead className="bg-[#29234b] text-white uppercase">
                                         <tr>
-                                            <th className="px-6 py-4">Sr. No.</th>
-                                            <th className="px-6 py-4">Student Name</th>
-                                            <th className="px-6 py-4">Current Branch</th>
-                                            <th className="px-6 py-4">Assgned From</th>
-                                            <th className="px-6 py-4">Assgned From Branch</th>
-                                            <th className="px-6 py-4">Deadline</th>
-                                            <th className="px-6 py-4">Status</th>
+                                            <th className="px-2 py-4">SN.</th>
+                                            <th className="px-2 py-4">Student Name</th>
+                                            <th className="px-2 py-4">Current Branch</th>
+                                            <th className="px-2 py-4">Assgned From</th>
+                                            <th className="px-2 py-4">Assgned From Branch</th>
+                                            <th className="px-2 py-4">Deadline</th>
+                                            <th className="px-2 py-4">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>

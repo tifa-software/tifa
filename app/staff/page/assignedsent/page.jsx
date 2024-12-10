@@ -168,13 +168,12 @@ export default function Assigned() {
                                 <table className="min-w-full text-xs text-left text-gray-600 font-sans">
                                     <thead className="bg-[#29234b] text-white uppercase">
                                         <tr>
-                                            <th className="px-6 py-4">Sr. No.</th>
-                                            <th className="px-6 py-4">Student Name</th>
-                                            <th className="px-6 py-4">Branch</th>
-                                            <th className="px-6 py-4">Assigned To</th>
-
-                                            <th className="px-6 py-4">Deadline</th>
-                                            <th className="px-6 py-4">Status</th>
+                                            <th className="px-2 py-4">SN.</th>
+                                            <th className="px-2 py-4">Student Name</th>
+                                            <th className="px-2 py-4">Branch</th>
+                                            <th className="px-2 py-4">Assigned To</th>
+                                            <th className="px-2 py-4">Deadline</th>
+                                            <th className="px-2 py-4">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -208,7 +207,7 @@ export default function Assigned() {
                                                                 : isIn24Hours ? 'bg-[#fcccba] text-black'
                                                                     : isIn48Hours ? 'bg-[#ffe9bf] text-black'
                                                                         : '';
-                                                                        const matchedUser = user.find((u) => u._id == query.assignedreceivedhistory);
+                                                    const matchedUser = user.find((u) => u._id == query.assignedreceivedhistory);
                                                     return (
                                                         <tr
                                                             key={query._id}
@@ -222,7 +221,7 @@ export default function Assigned() {
                                                             <td className="px-6 py-1">{deadline.toLocaleDateString()}</td>
                                                             <td
                                                                 className="px-6 py-1 text-blue-500 cursor-pointer"
-                                                             
+
                                                             >
                                                                 {query.assignedTostatus ? 'Pending' : 'Accepted'}
                                                             </td>
@@ -236,7 +235,7 @@ export default function Assigned() {
                                                 </td>
                                             </tr>
                                         )}
-                                      
+
                                     </tbody>
 
 
@@ -308,7 +307,7 @@ export default function Assigned() {
 
 
 
-                 
+
                 </div>
             </div>
         </div>
