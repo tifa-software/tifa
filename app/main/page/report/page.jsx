@@ -33,7 +33,7 @@ export default function BranchReportPage() {
                             className="text-[#29234b] underline"
                             onClick={() => handleOpenModal(<Queryadd />)}
                         >
-                            Overview
+                            OVERVIEW 
                         </button>
                     </div>
 
