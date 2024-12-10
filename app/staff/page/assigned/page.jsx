@@ -186,7 +186,7 @@ export default function Assigned() {
 
                             </div>
                             <p className="text-sm text-gray-600 mb-4">Total Requests: <span className="font-bold">{totalRequests}</span></p>
-                            <div className="relative overflow-y-auto" style={{ height: '400px' }}>
+                            <div className="relative overflow-y-auto" style={{ height: '500px' }}>
                                 <table className="min-w-full text-xs text-left text-gray-600 font-sans">
                                     <thead className="bg-[#29234b] text-white uppercase">
                                         <tr>
@@ -199,7 +199,7 @@ export default function Assigned() {
                                             <th className="px-2 py-4">Status</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody className='overflow-y-auto '>
                                         {loading ? (
                                             <tr>
                                                 <td colSpan="4" className="px-6 py-4  text-center">

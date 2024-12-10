@@ -166,7 +166,7 @@ export default function Assigned() {
                         <div className="p-4">
                             <h2 className="text-xl font-semibold mb-4 text-gray-800">Assigned Request</h2>
                             <p className="text-sm text-gray-600 mb-4">Total Requests: <span className="font-bold">{totalRequests}</span></p>
-                            <div className="relative overflow-y-auto" style={{ height: '400px' }}>
+                            <div className="relative overflow-y-auto" style={{ height: '500px' }}>
                                 <table className="min-w-full text-xs text-left text-gray-600 font-sans">
                                     <thead className="bg-[#29234b] text-white uppercase">
                                         <tr>
