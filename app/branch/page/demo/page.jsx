@@ -36,6 +36,7 @@ export default function Assigned() {
   useEffect(() => {
     if (adminbranch) {
       const fetchQueryData = async () => {
+        
         try {
           setLoading(true);
           const { data } = await axios.get(`/api/queries/demobybranch/${adminbranch}`);
