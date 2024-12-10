@@ -190,19 +190,19 @@ export default function Assigned() {
                                 <table className="min-w-full text-xs text-left text-gray-600 font-sans">
                                     <thead className="bg-[#29234b] text-white uppercase">
                                         <tr>
-                                            <th className="px-2 py-4">SN.</th>
-                                            <th className="px-2 py-4">Student Name</th>
-                                            <th className="px-2 py-4">Current Branch</th>
-                                            <th className="px-2 py-4">Assgned From</th>
-                                            <th className="px-2 py-4">Assgned From Branch</th>
-                                            <th className="px-2 py-4">Deadline</th>
-                                            <th className="px-2 py-4">Status</th>
+                                            <th className="px-1 py-4">SN.</th>
+                                            <th className="px-1 py-4">Student Name</th>
+                                            <th className="px-1 py-4">Current Branch</th>
+                                            <th className="px-1 py-4">Assgned From</th>
+                                            <th className="px-1 py-4">Assgned From Branch</th>
+                                            <th className="px-1 py-4">Deadline</th>
+                                            <th className="px-1 py-4">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody className='overflow-y-auto '>
                                         {loading ? (
                                             <tr>
-                                                <td colSpan="4" className="px-6 py-4  text-center">
+                                                <td colSpan="4" className="px-2 py-4  text-center">
                                                     <div className="flex items-center justify-center h-full">
                                                         <Loader />
                                                     </div>
@@ -237,19 +237,19 @@ export default function Assigned() {
                                                             className={`border-b cursor-pointer transition-colors duration-200 hover:opacity-90 ${rowClass}`}
                                                             onClick={() => handleRowClick(query._id)}
                                                         >
-                                                            <td className="px-6 py-1 font-semibold">{(indexOfFirstQuery + index + 1)}</td>
-                                                            <td className="px-6 py-1 font-semibold">{query.studentName}</td>
-                                                            <td className="px-6 py-1">{query.branch}</td>
+                                                            <td className="px-2 py-1 font-semibold">{(indexOfFirstQuery + index + 1)}</td>
+                                                            <td className="px-2 py-1 font-semibold">{query.studentName}</td>
+                                                            <td className="px-2 py-1">{query.branch}</td>
                                                             {matchedUser.name && (
-                                                                <td className="px-6 py-1">{matchedUser.name}</td>
+                                                                <td className="px-2 py-1">{matchedUser.name}</td>
                                                             )}
                                                             {matchedUser.branch && (
-                                                                <td className="px-6 py-1">{matchedUser.branch}</td>
+                                                                <td className="px-2 py-1">{matchedUser.branch}</td>
                                                             )}
 
-                                                            <td className="px-6 py-1">{deadline.toLocaleDateString()}</td>
+                                                            <td className="px-2 py-1">{deadline.toLocaleDateString()}</td>
                                                             <td
-                                                                className="px-6 py-1 text-blue-500 cursor-pointer"
+                                                                className="px-2 py-1 text-blue-500 cursor-pointer"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     if (query.assignedTostatus) {
@@ -265,7 +265,7 @@ export default function Assigned() {
                                                 })
                                         ) : (
                                             <tr>
-                                                <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                                                <td colSpan="4" className="px-2 py-4 text-center text-gray-500">
                                                     No queries available
                                                 </td>
                                             </tr>

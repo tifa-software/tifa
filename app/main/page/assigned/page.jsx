@@ -170,18 +170,18 @@ export default function Assigned() {
                                 <table className="min-w-full text-xs text-left text-gray-600 font-sans">
                                     <thead className="bg-[#29234b] text-white uppercase">
                                         <tr>
-                                            <th className="px-2 py-4">SN.</th>
-                                            <th className="px-2 py-4">Student Name</th>
-                                            <th className="px-2 py-4">Branch</th>
-                                            <th className="px-2 py-4">Assigned To</th>
-                                            <th className="px-2 py-4">Deadline</th>
-                                            <th className="px-2 py-4">Status</th>
+                                            <th className="px-1 py-4">SN.</th>  
+                                            <th className="px-1 py-4">Student Name</th>
+                                            <th className="px-1 py-4">Branch</th>
+                                            <th className="px-1 py-4">Assigned To</th>
+                                            <th className="px-1 py-4">Deadline</th>
+                                            <th className="px-1 py-4">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {loading ? (
                                             <tr>
-                                                <td colSpan="4" className="px-6 py-4  text-center">
+                                                <td colSpan="4" className="px-2 py-4  text-center">
                                                     <div className="flex items-center justify-center h-full">
                                                         <Loader />
                                                     </div>
@@ -217,13 +217,13 @@ export default function Assigned() {
                                                             className={`border-b cursor-pointer transition-colors duration-200 hover:opacity-90 ${rowClass}`}
                                                             onClick={() => handleRowClick(query._id)}
                                                         >
-                                                            <td className="px-6 py-1 font-semibold">{(indexOfFirstQuery + index + 1)}</td>
-                                                            <td className="px-6 py-1 font-semibold">{query.studentName}</td>
-                                                            <td className="px-6 py-1">{query.branch}</td>
-                                                            <td className="px-6 py-1">{matchedUser.name} ({matchedUser.branch}) Branch</td>
-                                                            <td className="px-6 py-1">{deadline.toLocaleDateString()}</td>
+                                                            <td className="px-2 py-1 font-semibold">{(indexOfFirstQuery + index + 1)}</td>
+                                                            <td className="px-2 py-1 font-semibold">{query.studentName}</td>
+                                                            <td className="px-2 py-1">{query.branch}</td>
+                                                            <td className="px-2 py-1">{matchedUser.name} ({matchedUser.branch}) Branch</td>
+                                                            <td className="px-2 py-1">{deadline.toLocaleDateString()}</td>
                                                             <td
-                                                                className="px-6 py-1 text-blue-500 cursor-pointer"
+                                                                className="px-2 py-1 text-blue-500 cursor-pointer"
 
                                                             >
                                                                 {query.assignedTostatus ? 'Pending' : 'Accepted'}
@@ -233,7 +233,7 @@ export default function Assigned() {
                                                 })
                                         ) : (
                                             <tr>
-                                                <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                                                <td colSpan="4" className="px-2 py-4 text-center text-gray-500">
                                                     No queries available
                                                 </td>
                                             </tr>
@@ -271,8 +271,8 @@ export default function Assigned() {
                 <div className="w-full lg:w-1/3 space-y-6">
                     {/* Branch Filter */}
                     <div className="shadow-lg rounded-lg bg-white p-4">
-                        <h2 className="text-xl font-semibold mb-4 text-gray-800 flex justify-between">Branch Statistics 
-                        <span className="text-sm text-gray-600 mb-4">Total <span className="font-bold">{totalRequests}</span></span>
+                        <h2 className="text-xl font-semibold mb-4 text-gray-800 flex justify-between">Branch Statistics
+                            <span className="text-sm text-gray-600 mb-4">Total <span className="font-bold">{totalRequests}</span></span>
                         </h2>
                         <ul className="space-y-2 text-sm">
 
