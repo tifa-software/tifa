@@ -9,7 +9,6 @@ const AdminSchema = new Schema(
         password: { type: String, required: true },
         branch: { type: String, required: true },
         usertype: { type: String, enum: ["0", "1", "2"], default: "0", required: true },
-
         defaultdata: { type: String, required: true, default: "admin" }
 
     },

@@ -560,8 +560,9 @@ export default function AllQuery() {
 
                           <ul>
 
-                            <li className=' text-xs'>
-                              <strong>Message = </strong> {querie.lastmessage}
+                            <li className='text-xs'>
+                              <strong>Message = </strong>
+                              {querie.lastmessage !== "null" ? querie.lastmessage : querie.notes}
                             </li>
 
                           </ul>

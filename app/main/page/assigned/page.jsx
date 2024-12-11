@@ -119,7 +119,8 @@ export default function Assigned() {
 
     const totalRequests = Object.values(branchDetails).reduce((acc, { count }) => acc + count, 0);
 
-    const filteredQueries = queries.filter(query => {
+    const filteredQueries = queries
+    .filter(query => {
         const matchesBranch = selectedBranch === 'All' || query.branch === selectedBranch;
         const queryDeadline = new Date(query.deadline);
 
@@ -133,6 +134,23 @@ export default function Assigned() {
             (selectedEnrollStatus === 'Pending' && !query.addmission);
 
         return matchesBranch && matchesDeadline && matchesEnrollStatus;
+    })
+    .sort((a, b) => {
+        const deadlineA = new Date(a.deadline);
+        const deadlineB = new Date(b.deadline);
+
+        const isInvalidA = isNaN(deadlineA);
+        const isInvalidB = isNaN(deadlineB);
+
+        // Sort valid deadlines before invalid deadlines
+        if (isInvalidA && !isInvalidB) return 1;
+        if (!isInvalidA && isInvalidB) return -1;
+
+        // If both are valid, sort by deadline date (earliest first)
+        if (!isInvalidA && !isInvalidB) return deadlineA - deadlineB;
+
+        // If both are invalid, maintain their original order
+        return 0;
     });
 
 

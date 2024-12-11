@@ -166,6 +166,11 @@ export default function Page({ params }) {
                         <h2 className="text-lg font-semibold text-[#29234b]">Query Status</h2>
                         <p className="text-sm text-gray-700 capitalize">{query.autoclosed}</p>
                     </div>
+
+                    <div className="mt-4">
+                        <h2 className="text-lg font-semibold text-[#29234b]">Message</h2>
+                        <p className="text-sm text-gray-700 capitalize">{query.notes}</p>
+                    </div>
                 </div>
             </div>
 

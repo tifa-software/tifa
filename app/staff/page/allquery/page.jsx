@@ -274,7 +274,7 @@ export default function AllQuery() {
                   />
                 )}
 
-            
+
                 <Link href={'/staff/page/importquery'}>
                   <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
                     <CirclePlus size={16} className='me-1' /> Import Query
@@ -323,32 +323,32 @@ export default function AllQuery() {
           </select>
 
           <select
-                  className="border px-3 py-2 focus:outline-none text-sm"
-                  value={deadlineFilter} // Binding the deadline filter state
-                  onChange={(e) => setDeadlineFilter(e.target.value)} // Update the deadline filter state
-                >
-                  <option value="" disabled>Deadline</option>
-                  <option value="">All</option>
-                  <option value="today">Today</option>
-                  <option value="tomorrow">Tomorrow</option>
-                  <option value="dayAfterTomorrow">Day After Tomorrow</option>
-                  <option value="past">Past Date</option>
-                  <option value="custom">Custom Date</option> {/* Add Custom Date option */}
-                </select>
+            className="border px-3 py-2 focus:outline-none text-sm"
+            value={deadlineFilter} // Binding the deadline filter state
+            onChange={(e) => setDeadlineFilter(e.target.value)} // Update the deadline filter state
+          >
+            <option value="" disabled>Deadline</option>
+            <option value="">All</option>
+            <option value="today">Today</option>
+            <option value="tomorrow">Tomorrow</option>
+            <option value="dayAfterTomorrow">Day After Tomorrow</option>
+            <option value="past">Past Date</option>
+            <option value="custom">Custom Date</option> {/* Add Custom Date option */}
+          </select>
 
-                {/* Show custom date picker when "Custom Date" is selected */}
-                {deadlineFilter === "custom" && (
-                  <input
-                    type="date"
-                    className="border px-3 py-2 focus:outline-none text-sm"
-                    value={customDate}
-                    onChange={(e) => setCustomDate(e.target.value)} // Update custom date state
-                  />
-                )}
+          {/* Show custom date picker when "Custom Date" is selected */}
+          {deadlineFilter === "custom" && (
+            <input
+              type="date"
+              className="border px-3 py-2 focus:outline-none text-sm"
+              value={customDate}
+              onChange={(e) => setCustomDate(e.target.value)} // Update custom date state
+            />
+          )}
 
 
 
-         
+
 
           <Link href={'/staff/page/importquery'}>
             <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
@@ -543,8 +543,9 @@ export default function AllQuery() {
 
                           <ul>
 
-                            <li className=' text-xs'>
-                              <strong>Message = </strong> {querie.lastmessage}
+                            <li className='text-xs'>
+                              <strong>Message = </strong>
+                              {querie.lastmessage !== "null" ? querie.lastmessage : querie.notes}
                             </li>
 
                           </ul>

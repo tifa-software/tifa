@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import Loader from "@/components/Loader/Loader";
-import { Phone, MapPin, Calendar, CheckCircle, MessageCircle,Edit } from "lucide-react";
+import { Phone, MapPin, Calendar, CheckCircle, MessageCircle, Edit } from "lucide-react";
 import Link from "next/link";
 import UpdateQuere from "@/app/main/component/Updatequere/UpdateQuere";
 import AssignedQuery from "@/components/AssignedQuery/AssignedQuery";
@@ -165,6 +165,10 @@ export default function Page({ params }) {
                     <div className="mt-4">
                         <h2 className="text-lg font-semibold text-[#29234b]">Query Status</h2>
                         <p className="text-sm text-gray-700 capitalize">{query.autoclosed}</p>
+                    </div>
+                    <div className="mt-4">
+                        <h2 className="text-lg font-semibold text-[#29234b]">Message</h2>
+                        <p className="text-sm text-gray-700 capitalize">{query.notes}</p>
                     </div>
                 </div>
             </div>
