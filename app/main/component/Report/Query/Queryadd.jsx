@@ -16,6 +16,7 @@ export default function Queryadd() {
 
   const [activeData, setActiveData] = useState([]);
   const [activeLabel, setActiveLabel] = useState("Grouped Data");
+  const [activeCard, setActiveCard] = useState("Total Queries");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -50,6 +51,7 @@ export default function Queryadd() {
   }, []);
 
   const handleCardClick = (label) => {
+    setActiveCard(label);
     switch (label) {
       case "Total Queries":
         setActiveData(groupedData);
@@ -99,7 +101,7 @@ export default function Queryadd() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-8 px-6">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-10 px-6">
       <div className="grid md:grid-cols-4 gap-8">
         {/* Summary Cards */}
         <div className="space-y-6 md:col-span-1">
@@ -111,19 +113,28 @@ export default function Queryadd() {
             { label: "Total Closed", value: totalAutoClosedClose },
           ].map((card, idx) => (
             <div
-              key={idx}
-              className="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all cursor-pointer border border-gray-100 hover:scale-105"
-              onClick={() => handleCardClick(card.label)}
-            >
-              <h3 className="text-sm font-medium text-gray-600">{card.label}</h3>
-              <p className="text-2xl font-bold text-indigo-600">{card.value}</p>
-            </div>
+            key={idx}
+            role="button"
+            tabIndex={0}
+            aria-pressed={activeCard === card.label}
+            className={`p-4 shadow-lg transition-all cursor-pointer border-2 rounded-lg ${
+              activeCard === card.label
+                ? "bg-indigo-600 text-white border-indigo-800 scale-105"
+                : "bg-indigo-50 text-gray-700 border-gray-300 "
+            }`}
+            onClick={() => handleCardClick(card.label)}
+            onKeyDown={(e) => e.key === "Enter" && handleCardClick(card.label)}
+          >
+            <h3 className="text-sm font-medium">{card.label}</h3>
+            <p className="text-2xl font-extrabold">{card.value}</p>
+          </div>
+          
           ))}
         </div>
 
         {/* Data Display Section */}
         <div className="md:col-span-3">
-          <h3 className="text-2xl font-semibold text-indigo-800 mb-6">
+          <h3 className="text-3xl font-semibold text-indigo-900 mb-6 border-b-2 border-indigo-200 pb-2">
             {activeLabel}
           </h3>
           {activeData.length > 0 ? (
@@ -131,9 +142,9 @@ export default function Queryadd() {
               {activeData.map((item, index) => (
                 <li
                   key={index}
-                  className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-all"
+                  className="bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all border border-gray-100"
                 >
-                  <h4 className="text-lg font-semibold text-indigo-700">
+                  <h4 className="text-xl font-bold text-indigo-800">
                     {item.userName || item.studentName || "Unknown Name"}{" "}
                     {item.userBranch && (
                       <span className="text-sm text-gray-500">
@@ -142,28 +153,17 @@ export default function Queryadd() {
                     )}
                   </h4>
                   <p className="mt-2 text-gray-700">
-                    Total Queries:{" "}
-                    <span className="font-medium">{item.totalQueries || 0}</span>
+                    Total Queries: <span className="font-medium">{item.totalQueries || 0}</span>
                   </p>
                   {item.queries && (
-                    <table className="mt-4 w-full border-collapse border border-gray-200">
+                    <table className="mt-4 w-full border-collapse border border-gray-200 text-sm">
                       <thead>
-                        <tr className="bg-indigo-50">
-                          <th className="border px-4 py-2 text-left text-sm text-gray-700">
-                            S/N
-                          </th>
-                          <th className="border px-4 py-2 text-left text-sm text-gray-700">
-                            Student Name
-                          </th>
-                          <th className="border px-4 py-2 text-left text-sm text-gray-700">
-                            Current Branch
-                          </th>
-                          <th className="border px-4 py-2 text-left text-sm text-gray-700">
-                            Mobile Number
-                          </th>
-                          <th className="border px-4 py-2 text-left text-sm text-gray-700">
-                            Assigned To
-                          </th>
+                        <tr className="bg-indigo-100">
+                          <th className="border px-4 py-2 text-left text-gray-600">S/N</th>
+                          <th className="border px-4 py-2 text-left text-gray-600">Student Name</th>
+                          <th className="border px-4 py-2 text-left text-gray-600">Current Branch</th>
+                          <th className="border px-4 py-2 text-left text-gray-600">Mobile Number</th>
+                          <th className="border px-4 py-2 text-left text-gray-600">Assigned To</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -174,21 +174,11 @@ export default function Queryadd() {
                               idx % 2 === 0 ? "bg-gray-50" : "bg-white"
                             }`}
                           >
-                            <td className="border px-4 py-2 text-sm text-gray-600">
-                              {idx + 1}
-                            </td>
-                            <td className="border px-4 py-2 text-sm text-gray-600">
-                              {query.studentName}
-                            </td>
-                            <td className="border px-4 py-2 text-sm text-gray-600">
-                              {query.branch}
-                            </td>
-                            <td className="border px-4 py-2 text-sm text-gray-600">
-                              {query.studentContact.phoneNumber}
-                            </td>
-                            <td className="border px-4 py-2 text-sm text-gray-600">
-                              {query.assignedTo}
-                            </td>
+                            <td className="border px-4 py-2 text-gray-600">{idx + 1}</td>
+                            <td className="border px-4 py-2 text-gray-600">{query.studentName}</td>
+                            <td className="border px-4 py-2 text-gray-600">{query.branch}</td>
+                            <td className="border px-4 py-2 text-gray-600">{query.studentContact.phoneNumber}</td>
+                            <td className="border px-4 py-2 text-gray-600">{query.assignedTo}</td>
                           </tr>
                         ))}
                       </tbody>

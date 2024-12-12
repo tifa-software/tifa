@@ -124,48 +124,58 @@ export default function AllQuery() {
 
     return sortedQueries;
   };
-  const [customDate, setCustomDate] = React.useState(""); // State for custom date
-  const filterByDeadline = (querie) => {
-    const currentDate = new Date();
-    const querieDeadline = new Date(querie.deadline);
-
-    switch (deadlineFilter) {
-      case "today":
-        return querieDeadline.toDateString() === currentDate.toDateString();
-      case "tomorrow":
-        const tomorrow = new Date(currentDate);
-        tomorrow.setDate(currentDate.getDate() + 1);
-        return querieDeadline.toDateString() === tomorrow.toDateString();
-      case "dayAfterTomorrow":
-        const dayAfterTomorrow = new Date(currentDate);
-        dayAfterTomorrow.setDate(currentDate.getDate() + 2);
-        return querieDeadline.toDateString() === dayAfterTomorrow.toDateString();
-      case "past":
-        return querieDeadline < new Date(currentDate.setHours(0, 0, 0, 0));
-      case "custom":
-        const customDateObj = new Date(customDate);
-        return querieDeadline.toDateString() === customDateObj.toDateString();
-      default:
-        return true; // 'All' will display all queries
-    }
-  };
-
-
-  // Apply filters and sort queries
-  const filteredqueries = sortqueries(
-    queries.filter(querie =>
-      (
-        (querie.studentName && querie.studentName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (querie.studentContact?.phoneNumber?.includes(searchTerm)) ||
-        (querie.referenceid && querie.referenceid.toLowerCase().includes(searchTerm.toLowerCase()))
-      ) &&
-      (filterCourse === "" || querie.branch?.includes(filterCourse)) &&
-      filterByDeadline(querie) && // Ensure the deadline filter is applied
-      (filterByGrade === "" || querie.lastgrade === filterByGrade) && // Add filter by grade
-      (filterAssignedFrom === "" || querie.assignedreceivedhistory == filterAssignedFrom)
-    )
-  );
-
+ 
+ 
+   // Declare all required states
+   const [customDate, setCustomDate] = React.useState(""); // State for custom date
+   const [startDate, setStartDate] = React.useState(""); // State for start date of range
+   const [endDate, setEndDate] = React.useState(""); // State for end date of range
+ 
+   const filterByDeadline = (querie) => {
+     const currentDate = new Date();
+     const querieDeadline = new Date(querie.deadline);
+ 
+     switch (deadlineFilter) {
+       case "today":
+         return querieDeadline.toDateString() === currentDate.toDateString();
+       case "tomorrow":
+         const tomorrow = new Date(currentDate);
+         tomorrow.setDate(currentDate.getDate() + 1);
+         return querieDeadline.toDateString() === tomorrow.toDateString();
+       case "dayAfterTomorrow":
+         const dayAfterTomorrow = new Date(currentDate);
+         dayAfterTomorrow.setDate(currentDate.getDate() + 2);
+         return querieDeadline.toDateString() === dayAfterTomorrow.toDateString();
+       case "past":
+         return querieDeadline < new Date(currentDate.setHours(0, 0, 0, 0));
+       case "custom":
+         const customDateObj = new Date(customDate);
+         return querieDeadline.toDateString() === customDateObj.toDateString();
+       case "dateRange":
+         if (!startDate || !endDate) return true; // If dates are not set, skip filter
+         const start = new Date(startDate);
+         const end = new Date(endDate);
+         end.setHours(23, 59, 59, 999); // Include the entire end day
+         return querieDeadline >= start && querieDeadline <= end;
+       default:
+         return true; // 'All' will display all queries
+     }
+   };
+ 
+   const filteredqueries = sortqueries(
+     queries.filter(querie =>
+       (
+         (querie.studentName && querie.studentName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+         (querie.studentContact?.phoneNumber?.includes(searchTerm)) ||
+         (querie.referenceid && querie.referenceid.toLowerCase().includes(searchTerm.toLowerCase()))
+       ) &&
+       (filterCourse === "" || querie.branch?.includes(filterCourse)) &&
+       filterByDeadline(querie) && // Ensure the deadline filter is applied
+       (filterByGrade === "" || querie.lastgrade === filterByGrade) // Add filter by grade
+     )
+   );
+ 
+ 
 
 
 
@@ -342,29 +352,54 @@ export default function AllQuery() {
 
           </select>
 
-          <select
-            className="border px-3 py-2 focus:outline-none text-sm"
-            value={deadlineFilter} // Binding the deadline filter state
-            onChange={(e) => setDeadlineFilter(e.target.value)} // Update the deadline filter state
-          >
-            <option value="" disabled>Deadline</option>
-            <option value="">All</option>
-            <option value="today">Today</option>
-            <option value="tomorrow">Tomorrow</option>
-            <option value="dayAfterTomorrow">Day After Tomorrow</option>
-            <option value="past">Past Date</option>
-            <option value="custom">Custom Date</option> {/* Add Custom Date option */}
-          </select>
-
-          {/* Show custom date picker when "Custom Date" is selected */}
-          {deadlineFilter === "custom" && (
-            <input
-              type="date"
+          <div className=' relative'>
+            <select
               className="border px-3 py-2 focus:outline-none text-sm"
-              value={customDate}
-              onChange={(e) => setCustomDate(e.target.value)} // Update custom date state
-            />
-          )}
+              value={deadlineFilter} // Binding the deadline filter state
+              onChange={(e) => setDeadlineFilter(e.target.value)} // Update the deadline filter state
+            >
+              <option value="" disabled>Deadline</option>
+              <option value="">All</option>
+              <option value="today">Today</option>
+              <option value="tomorrow">Tomorrow</option>
+              <option value="dayAfterTomorrow">Day After Tomorrow</option>
+              <option value="past">Past Date</option>
+              <option value="custom">Custom Date</option>
+              <option value="dateRange">Date-to-Date</option> {/* Add Date-to-Date option */}
+            </select>
+
+            {/* Show custom date picker when "Custom Date" is selected */}
+            {deadlineFilter === "custom" && (
+              <div className=' absolute'>
+              <input
+                type="date"
+                className="border px-3 py-2 focus:outline-none text-sm"
+                value={customDate}
+                onChange={(e) => setCustomDate(e.target.value)} // Update custom date state
+              />
+              </div>
+            )}
+
+            {/* Show start and end date pickers when "Date-to-Date" is selected */}
+            {deadlineFilter === "dateRange" && (
+              <div className="flex space-x-2 absolute bg-white border border-black">
+                <input
+                  type="date"
+                  className="border px-3 py-2 focus:outline-none text-sm"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)} // Update start date state
+                /> <div className=' flex items-center'>to</div>
+                <input
+                  type="date"
+                  className="border px-3 py-2 focus:outline-none text-sm"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)} // Update end date state
+                />
+              </div>
+            )}
+
+
+          </div>
 
 
 
