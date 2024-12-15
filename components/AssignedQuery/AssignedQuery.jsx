@@ -83,7 +83,8 @@ export default function AssignedQuery({ initialData, refreshData }) {
                 assignedsenthistory: [adminId],
                 assignedreceivedhistory: [assignedUserId], // Add assigned user ID to received history
                 assignedTostatus: true,
-                actionBy: session?.user?.name
+                actionBy: session?.user?.name,
+                assigneddate: new Date().toISOString()
             });
 
             // Update audit log with actionBy, assignedBy, and message

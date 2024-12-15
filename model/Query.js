@@ -161,8 +161,20 @@ const querySchema = new Schema({
         type: String,
 
         default: "query"
-    }
+    },
+
+    assigneddate: {
+        type: Date,
+        required: true
+    },
 }, { timestamps: true });
+
+querySchema.pre('validate', function (next) {
+    if (!this.assigneddate) {
+        this.assigneddate = this.createdAt || new Date(); // Use createdAt or fallback to current date
+    }
+    next();
+});
 
 querySchema.pre('save', function (next) {
     // Check if deadline has been modified
@@ -180,6 +192,6 @@ querySchema.pre('save', function (next) {
 
 const QueryModel =
 
-    mongoose.models.Queries40 || mongoose.model('Queries40', querySchema);
+    mongoose.models.Queries44 || mongoose.model('Queries44', querySchema);
 
 export default QueryModel;

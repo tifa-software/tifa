@@ -10,7 +10,6 @@ export default function Assigned() {
     const [branches, setBranches] = useState([]);
     const [loading, setLoading] = useState(true);
     const [adminId, setAdminId] = useState(null);
-    const [adminBranch, setAdminBranch] = useState(null);
     const { data: session } = useSession();
     const router = useRouter();
     const [user, setuser] = useState([]);
@@ -22,6 +21,9 @@ export default function Assigned() {
     const [openBranchDetails, setOpenBranchDetails] = useState(null);
     const [showPopup, setShowPopup] = useState(false);
     const [selectedQuery, setSelectedQuery] = useState(null);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+
     useEffect(() => {
         const fetchuserData = async () => {
             try {
@@ -40,7 +42,7 @@ export default function Assigned() {
         if (!selectedQuery) return;
 
         try {
-            const data = { id: selectedQuery._id, assignedTo: adminId, assignedTostatus: false, branch: adminBranch }; // Update status to "Accepted"
+            const data = { id: selectedQuery._id, assignedTo: adminId, assignedTostatus: false }; // Update status to "Accepted"
             const response = await axios.patch('/api/queries/update', data);
 
             if (response.status === 200) {
@@ -64,7 +66,6 @@ export default function Assigned() {
                 try {
                     const { data } = await axios.get(`/api/admin/find-admin-byemail/${session.user.email}`);
                     setAdminId(data._id);
-                    setAdminBranch(data.branch)
                 } catch (error) {
                     console.error(error.message);
                 }
@@ -91,7 +92,6 @@ export default function Assigned() {
                 try {
                     setLoading(true);
                     const { data } = await axios.get(`/api/queries/assignedreq/${adminId}?autoclosed=open`);
-                    // const filteredQueries = data.fetch.filter(query => query.assignedTostatus);
                     setQueries(data.fetch);
                 } catch (error) {
                     console.error('Error fetching query data:', error);
@@ -100,18 +100,8 @@ export default function Assigned() {
                 }
             }
         };
-
-        // Initial fetch
         fetchQueryData();
-
-        // Set up an interval to fetch data every 30 seconds
-        const intervalId = setInterval(fetchQueryData, 30000); // 30000 ms = 30 seconds
-
-        // Clean up the interval on component unmount
-        return () => clearInterval(intervalId);
-
     }, [adminId]);
-
 
     const handleRowClick = (id) => {
         router.push(`/branch/page/allquery/${id}`);
@@ -129,39 +119,54 @@ export default function Assigned() {
 
     const totalRequests = Object.values(branchDetails).reduce((acc, { count }) => acc + count, 0);
 
+    const resetFilters = () => {
+        setStartDate(null);
+        setEndDate(null);
+        setSelectedBranch('All');
+        setSelectedDeadline('All');
+        setSelectedEnrollStatus('All');
+    };
+
     const filteredQueries = queries
-    .filter(query => {
-        const matchesBranch = selectedBranch === 'All' || query.branch === selectedBranch;
-        const queryDeadline = new Date(query.deadline);
+        .filter(query => {
+            const matchesBranch = selectedBranch === 'All' || query.branch === selectedBranch;
+            const queryDeadline = new Date(query.deadline);
+            const queryAssignedDate = new Date(query.assigneddate);
 
-        const matchesDeadline = selectedDeadline === 'All' ||
-            (selectedDeadline === 'Today' && queryDeadline.toDateString() === new Date().toDateString()) ||
-            (selectedDeadline === 'Tomorrow' && queryDeadline.toDateString() === new Date(Date.now() + 86400000).toDateString()) ||
-            (selectedDeadline === 'Past' && queryDeadline < new Date() && queryDeadline.toDateString() !== new Date().toDateString());
+            const matchesDeadline = selectedDeadline === 'All' ||
+                (selectedDeadline === 'Today' && queryDeadline.toDateString() === new Date().toDateString()) ||
+                (selectedDeadline === 'Tomorrow' && queryDeadline.toDateString() === new Date(Date.now() + 86400000).toDateString()) ||
+                (selectedDeadline === 'Past' && queryDeadline < new Date() && queryDeadline.toDateString() !== new Date().toDateString());
 
-        const matchesEnrollStatus = selectedEnrollStatus === 'All' ||
-            (selectedEnrollStatus === 'Enroll' && query.addmission) ||
-            (selectedEnrollStatus === 'Pending' && !query.addmission);
+            const matchesEnrollStatus = selectedEnrollStatus === 'All' ||
+                (selectedEnrollStatus === 'Enroll' && query.addmission) ||
+                (selectedEnrollStatus === 'Pending' && !query.addmission);
 
-        return matchesBranch && matchesDeadline && matchesEnrollStatus;
-    })
-    .sort((a, b) => {
-        const deadlineA = new Date(a.deadline);
-        const deadlineB = new Date(b.deadline);
+            const matchesDateRange =
+                (!startDate || queryAssignedDate >= new Date(startDate)) &&
+                (!endDate || queryAssignedDate <= new Date(endDate));
 
-        const isInvalidA = isNaN(deadlineA);
-        const isInvalidB = isNaN(deadlineB);
+            return matchesBranch && matchesDeadline && matchesEnrollStatus && matchesDateRange;
+        })
+        .sort((a, b) => {
+            const deadlineA = new Date(a.deadline);
+            const deadlineB = new Date(b.deadline);
 
-        // Sort valid deadlines before invalid deadlines
-        if (isInvalidA && !isInvalidB) return 1;
-        if (!isInvalidA && isInvalidB) return -1;
+            const isInvalidA = isNaN(deadlineA);
+            const isInvalidB = isNaN(deadlineB);
 
-        // If both are valid, sort by deadline date (earliest first)
-        if (!isInvalidA && !isInvalidB) return deadlineA - deadlineB;
+            // Sort valid deadlines before invalid deadlines
+            if (isInvalidA && !isInvalidB) return 1;
+            if (!isInvalidA && isInvalidB) return -1;
 
-        // If both are invalid, maintain their original order
-        return 0;
-    });
+            // If both are valid, sort by deadline date (earliest first)
+            if (!isInvalidA && !isInvalidB) return deadlineA - deadlineB;
+
+            // If both are invalid, maintain their original order
+            return 0;
+        });
+
+
 
     const toggleBranchDetails = (branchName) => {
         setOpenBranchDetails(prev => (prev === branchName ? null : branchName));
@@ -191,7 +196,50 @@ export default function Assigned() {
                 <div className="w-full lg:w-2/3">
                     <div className="shadow-lg rounded-lg bg-white mb-6 relative">
                         <div className="p-4">
-                            <h2 className="text-xl font-semibold mb-4 text-gray-800">Assigned Queries</h2>
+
+                            <div className=' flex justify-between'>
+
+                                <h2 className="text-xl font-semibold mb-4 text-gray-800">Assigned Request</h2>
+                                <div className="flex flex-col md:flex-row gap-4 items-start md:items-end bg-gray-50">
+                                    <div className="w-full md:w-auto">
+                                        <label
+                                            htmlFor="startDate"
+                                            className="block text-sm font-medium text-gray-700 mb-1"
+                                        >
+                                            Start Date
+                                        </label>
+                                        <input
+                                            type="date"
+                                            id="startDate"
+                                            className="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm px-3 py-2"
+                                            value={startDate || ''}
+                                            onChange={(e) => setStartDate(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="w-full md:w-auto">
+                                        <label
+                                            htmlFor="endDate"
+                                            className="block text-sm font-medium text-gray-700 mb-1"
+                                        >
+                                            End Date
+                                        </label>
+                                        <input
+                                            type="date"
+                                            id="endDate"
+                                            className="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm px-3 py-2"
+                                            value={endDate || ''}
+                                            onChange={(e) => setEndDate(e.target.value)}
+                                        />
+                                    </div>
+                                    <button
+                                        className="w-full md:w-auto mt-2 md:mt-0 px-4 py-2 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition-all"
+                                        onClick={resetFilters}
+                                    >
+                                        Reset Filters
+                                    </button>
+                                </div>
+
+                            </div>
                             <p className="text-sm text-gray-600 mb-4">Total Requests: <span className="font-bold">{totalRequests}</span></p>
                             <div className="relative overflow-y-auto" style={{ height: '500px' }}>
                                 <table className="min-w-full text-xs text-left text-gray-600 font-sans">
@@ -199,9 +247,8 @@ export default function Assigned() {
                                         <tr>
                                             <th className="px-1 py-4">SN.</th>
                                             <th className="px-1 py-4">Student Name</th>
-                                            <th className="px-1 py-4">Current Branch</th>
-                                            <th className="px-1 py-4">Assgned From</th>
-                                            <th className="px-1 py-4">Assgned From Branch</th>
+                                            <th className="px-1 py-4">Branch</th>
+                                            <th className="px-1 py-4">Assigned To</th>
                                             <th className="px-1 py-4">Deadline</th>
                                             <th className="px-1 py-4">Status</th>
                                         </tr>
@@ -237,7 +284,7 @@ export default function Assigned() {
                                                                 : isIn24Hours ? 'bg-[#fcccba] text-black'
                                                                     : isIn48Hours ? 'bg-[#ffe9bf] text-black'
                                                                         : '';
-                                                    const matchedUser = user.find((u) => u._id == query.assignedsenthistory);
+                                                    const matchedUser = user.find((u) => u._id == query.assignedreceivedhistory);
                                                     return (
                                                         <tr
                                                             key={query._id}
@@ -247,23 +294,11 @@ export default function Assigned() {
                                                             <td className="px-2 py-1 font-semibold">{(indexOfFirstQuery + index + 1)}</td>
                                                             <td className="px-2 py-1 font-semibold">{query.studentName}</td>
                                                             <td className="px-2 py-1">{query.branch}</td>
-                                                            {matchedUser.name && (
-                                                                <td className="px-2 py-1">{matchedUser.name}</td>
-                                                            )}
-                                                            {matchedUser.branch && (
-                                                                <td className="px-2 py-1">{matchedUser.branch}</td>
-                                                            )}
-
+                                                            <td className="px-2 py-1">{matchedUser.name} ({matchedUser.branch}) Branch</td>
                                                             <td className="px-2 py-1">{deadline.toLocaleDateString()}</td>
                                                             <td
                                                                 className="px-2 py-1 text-blue-500 cursor-pointer"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    if (query.assignedTostatus) {
-                                                                        setSelectedQuery(query);
-                                                                        setShowPopup(true);
-                                                                    }
-                                                                }}
+
                                                             >
                                                                 {query.assignedTostatus ? 'Pending' : 'Accepted'}
                                                             </td>
@@ -277,28 +312,7 @@ export default function Assigned() {
                                                 </td>
                                             </tr>
                                         )}
-                                        {showPopup && (
-                                            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                                                <div className="bg-white rounded-lg p-6 text-center">
-                                                    <h2 className="text-lg font-semibold mb-4">Accept Query</h2>
-                                                    <p>Are you sure you want to accept this query?</p>
-                                                    <div className="mt-4 flex justify-center space-x-4">
-                                                        <button
-                                                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                                                            onClick={handleAcceptQuery}
-                                                        >
-                                                            Accept
-                                                        </button>
-                                                        <button
-                                                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                                                            onClick={() => setShowPopup(false)}
-                                                        >
-                                                            Ignore
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
+
                                     </tbody>
 
 

@@ -170,6 +170,7 @@ export default function AllQuery() {
          (querie.referenceid && querie.referenceid.toLowerCase().includes(searchTerm.toLowerCase()))
        ) &&
        (filterCourse === "" || querie.branch?.includes(filterCourse)) &&
+       (filterAssignedFrom === "" || querie.assignedreceivedhistory?.includes(filterAssignedFrom)) &&
        filterByDeadline(querie) && // Ensure the deadline filter is applied
        (filterByGrade === "" || querie.lastgrade === filterByGrade) // Add filter by grade
      )
