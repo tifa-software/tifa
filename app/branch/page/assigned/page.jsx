@@ -104,7 +104,7 @@ export default function Assigned() {
     }, [adminId]);
 
     const handleRowClick = (id) => {
-        router.push(`/branch/page/allquery/${id}`);
+        router.push(`/staff/page/allquery/${id}`);
     };
 
     const branchDetails = branches.reduce((acc, branch) => {
@@ -298,7 +298,13 @@ export default function Assigned() {
                                                             <td className="px-2 py-1">{deadline.toLocaleDateString()}</td>
                                                             <td
                                                                 className="px-2 py-1 text-blue-500 cursor-pointer"
-
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    if (query.assignedTostatus) {
+                                                                        setSelectedQuery(query);
+                                                                        setShowPopup(true);
+                                                                    }
+                                                                }}
                                                             >
                                                                 {query.assignedTostatus ? 'Pending' : 'Accepted'}
                                                             </td>
@@ -312,7 +318,28 @@ export default function Assigned() {
                                                 </td>
                                             </tr>
                                         )}
-
+                                        {showPopup && (
+                                            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                                                <div className="bg-white rounded-lg p-6 text-center">
+                                                    <h2 className="text-lg font-semibold mb-4">Accept Query</h2>
+                                                    <p>Are you sure you want to accept this query?</p>
+                                                    <div className="mt-4 flex justify-center space-x-4">
+                                                        <button
+                                                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                                                            onClick={handleAcceptQuery}
+                                                        >
+                                                            Accept
+                                                        </button>
+                                                        <button
+                                                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                                            onClick={() => setShowPopup(false)}
+                                                        >
+                                                            Ignore
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </tbody>
 
 
