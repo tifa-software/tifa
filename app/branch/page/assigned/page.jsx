@@ -104,7 +104,7 @@ export default function Assigned() {
     }, [adminId]);
 
     const handleRowClick = (id) => {
-        router.push(`/staff/page/allquery/${id}`);
+        router.push(`/branch/page/allquery/${id}`);
     };
 
     const branchDetails = branches.reduce((acc, branch) => {
