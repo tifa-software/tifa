@@ -124,59 +124,59 @@ export default function AllQuery() {
 
     return sortedQueries;
   };
- 
- 
-   // Declare all required states
-   const [customDate, setCustomDate] = React.useState(""); // State for custom date
-   const [startDate, setStartDate] = React.useState(""); // State for start date of range
-   const [endDate, setEndDate] = React.useState(""); // State for end date of range
- 
-   const filterByDeadline = (querie) => {
-     const currentDate = new Date();
-     const querieDeadline = new Date(querie.deadline);
- 
-     switch (deadlineFilter) {
-       case "today":
-         return querieDeadline.toDateString() === currentDate.toDateString();
-       case "tomorrow":
-         const tomorrow = new Date(currentDate);
-         tomorrow.setDate(currentDate.getDate() + 1);
-         return querieDeadline.toDateString() === tomorrow.toDateString();
-       case "dayAfterTomorrow":
-         const dayAfterTomorrow = new Date(currentDate);
-         dayAfterTomorrow.setDate(currentDate.getDate() + 2);
-         return querieDeadline.toDateString() === dayAfterTomorrow.toDateString();
-       case "past":
-         return querieDeadline < new Date(currentDate.setHours(0, 0, 0, 0));
-       case "custom":
-         const customDateObj = new Date(customDate);
-         return querieDeadline.toDateString() === customDateObj.toDateString();
-       case "dateRange":
-         if (!startDate || !endDate) return true; // If dates are not set, skip filter
-         const start = new Date(startDate);
-         const end = new Date(endDate);
-         end.setHours(23, 59, 59, 999); // Include the entire end day
-         return querieDeadline >= start && querieDeadline <= end;
-       default:
-         return true; // 'All' will display all queries
-     }
-   };
- 
-   const filteredqueries = sortqueries(
-     queries.filter(querie =>
-       (
-         (querie.studentName && querie.studentName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-         (querie.studentContact?.phoneNumber?.includes(searchTerm)) ||
-         (querie.referenceid && querie.referenceid.toLowerCase().includes(searchTerm.toLowerCase()))
-       ) &&
-       (filterCourse === "" || querie.branch?.includes(filterCourse)) &&
-       (filterAssignedFrom === "" || querie.assignedreceivedhistory?.includes(filterAssignedFrom)) &&
-       filterByDeadline(querie) && // Ensure the deadline filter is applied
-       (filterByGrade === "" || querie.lastgrade === filterByGrade) // Add filter by grade
-     )
-   );
- 
- 
+
+
+  // Declare all required states
+  const [customDate, setCustomDate] = React.useState(""); // State for custom date
+  const [startDate, setStartDate] = React.useState(""); // State for start date of range
+  const [endDate, setEndDate] = React.useState(""); // State for end date of range
+
+  const filterByDeadline = (querie) => {
+    const currentDate = new Date();
+    const querieDeadline = new Date(querie.deadline);
+
+    switch (deadlineFilter) {
+      case "today":
+        return querieDeadline.toDateString() === currentDate.toDateString();
+      case "tomorrow":
+        const tomorrow = new Date(currentDate);
+        tomorrow.setDate(currentDate.getDate() + 1);
+        return querieDeadline.toDateString() === tomorrow.toDateString();
+      case "dayAfterTomorrow":
+        const dayAfterTomorrow = new Date(currentDate);
+        dayAfterTomorrow.setDate(currentDate.getDate() + 2);
+        return querieDeadline.toDateString() === dayAfterTomorrow.toDateString();
+      case "past":
+        return querieDeadline < new Date(currentDate.setHours(0, 0, 0, 0));
+      case "custom":
+        const customDateObj = new Date(customDate);
+        return querieDeadline.toDateString() === customDateObj.toDateString();
+      case "dateRange":
+        if (!startDate || !endDate) return true; // If dates are not set, skip filter
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999); // Include the entire end day
+        return querieDeadline >= start && querieDeadline <= end;
+      default:
+        return true; // 'All' will display all queries
+    }
+  };
+
+  const filteredqueries = sortqueries(
+    queries.filter(querie =>
+      (
+        (querie.studentName && querie.studentName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (querie.studentContact?.phoneNumber?.includes(searchTerm)) ||
+        (querie.referenceid && querie.referenceid.toLowerCase().includes(searchTerm.toLowerCase()))
+      ) &&
+      (filterCourse === "" || querie.branch?.includes(filterCourse)) &&
+      (filterAssignedFrom === "" || querie.assignedreceivedhistory?.includes(filterAssignedFrom)) &&
+      filterByDeadline(querie) && // Ensure the deadline filter is applied
+      (filterByGrade === "" || querie.lastgrade === filterByGrade) // Add filter by grade
+    )
+  );
+
+
 
 
 
@@ -322,24 +322,35 @@ export default function AllQuery() {
             onChange={(e) => setFilterCourse(e.target.value)}
           >
             <option value="">All Branch</option>
-            {Array.from(new Set(queries.flatMap(querie => querie.branch))).map((branch, index) => (
-              <option key={index} value={branch}>{branch}</option>
-            ))}
+            {Array.from(new Set(queries.flatMap((querie) => querie.branch)))
+              .filter((branch) => branch && branch.trim() !== "") // Exclude undefined or empty values
+              .map((branch, index) => (
+                <option key={index} value={branch}>
+                  {branch}
+                </option>
+              ))}
           </select>
+
 
           <select
             className="border px-3 py-2 focus:outline-none text-sm"
             value={filterAssignedFrom}
             onChange={(e) => setFilterAssignedFrom(e.target.value)}
           >
-            <option value="">All Assigned </option>
-            {Array.from(new Set(queries.flatMap(querie => querie.assignedreceivedhistory))).map((assignedFrom, index) => {
-              const userName = user.find(u => u._id === assignedFrom)?.name || 'Unknown';
-              return (
-                <option key={index} value={assignedFrom}>{userName}</option>
-              );
-            })}
+            <option value="">All Assigned</option>
+            {Array.from(new Set(queries.flatMap((querie) => querie.assignedreceivedhistory)))
+              .map((assignedFrom) => {
+                const userName = user.find((u) => u._id === assignedFrom)?.name;
+                return userName ? { id: assignedFrom, name: userName } : null;
+              })
+              .filter((option) => option !== null) // Remove null options
+              .map((option, index) => (
+                <option key={index} value={option.id}>
+                  {option.name}
+                </option>
+              ))}
           </select>
+
 
           <select
             value={filterByGrade}
@@ -372,12 +383,12 @@ export default function AllQuery() {
             {/* Show custom date picker when "Custom Date" is selected */}
             {deadlineFilter === "custom" && (
               <div className=' absolute'>
-              <input
-                type="date"
-                className="border px-3 py-2 focus:outline-none text-sm"
-                value={customDate}
-                onChange={(e) => setCustomDate(e.target.value)} // Update custom date state
-              />
+                <input
+                  type="date"
+                  className="border px-3 py-2 focus:outline-none text-sm"
+                  value={customDate}
+                  onChange={(e) => setCustomDate(e.target.value)} // Update custom date state
+                />
               </div>
             )}
 

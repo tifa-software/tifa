@@ -241,11 +241,11 @@ export default function AllQuery() {
                   <option value="tomorrow">Tomorrow</option>
                   <option value="dayAfterTomorrow">Day After Tomorrow</option>
                   <option value="past">Past Date</option>
-                  
+
                 </select>
 
-                
-               
+
+
 
                 <Link href={'/main/page/importquery'}>
                   <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
@@ -278,10 +278,15 @@ export default function AllQuery() {
             onChange={(e) => setFilterCourse(e.target.value)}
           >
             <option value="">All Branch</option>
-            {Array.from(new Set(queries.flatMap(querie => querie.branch))).map((branch, index) => (
-              <option key={index} value={branch}>{branch}</option>
-            ))}
+            {Array.from(new Set(queries.flatMap((querie) => querie.branch)))
+              .filter((branch) => branch && branch.trim() !== "") // Exclude undefined or empty values
+              .map((branch, index) => (
+                <option key={index} value={branch}>
+                  {branch}
+                </option>
+              ))}
           </select>
+
           <select
             value={filterByGrade}
             onChange={(e) => setFilterByGrade(e.target.value)}
@@ -312,12 +317,12 @@ export default function AllQuery() {
             {/* Show custom date picker when "Custom Date" is selected */}
             {deadlineFilter === "custom" && (
               <div className=' absolute'>
-              <input
-                type="date"
-                className="border px-3 py-2 focus:outline-none text-sm"
-                value={customDate}
-                onChange={(e) => setCustomDate(e.target.value)} // Update custom date state
-              />
+                <input
+                  type="date"
+                  className="border px-3 py-2 focus:outline-none text-sm"
+                  value={customDate}
+                  onChange={(e) => setCustomDate(e.target.value)} // Update custom date state
+                />
               </div>
             )}
 
