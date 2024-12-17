@@ -23,6 +23,7 @@ export const GET = async (request, context) => {
         const fetch = await QueryModel.find({
             $or: [
                 { assignedTo: userid },
+                { userid: userid },
                 { branch: branchname, assignedTo: "Not-Assigned" }
             ],
             autoclosed: autoclosedStatus
