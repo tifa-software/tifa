@@ -294,7 +294,11 @@ export default function Assigned() {
                                                             <td className="px-2 py-1 font-semibold">{(indexOfFirstQuery + index + 1)}</td>
                                                             <td className="px-2 py-1 font-semibold">{query.studentName}</td>
                                                             <td className="px-2 py-1">{query.branch}</td>
-                                                            <td className="px-2 py-1">{matchedUser.name} ({matchedUser.branch}) Branch</td>
+                                                            <td className="px-2 py-1">
+                                                                {matchedUser
+                                                                    ? `${matchedUser.name} (${matchedUser.branch}) Branch`
+                                                                    : "User not found"}
+                                                            </td>
                                                             <td className="px-2 py-1">{deadline.toLocaleDateString()}</td>
                                                             <td
                                                                 className="px-2 py-1 text-blue-500 cursor-pointer"
