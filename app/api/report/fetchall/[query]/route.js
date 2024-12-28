@@ -15,13 +15,14 @@ export const GET = async (request) => {
     // Parse query parameters
     const { searchParams } = new URL(request.url);
     const referenceId = searchParams.get("referenceId");
+    const suboption = searchParams.get("suboption")
     const fromDate = searchParams.get("fromDate");
     const toDate = searchParams.get("toDate");
     const admission = searchParams.get("admission");
     const grade = searchParams.get("grade");
     const location = searchParams.get("location");
     const assignedName = searchParams.get("assignedName");
-
+    console.log(suboption)
     // Build MongoDB query
     const queryFilter = { defaultdata: "query" };
 
@@ -30,6 +31,9 @@ export const GET = async (request) => {
       const decodedReferenceId = decodeURIComponent(referenceId);  // Decode URL-encoded referenceId
       const escapedReferenceId = escapeRegex(decodedReferenceId);  // Escape special characters
       queryFilter.referenceid = { $regex: escapedReferenceId, $options: "i" };  // Case-insensitive match
+    }
+    if (suboption) {
+      queryFilter.suboption = { $regex: suboption, $options: "i" };
     }
 
     if (fromDate && toDate) {
