@@ -21,8 +21,10 @@ export const GET = async (request) => {
     const admission = searchParams.get("admission");
     const grade = searchParams.get("grade");
     const location = searchParams.get("location");
+    const city = searchParams.get("city");
     const assignedName = searchParams.get("assignedName");
-    console.log(suboption)
+
+
     // Build MongoDB query
     const queryFilter = { defaultdata: "query" };
 
@@ -37,8 +39,17 @@ export const GET = async (request) => {
     }
 
     if (fromDate && toDate) {
-      queryFilter.createdAt = { $gte: new Date(fromDate), $lte: new Date(toDate) };
+      const from = new Date(fromDate);
+      const to = new Date(toDate);
+      to.setHours(23, 59, 59, 999);
+
+      if (!isNaN(from) && !isNaN(to)) {
+        queryFilter.createdAt = { $gte: from, $lte: to };
+      } else {
+        throw new Error("Invalid date format for fromDate or toDate");
+      }
     }
+
     if (admission) {
       queryFilter.addmission = admission === "true"; // Convert to boolean
     }
@@ -48,6 +59,18 @@ export const GET = async (request) => {
     if (location) {
       queryFilter.branch = { $regex: location, $options: "i" };
     }
+    if (city) {
+      if (city.toLowerCase() === "jaipur") {
+        // If city is Jaipur, show only records with Jaipur
+        queryFilter["studentContact.city"] = { $regex: "^Jaipur$", $options: "i" }; // Exact match for Jaipur, case-insensitive
+      } else {
+        // If city is not Jaipur, exclude records with Jaipur
+        queryFilter["studentContact.city"] = { $ne: "Jaipur" }; // Exclude Jaipur
+      }
+    }
+    
+    
+
     if (assignedName) {
       // Fetch admin ID for assignedName
       const admin = await AdminModel.findOne({ name: { $regex: assignedName, $options: "i" } });

@@ -17,6 +17,7 @@ export default function QueryReport() {
   const [admission, setAdmission] = useState("");
   const [grade, setGrade] = useState("");
   const [location, setLocation] = useState("");
+  const [city, setCity] = useState("");
   const [assignedName, setAssignedName] = useState("");
   const [referenceData, setReferenceData] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -56,6 +57,7 @@ export default function QueryReport() {
           admission,
           grade,
           location,
+          city,
           assignedName,
         },
       });
@@ -99,6 +101,7 @@ export default function QueryReport() {
     if (admission) filters.push(`Admission: ${admission === "true" ? "Enroll" : "Not Enroll"}`);
     if (grade) filters.push(`Grade: ${grade}`);
     if (location) filters.push(`Branch: ${location}`);
+    if (city) filters.push(`City: ${city}`);
     if (assignedName) filters.push(`Assigned Name: ${assignedName}`);
     return filters.length > 0 ? filters.join(" | ") : "No filters applied.";
   };
@@ -252,6 +255,19 @@ export default function QueryReport() {
                       {data.branch_name}
                     </option>
                   ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">City</label>
+                <select
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                >
+                  <option value="">All</option>
+                  <option value="Jaipur">Jaipur</option>
+                  <option value="out">Out Of Jaipur</option>
                 </select>
               </div>
               <div>

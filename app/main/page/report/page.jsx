@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 
 import QueryReport from '../../component/Report/QueryReport/QueryReport';
+import MBSWise from '../../component/Report/MBSWise/MBSWise';
+
 export default function BranchReportPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,6 +36,17 @@ export default function BranchReportPage() {
                             onClick={() => handleOpenModal(<QueryReport />)}
                         >
                             OVERVIEW
+                        </button>
+                    </div>
+
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] underline"
+                            onClick={() => handleOpenModal(<MBSWise />)}
+                        >
+                            Month-wise /
+                            Branch-wise /
+                            Staff-wise
                         </button>
                     </div>
 
