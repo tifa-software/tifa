@@ -25,18 +25,18 @@ export default function UnderVisit() {
 
     useEffect(() => {
         const fetchAdminData = async () => {
-          try {
-            const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
-            setAdminData(response.data.branch); // Make sure response.data contains branch and _id
-          } catch (err) {
-            setError(err.message);
-          } finally {
-            setLoading(false);
-          }
+            try {
+                const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
+                setAdminData(response.data.branch); // Make sure response.data contains branch and _id
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
         };
-    
+
         if (session?.user?.email) fetchAdminData();
-      }, [session]);
+    }, [session]);
 
 
 
@@ -57,38 +57,38 @@ export default function UnderVisit() {
     }, [adminData]);
 
     const handleRowClick = (id) => {
-        router.push(`/main/page/allquery/${id}`);
+        router.push(`/branch/page/allquery/${id}`);
     };
     const handleSearch = (e) => {
         setSearchTerm(e.target.value);
         setCurrentPage(1); // Reset to first page on search
     };
 
-  
+
     // Updated filter logic for grade
     const filteredQueries = queries.filter(query => {
         const matchesGrade = selectedGrade === 'Null' || query.grade === selectedGrade;
         const queryDeadline = new Date(query.deadline);
-        
+
         const matchesDeadline = selectedDeadline === 'All' ||
             (selectedDeadline === 'Today' && queryDeadline.toDateString() === new Date().toDateString()) ||
             (selectedDeadline === 'Tomorrow' && queryDeadline.toDateString() === new Date(Date.now() + 86400000).toDateString()) ||
             (selectedDeadline === 'Past' && queryDeadline < new Date() && queryDeadline.toDateString() !== new Date().toDateString());
-    
+
         const matchesEnrollStatus = selectedEnrollStatus === 'All' ||
             (selectedEnrollStatus === 'Enroll' && query.addmission) ||
             (selectedEnrollStatus === 'Pending' && !query.addmission);
-    
+
         // Check if any of the student-related fields match the searchTerm
         const matchesSearchTerm =
             query.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             query.studentContact.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
             query.studentContact.city.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
         // Combine all the conditions
         return matchesGrade && matchesDeadline && matchesEnrollStatus && matchesSearchTerm;
     });
-    
+
 
     const sortedQueries = filteredQueries.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
 

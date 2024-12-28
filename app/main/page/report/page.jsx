@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from 'react';
-import Queryadd from '../../component/Report/Query/Queryadd';
 
+import QueryReport from '../../component/Report/QueryReport/QueryReport';
 export default function BranchReportPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,9 +31,9 @@ export default function BranchReportPage() {
                     <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
                         <button
                             className="text-[#29234b] underline"
-                            onClick={() => handleOpenModal(<Queryadd />)}
+                            onClick={() => handleOpenModal(<QueryReport />)}
                         >
-                            OVERVIEW 
+                            OVERVIEW
                         </button>
                     </div>
 
@@ -47,7 +47,7 @@ export default function BranchReportPage() {
                 <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
                     <div className="   h-screen w-screen  relative">
                         <button
-                            className="absolute top-2 text-3xl right-2 text-red-500 hover:text-red-700"
+                            className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
                             onClick={handleCloseModal}
                         >
                             &times;
