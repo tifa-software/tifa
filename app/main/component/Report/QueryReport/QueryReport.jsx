@@ -115,13 +115,6 @@ export default function QueryReport() {
   }
 
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader />
-      </div>
-    );
-  }
 
   const handleReferenceChange = (e) => {
     const selectedName = e.target.value;

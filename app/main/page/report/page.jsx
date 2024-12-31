@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 
 import QueryReport from '../../component/Report/QueryReport/QueryReport';
 import MBSWise from '../../component/Report/MBSWise/MBSWise';
-
+import LeadTransfer from '../../component/Report/LeadTransfer/LeadTransfer';
 export default function BranchReportPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,7 +32,7 @@ export default function BranchReportPage() {
 
                     <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
                         <button
-                            className="text-[#29234b] underline"
+                            className="text-[#29234b] "
                             onClick={() => handleOpenModal(<QueryReport />)}
                         >
                             OVERVIEW
@@ -41,14 +41,21 @@ export default function BranchReportPage() {
 
                     <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
                         <button
-                            className="text-[#29234b] underline"
+                            className="text-[#29234b] "
                             onClick={() => handleOpenModal(<MBSWise />)}
                         >
-                            Month-wise /
-                            Branch-wise /
-                            Staff-wise
+                           Lead Update Report
                         </button>
                     </div>
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<LeadTransfer />)}
+                        >
+                           Lead Transfer Report
+                        </button>
+                    </div>
+
 
 
 

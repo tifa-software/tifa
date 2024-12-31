@@ -2,7 +2,6 @@ import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
 import AdminModel from "@/model/Admin";
 import AuditLog from "@/model/AuditLog";
-
 export const GET = async () => {
     await dbConnect();
 
@@ -10,20 +9,19 @@ export const GET = async () => {
         // Fetch all queries and admins
         const queries = await QueryModel.find({});
         const admins = await AdminModel.find({}, { _id: 1, name: 1, branch: 1 });
+
         const adminMap = admins.reduce((map, admin) => {
             map[admin._id.toString()] = { name: admin.name, branch: admin.branch };
             map[admin.name] = { name: admin.name, branch: admin.branch }; // Map names too
             return map;
         }, {});
-        
-        // Fetch audit logs for queries
+
         const auditLogs = await AuditLog.find({ queryId: { $in: queries.map(q => q._id) } });
 
         const now = new Date();
         const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
         const startOfLastWeek = new Date(startOfWeek);
         startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
-
         const analytics = auditLogs.reduce((acc, log) => {
             log.history.forEach(entry => {
                 const actionDate = new Date(entry.actionDate);
@@ -60,10 +58,26 @@ export const GET = async () => {
             trendAnalysis: {}
         });
 
+
+        // Calculate sent and received counts
+        const sentReceivedCounts = admins.reduce((counts, admin) => {
+            const adminId = admin._id.toString();
+            counts[adminId] = { sent: 0, received: 0 };
+
+            queries.forEach(query => {
+                if (query.assignedsenthistory.includes(adminId)) counts[adminId].sent++;
+                if (query.assignedreceivedhistory.includes(adminId)) counts[adminId].received++;
+            });
+
+            return counts;
+        }, {});
+
+       
+
         // Grouping the user activity reports by userId to prevent duplicates
         const userActivityReport = Object.entries(analytics.dailyActivity).map(([userId, days]) => {
             let adminData;
-
+            
             if (userId === "system") {
                 adminData = { name: "System", branch: "System" };
             } else {
@@ -88,24 +102,15 @@ export const GET = async () => {
                         change: analytics.trendAnalysis[userId].currentWeek - analytics.trendAnalysis[userId].lastWeek,
                     }
                     : null,
+                    
             };
         });
 
-        // Remove duplicate user entries by aggregating daily activity for each user
-        const finalUserActivityReport = [];
-        const userIdsProcessed = new Set();
-
-        userActivityReport.forEach(item => {
-            if (item.userName !== "System" && item.branch !== "System" && !userIdsProcessed.has(item.userName)) {
-                finalUserActivityReport.push(item);
-                userIdsProcessed.add(item.userName);
-            }
-        });
 
         return Response.json({
             message: "Enhanced audit log analysis fetched successfully!",
             success: true,
-            data: { userActivityReport: finalUserActivityReport },
+            data: { userActivityReport },
         }, { status: 200 });
 
     } catch (error) {
