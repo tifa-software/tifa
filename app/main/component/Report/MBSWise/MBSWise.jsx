@@ -180,11 +180,10 @@ export default function MBSWise() {
                                                     <th className="border border-gray-300 p-2 bg-gray-100">Action</th>
                                                 </thead>
                                                 <tbody>
-
                                                     {Object.entries(user.dailyActivity)
-                                                        .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB))  // Sort dates in ascending order
-                                                        .map(([date, count]) => {
-                                                            // Convert the string date to a Date object and format it
+                                                        .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB)) // Sort dates in ascending order
+                                                        .map(([date, [actions, admissions]]) => { // Destructure actions and admissions from the array
+                                                            // Format the date
                                                             const formattedDate = new Date(date).toLocaleDateString("en-GB", {
                                                                 day: "numeric",
                                                                 month: "long",
@@ -194,10 +193,12 @@ export default function MBSWise() {
                                                             return (
                                                                 <tr key={date}>
                                                                     <td className="border border-gray-300 p-2 text-gray-700">{formattedDate}</td>
-                                                                    <td className="border border-gray-300 p-2 text-gray-700">{count} actions</td>
+                                                                    <td className="border border-gray-300 p-2 text-gray-700">{actions} actions {admissions > 0 && ( <span className=" bg-green-500 text-white text-sm  rounded-full px-2">{admissions} Addmission Done</span>)}</td>
+                                                                    
                                                                 </tr>
                                                             );
                                                         })}
+
 
                                                 </tbody>
 
@@ -227,7 +228,7 @@ export default function MBSWise() {
 
                                                     {Object.entries(user.monthlyActivity)
                                                         .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB))  // Sort dates in ascending order
-                                                        .map(([date, count]) => {
+                                                        .map(([date, [actions, admissions]]) => {
                                                             // Convert the string date to a Date object and format it
                                                             const formattedDate = new Date(date).toLocaleDateString("en-GB", {
 
@@ -238,7 +239,7 @@ export default function MBSWise() {
                                                             return (
                                                                 <tr key={date}>
                                                                     <td className="border border-gray-300 p-2 text-gray-700">{formattedDate}</td>
-                                                                    <td className="border border-gray-300 p-2 text-gray-700">{count} actions</td>
+                                                                    <td className="border border-gray-300 p-2 text-gray-700">{actions} actions {admissions} Addmission</td>
                                                                 </tr>
                                                             );
                                                         })}

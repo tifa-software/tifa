@@ -81,12 +81,15 @@ export default function AllQuery() {
           const tomorrow = new Date(today);
           tomorrow.setDate(today.getDate() + 1);
 
-          // Filter for queries with deadlines today, tomorrow, or in the past
+          // Filter queries based on conditions
           const filteredQueries = response.data.fetch.filter(query => {
             const deadline = new Date(query.deadline);
-            return (
-              deadline <= tomorrow
-            );
+            const isWithinDeadline = deadline <= tomorrow;
+            const isAssignedToUser =
+              (query.assignedTo === 'Not-Assigned' && query.userid === userid) ||
+              query.assignedTo === userid;
+
+            return isWithinDeadline && isAssignedToUser;
           });
 
           setQueries(filteredQueries);

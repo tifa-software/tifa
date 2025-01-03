@@ -1,7 +1,6 @@
 import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
 import AdminModel from "@/model/Admin";
-import AuditLog from "@/model/AuditLog";
 
 export const GET = async () => {
     await dbConnect();
@@ -11,14 +10,20 @@ export const GET = async () => {
         const queries = await QueryModel.find({});
         const admins = await AdminModel.find({}, { _id: 1, name: 1, branch: 1 });
 
-        // Calculate sent and received counts along with query IDs and assigned dates
+        // Create a map of admin IDs to names
+        const adminIdToName = admins.reduce((map, admin) => {
+            map[admin._id.toString()] = admin.name;
+            return map;
+        }, {});
+
+        // Calculate sent and received counts along with query details
         const sentReceivedCounts = admins.reduce((counts, admin) => {
             const adminId = admin._id.toString();
-            counts[adminId] = { 
-                sent: 0, 
-                received: 0, 
-                sentQueryDetails: [], // Store query IDs and assigned date for sent queries
-                receivedQueryDetails: [] // Store query IDs and assigned date for received queries
+            counts[adminId] = {
+                sent: 0,
+                received: 0,
+                sentQueryDetails: [],
+                receivedQueryDetails: []
             };
 
             queries.forEach(query => {
@@ -27,7 +32,11 @@ export const GET = async () => {
                     counts[adminId].sent++;
                     counts[adminId].sentQueryDetails.push({
                         queryId: query._id,
-                        assignedDate: query.assigneddate // Assuming 'assignedsentdate' is a field in your query model
+                        queryDetails: {
+                            ...query._doc,
+                            assignedsenthistory: query.assignedsenthistory.map(id => adminIdToName[id] || id),
+                            assignedreceivedhistory: query.assignedreceivedhistory.map(id => adminIdToName[id] || id)
+                        }
                     });
                 }
 
@@ -36,8 +45,11 @@ export const GET = async () => {
                     counts[adminId].received++;
                     counts[adminId].receivedQueryDetails.push({
                         queryId: query._id,
-                        assignedDate: query.assigneddate // Assuming 'assignedreceiveddate' is a field in your query model
-                        
+                        queryDetails: {
+                            ...query._doc,
+                            assignedsenthistory: query.assignedsenthistory.map(id => adminIdToName[id] || id),
+                            assignedreceivedhistory: query.assignedreceivedhistory.map(id => adminIdToName[id] || id)
+                        }
                     });
                 }
             });
@@ -45,7 +57,7 @@ export const GET = async () => {
             return counts;
         }, {});
 
-        // Prepare user activity report including query details and assigned date
+        // Prepare user activity report including full query details
         const userActivityReport = admins.map(admin => {
             const adminId = admin._id.toString();
             return {

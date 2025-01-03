@@ -39,6 +39,18 @@ export default function LeadTransfer() {
         setModalData({ type: "", queryIds: [] });
     };
 
+
+    if (loading) {
+        return (
+            <div className="mt-12 container lg:w-[90%] mx-auto text-center">
+                {/* Loading Spinner or Message */}
+                <div className="flex justify-center items-center h-40">
+                    <div className="w-16 h-16 border-4 border-t-4 border-gray-200 rounded-full animate-spin"></div>
+                    <p className="ml-4 text-xl font-semibold text-gray-700">Loading...</p>
+                </div>
+            </div>
+        );
+    }
     return (
         <div className="mt-12 container lg:w-[90%] mx-auto">
             <div>
@@ -56,8 +68,8 @@ export default function LeadTransfer() {
                             <th className="border border-gray-300 px-4 py-2">Branch</th>
                             <th className="border border-gray-300 px-4 py-2">Sent Queries</th>
                             <th className="border border-gray-300 px-4 py-2">Received Queries</th>
-                            <th className="border border-gray-300 px-4 py-2">Sent Query IDs</th>
-                            <th className="border border-gray-300 px-4 py-2">Received Query IDs</th>
+                            <th className="border border-gray-300 px-4 py-2">Sent Query</th>
+                            <th className="border border-gray-300 px-4 py-2">Received Query</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -98,56 +110,60 @@ export default function LeadTransfer() {
                     </tbody>
                 </table>
 
-               
+
                 {isModalOpen && (
-  <div className="fixed inset-0 flex items-center justify-center z-50">
-    {/* Background Overlay */}
-    <div
-      className="fixed inset-0 bg-black opacity-50"
-      onClick={closeModal}
-    ></div>
+                    <div className="fixed inset-0 flex items-center justify-center z-50">
+                        {/* Background Overlay */}
+                        <div
+                            className="fixed inset-0 bg-black opacity-50"
+                            onClick={closeModal}
+                        ></div>
 
-    {/* Modal Content */}
-    <div className="bg-white p-6 rounded shadow-lg z-10 w-1/2 max-h-[80vh] overflow-y-scroll">
-      {/* Modal Header */}
-      <h3 className="text-xl font-semibold mb-4">{modalData.type}</h3>
 
-      {/* Table */}
-      <table className="min-w-full table-auto">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="px-4 py-2 text-left">Query ID</th>
-            <th className="px-4 py-2 text-left">Assigned Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {modalData.queryIds.map((id, idx) => {
-            const formattedDate = new Date(id.assignedDate).toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            });
+                        <div className="bg-white p-6 rounded shadow-lg z-10  max-h-[80vh] overflow-y-scroll">
 
-            return (
-              <tr key={idx} className="border-t">
-                <td className="px-4 py-2">{id.queryId}</td>
-                <td className="px-4 py-2">{formattedDate}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                            <h3 className="text-xl font-semibold mb-4">{modalData.type}</h3>
 
-      {/* Close Button */}
-      <button
-        className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-        onClick={closeModal}
-      >
-        Close
-      </button>
-    </div>
-  </div>
-)}
+                            <table className="min-w-full table-auto">
+                                <thead>
+                                    <tr className="bg-gray-100">
+                                        <th className="px-4 py-2 text-left">Name</th>
+                                        <th className="px-4 py-2 text-left">Assigned Date</th>
+                                        <th className="px-4 py-2 text-left">Assigned By</th>
+                                        <th className="px-4 py-2 text-left">Assigned To</th>
+
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {modalData.queryIds.map((query, idx) => {
+                                        const formattedDate = new Date(query.assignedDate).toLocaleDateString('en-GB', {
+                                            day: 'numeric',
+                                            month: 'long',
+                                            year: 'numeric',
+                                        });
+
+                                        return (
+                                            <tr key={idx} className="border-t">
+                                                <td className="px-4 py-2">{query.queryDetails.studentName}</td>
+                                                <td className="px-4 py-2">{formattedDate}</td>
+                                                <td className="px-4 py-2">{query.queryDetails.assignedsenthistory}</td>
+                                                <td className="px-4 py-2">{query.queryDetails.assignedreceivedhistory}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+
+                            {/* Close Button */}
+                            <button
+                                className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                onClick={closeModal}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                )}
 
             </div>
 

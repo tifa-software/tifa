@@ -2,7 +2,6 @@ import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
 import AdminModel from "@/model/Admin";
 import AuditLog from "@/model/AuditLog";
-
 export const GET = async () => {
     await dbConnect();
 
@@ -15,7 +14,7 @@ export const GET = async () => {
             map[admin.name] = { name: admin.name, branch: admin.branch }; // Map names too
             return map;
         }, {});
-        
+
         // Fetch audit logs for queries
         const auditLogs = await AuditLog.find({ queryId: { $in: queries.map(q => q._id) } });
 
@@ -30,27 +29,49 @@ export const GET = async () => {
                 const actionDay = actionDate.toISOString().split("T")[0];
                 const actionMonth = actionDate.toISOString().slice(0, 7);
                 const userId = entry.actionBy;
-                const actionType = entry.actionType || "UNKNOWN";
-
+                const actionType = entry.action || "UNKNOWN";
+            
+                // Initialize data structures for the user
                 acc.dailyActivity[userId] = acc.dailyActivity[userId] || {};
-                acc.dailyActivity[userId][actionDay] = (acc.dailyActivity[userId][actionDay] || 0) + 1;
-
+                acc.dailyActivity[userId][actionDay] = acc.dailyActivity[userId][actionDay] || [0, 0];
+            
+                // Increment action count
+                acc.dailyActivity[userId][actionDay][0]++;
+            
+                // Check for enrollment-related actions in the changes map and count admissions
+                let admissionsCount = 0;
+                if (
+                    entry.changes.get("oflinesubStatus")?.newValue === "admission" ||
+                    entry.changes.get("onlinesubStatus")?.newValue === "admission"
+                ) {
+                    admissionsCount = 1; // This entry is an admission
+                    acc.dailyActivity[userId][actionDay][1]++; // Increment the daily admission count
+                }
+            
+                // Increment the total activity and admissions counts for the month
+                acc.monthlyActivity[userId] = acc.monthlyActivity[userId] || {};
+                const currentMonthData = acc.monthlyActivity[userId][actionMonth] || [0, 0];
+                
+                // Increment the activity count (first element) and admissions count (second element)
+                currentMonthData[0]++;  // Increment total activity
+                currentMonthData[1] += admissionsCount;  // Increment admissions count if it's an admission
+                acc.monthlyActivity[userId][actionMonth] = currentMonthData;
+        
+                // Track weekly, trend, and other breakdowns as before
                 acc.weeklyActivity[userId] = acc.weeklyActivity[userId] || 0;
                 if (actionDate >= startOfWeek) acc.weeklyActivity[userId]++;
-
+            
                 acc.trendAnalysis[userId] = acc.trendAnalysis[userId] || { currentWeek: 0, lastWeek: 0 };
                 if (actionDate >= startOfWeek) {
                     acc.trendAnalysis[userId].currentWeek++;
                 } else if (actionDate >= startOfLastWeek) {
                     acc.trendAnalysis[userId].lastWeek++;
                 }
-
-                acc.monthlyActivity[userId] = acc.monthlyActivity[userId] || {};
-                acc.monthlyActivity[userId][actionMonth] = (acc.monthlyActivity[userId][actionMonth] || 0) + 1;
-
+            
                 acc.actionBreakdown[userId] = acc.actionBreakdown[userId] || {};
                 acc.actionBreakdown[userId][actionType] = (acc.actionBreakdown[userId][actionType] || 0) + 1;
             });
+        
             return acc;
         }, {
             dailyActivity: {},
@@ -59,6 +80,7 @@ export const GET = async () => {
             actionBreakdown: {},
             trendAnalysis: {}
         });
+        
 
         // Grouping the user activity reports by userId to prevent duplicates
         const userActivityReport = Object.entries(analytics.dailyActivity).map(([userId, days]) => {
