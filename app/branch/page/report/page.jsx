@@ -29,7 +29,7 @@ export default function BranchReportPage() {
                 </header>
 
                 <div className="p-6 grid lg:grid-cols-2 gap-4">
-{/* 
+
                     <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
                         <button
                             className="text-[#29234b] "
@@ -37,7 +37,7 @@ export default function BranchReportPage() {
                         >
                             OVERVIEW
                         </button>
-                    </div> */}
+                    </div>
 
                     <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
                         <button

@@ -4,6 +4,7 @@ import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import Table from "../../Table/Table";
 import * as XLSX from "xlsx";
+import { useSession } from 'next-auth/react';
 
 export default function QueryReport() {
   const [allquery, setAllquery] = useState([]);
@@ -24,6 +25,8 @@ export default function QueryReport() {
   const [user, setuser] = useState([]);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedReference, setSelectedReference] = useState(null);
+  const { data: session } = useSession();
+  const [branch, setBranch] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,6 +48,22 @@ export default function QueryReport() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      try {
+        const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
+        setBranch(response.data.branch);
+      } catch (err) {
+        console.log(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (session?.user?.email) fetchAdminData();
+  }, [session]);
+ 
+  
   const fetchFilteredData = async () => {
     setLoading(true);
     try {
@@ -61,17 +80,29 @@ export default function QueryReport() {
           assignedName,
         },
       });
-      setAllquery(response.data.fetch);
+  
+      // Ensure `branch` is available before filtering
+      if (branch) {
+        const filteredData = response.data.fetch.filter((item) => item.branch === branch);
+        setAllquery(filteredData);
+      } else {
+        console.warn("Branch is not defined, skipping data filtering.");
+        setAllquery([]);
+      }
     } catch (error) {
       console.error("Error fetching filtered data:", error);
     } finally {
       setLoading(false);
     }
   };
-
+  
   useEffect(() => {
-    fetchFilteredData();
-  }, []);
+    // Fetch data only when `branch` is defined
+    if (branch) {
+      fetchFilteredData();
+    }
+  }, [branch]);
+  
 
   const handleFilter = () => {
     setIsFilterModalOpen(false); // Close modal

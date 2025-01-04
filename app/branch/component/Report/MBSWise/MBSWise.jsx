@@ -32,7 +32,6 @@ export default function MBSWise() {
             try {
                 const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
                 setBranch(response.data.branch);
-                console.log(response)
             } catch (err) {
                 console.log(err.message);
             } finally {

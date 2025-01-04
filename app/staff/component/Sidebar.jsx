@@ -112,7 +112,7 @@ export default function Sidebar({ onToggleSidebar }) {
                 </li>
               </Link>
 
-              <li
+              {/* <li
                 className={`cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md ${isActiveLink("") ? "bg-[#6cb049] text-white" : "hover:bg-gray-100 text-gray-700"
                   }`}
               >
@@ -124,7 +124,7 @@ export default function Sidebar({ onToggleSidebar }) {
               <li className="cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md hover:bg-gray-100 text-gray-700">
                 <Gauge size={18} />
                 Daily Report
-              </li>
+              </li> */}
             </ul>
 
             <ul className="flex h-full flex-col relative xl:hidden overflow-y-auto" style={{ maxHeight: "calc(100vh - 120px)" }}>
