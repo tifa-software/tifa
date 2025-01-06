@@ -825,8 +825,7 @@ export default function Page() {
                                             name="deadline"
                                             value={formData.deadline}
                                             onChange={handleChange}
-                                            min={formatDate(sessionStart)}
-                                            max={formatDate(sessionEnd)}
+                                           
                                             ref={(el) => (inputRefs.current[11] = el)} // Assign ref
                                             onKeyDown={(e) => handleKeyDown(e, 11)}
                                             className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
