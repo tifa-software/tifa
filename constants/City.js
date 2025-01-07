@@ -2,6 +2,7 @@ export const Citylist = [
     {
         state: "Rajasthan",
         cities: [
+            "Other",
             "Ajmer", 
             "Alwar", 
             "Banswara", 

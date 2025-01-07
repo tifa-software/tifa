@@ -164,18 +164,19 @@ export default function UpdateQuery6({ query, audit }) {
         </select>
       </div>
 
-      <div className="mb-6 transition-opacity duration-300 ease-in-out">
-        <label htmlFor="deadline" className="block text-lg font-medium text-gray-700 mb-2">Deadline:</label>
-        <input
-          type="date"
-          id="deadline"
-          value={deadline}
-          min={today} // Prevent selection of past dates
-          onChange={handleDeadlineChange}
-          className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
-        />
-      </div>
-
+      {connectionOption === 'connected' && (
+        <div className="mb-6 transition-opacity duration-300 ease-in-out">
+          <label htmlFor="deadline" className="block text-lg font-medium text-gray-700 mb-2">Deadline:</label>
+          <input
+            type="date"
+            id="deadline"
+            value={deadline}
+            min={today} // Prevent selection of past dates
+            onChange={handleDeadlineChange}
+            className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+          />
+        </div>
+      )}
       <div className="mb-6">
         <label htmlFor="gradeSelect" className="block text-lg font-medium text-gray-700 mb-2">
           Student Visit Grade:

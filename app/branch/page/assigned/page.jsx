@@ -142,10 +142,18 @@ export default function Assigned() {
                 (selectedEnrollStatus === 'Enroll' && query.addmission) ||
                 (selectedEnrollStatus === 'Pending' && !query.addmission);
 
-            const matchesDateRange =
-                (!startDate || queryAssignedDate >= new Date(startDate)) &&
-                (!endDate || queryAssignedDate <= new Date(endDate));
-
+                const start = startDate ? new Date(startDate) : null;
+                const end = endDate ? new Date(endDate) : null;
+        
+                // Ensure the end date includes the entire day (not just 00:00 time)
+                if (end) {
+                    end.setHours(23, 59, 59, 999);
+                }
+        
+                const matchesDateRange =
+                    (!start || (queryAssignedDate && queryAssignedDate >= start)) &&
+                    (!end || (queryAssignedDate && queryAssignedDate <= end));
+        
             return matchesBranch && matchesDeadline && matchesEnrollStatus && matchesDateRange;
         })
         .sort((a, b) => {
@@ -247,8 +255,9 @@ export default function Assigned() {
                                         <tr>
                                             <th className="px-1 py-4">SN.</th>
                                             <th className="px-1 py-4">Student Name</th>
-                                            <th className="px-1 py-4">Branch</th>
-                                            <th className="px-1 py-4">Assigned To</th>
+                                            <th className="px-1 py-4">Contact No</th>
+                                            <th className="px-1 py-4">Assigned Date</th>
+                                            <th className="px-1 py-4">Assigned From</th>
                                             <th className="px-1 py-4">Deadline</th>
                                             <th className="px-1 py-4">Status</th>
                                         </tr>
@@ -271,6 +280,7 @@ export default function Assigned() {
                                                 .map((query, index) => {
 
                                                     const deadline = new Date(query.deadline);
+                                                    const assigneddate = new Date(query.assigneddate);
                                                     const isToday = deadline.toDateString() === new Date().toDateString();
                                                     const isPastDeadline = deadline < new Date();
                                                     const isIn24Hours = deadline.toDateString() === new Date(Date.now() + 24 * 60 * 60 * 1000).toDateString();
@@ -284,7 +294,7 @@ export default function Assigned() {
                                                                 : isIn24Hours ? 'bg-[#fcccba] text-black'
                                                                     : isIn48Hours ? 'bg-[#ffe9bf] text-black'
                                                                         : '';
-                                                    const matchedUser = user.find((u) => u._id == query.assignedreceivedhistory);
+                                                    const matchedUser = user.find((u) => u._id == query.assignedsenthistory);
                                                     return (
                                                         <tr
                                                             key={query._id}
@@ -293,7 +303,8 @@ export default function Assigned() {
                                                         >
                                                             <td className="px-2 py-1 font-semibold">{(indexOfFirstQuery + index + 1)}</td>
                                                             <td className="px-2 py-1 font-semibold">{query.studentName}</td>
-                                                            <td className="px-2 py-1">{query.branch}</td>
+                                                            <td className="px-2 py-1 font-semibold">{query.studentContact.phoneNumber}</td>
+                                                            <td className="px-2 py-1">{assigneddate.toLocaleDateString()}</td>
                                                             <td className="px-2 py-1">
                                                                 {matchedUser
                                                                     ? `${matchedUser.name} (${matchedUser.branch}) Branch`

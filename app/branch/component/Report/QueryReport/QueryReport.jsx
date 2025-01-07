@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import Table from "../../Table/Table";
-import * as XLSX from "xlsx";
 import { useSession } from 'next-auth/react';
 
 export default function QueryReport() {
@@ -109,18 +108,7 @@ export default function QueryReport() {
     fetchFilteredData();
   };
 
-  const exportToExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(allquery);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Query Data");
 
-
-    const currentDate = new Date();
-    const formattedDate = currentDate.toISOString().slice(0, 10);
-    const fileName = `Report_${formattedDate}.xlsx`;
-
-    XLSX.writeFile(wb, fileName);
-  };
 
 
   const getFilterSummary = () => {
@@ -169,12 +157,7 @@ export default function QueryReport() {
             >
               Open Filters
             </button>
-            <button
-              onClick={exportToExcel}
-              className="ml-4 bg-green-500 text-white px-4 py-2 rounded shadow-md hover:bg-green-600 transition duration-200"
-            >
-              Export to Excel
-            </button>
+           
           </div>
         </div>
         <Table data={allquery} />

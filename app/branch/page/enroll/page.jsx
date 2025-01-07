@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Loader from '@/components/Loader/Loader';
 import { useRouter } from "next/navigation";
+import { useSession } from 'next-auth/react';
 
 export default function Assigned() {
     const [queries, setQueries] = useState([]);
@@ -11,18 +12,37 @@ export default function Assigned() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const { data: session } = useSession();
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(6); // Items to show per page
     const router = useRouter();
+    const [adminData, setAdminData] = useState(null);
+
+
+    useEffect(() => {
+        const fetchAdminData = async () => {
+            try {
+                const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
+                setAdminData(response.data.branch); // Make sure response.data contains branch and _id
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (session?.user?.email) fetchAdminData();
+    }, [session]);
+
 
     // Fetch enrolled queries and branch statistics
     useEffect(() => {
         const fetchEnrolledQueries = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get('/api/queries/enrolled/5');
+                const response = await axios.get(`/api/queries/enrolled-bybranch/${adminData}`);
                 setQueries(response.data.fetch);
                 calculateBranchStats(response.data.fetch); // Calculate stats based on the fetched data
                 calculateCityStats(response.data.fetch); // Calculate city stats based on the fetched data
@@ -35,7 +55,7 @@ export default function Assigned() {
         };
 
         fetchEnrolledQueries();
-    }, []);
+    }, [adminData]);
 
     // Calculate statistics per branch
     const calculateBranchStats = (data) => {

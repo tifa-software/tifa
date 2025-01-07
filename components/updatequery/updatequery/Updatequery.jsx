@@ -107,6 +107,7 @@ export default function UpdateQuery({ query, audit }) {
         // Check if wrong_no was selected or any count reaches 3, then call the second API
         if (
           selectedOption === 'wrong_no' ||
+          selectedOption === 'Wrong Lead Lokking For Job' ||
           subOption === 'not_interested' ||
           statusCountsUpdate.busy >= 3 ||
           statusCountsUpdate.call_back >= 3 ||
@@ -155,6 +156,7 @@ export default function UpdateQuery({ query, audit }) {
           <option value="no_connected">No Connected</option>
           <option value="not_lifting">Not Lifting</option>
           <option value="wrong_no">Wrong Number</option>
+          <option value="Wrong Lead Lokking For Job">Wrong Lead Looking For Job</option>
         </select>
       </div>
 
@@ -248,17 +250,20 @@ export default function UpdateQuery({ query, audit }) {
           <option value="C">Grade C (Student will visit beyond 7 days)</option>
         </select>
       </div>
-      <div className="mb-6 transition-opacity duration-300 ease-in-out">
-        <label htmlFor="deadline" className="block text-lg font-medium text-gray-700 mb-2">Deadline:</label>
-        <input
-          type="date"
-          id="deadline"
-          value={deadline}
-          min={today} // Prevent selection of past dates
-          onChange={handleDeadlineChange}
-          className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
-        />
-      </div>
+
+      {subOption === 'interested' && (
+        <div className="mb-6 transition-opacity duration-300 ease-in-out">
+          <label htmlFor="deadline" className="block text-lg font-medium text-gray-700 mb-2">Deadline:</label>
+          <input
+            type="date"
+            id="deadline"
+            value={deadline}
+            min={today} // Prevent selection of past dates
+            onChange={handleDeadlineChange}
+            className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+          />
+        </div>
+      )}
 
       <div className="mb-6 transition-opacity duration-300 ease-in-out">
         <h4 className="text-lg font-semibold mb-3 text-[#29234b]">Message</h4>

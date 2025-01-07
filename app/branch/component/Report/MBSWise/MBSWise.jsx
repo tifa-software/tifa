@@ -2,7 +2,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import Loader from "@/components/Loader/Loader";
-import * as XLSX from "xlsx";
 import { useSession } from 'next-auth/react';
 
 export default function MBSWise() {
@@ -112,28 +111,6 @@ export default function MBSWise() {
         setIsModalOpen(!isModalOpen);
     };
 
-    const exportToExcel = useCallback(() => {
-        const selectedColumns = Object.keys(columns).filter((col) => columns[col]);
-        const exportData = filteredData.map((user) => {
-            const row = {};
-            if (columns.userName) row["User Name"] = user.userName;
-            if (columns.branch) row["Branch"] = user.branch;
-            if (columns.dailyActivity)
-                row["Daily Activity"] = JSON.stringify(user.dailyActivity);
-            if (columns.weeklyActivity) row["Weekly Activity"] = user.weeklyActivity;
-            if (columns.monthlyActivity)
-                row["Monthly Activity"] = JSON.stringify(user.monthlyActivity);
-            if (columns.trendAnalysis)
-                row["Trend Analysis"] = JSON.stringify(user.trendAnalysis);
-            return row;
-        });
-
-        const worksheet = XLSX.utils.json_to_sheet(exportData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Filtered Data");
-        const fileName = `UserActivityReport_${new Date().toISOString()}.xlsx`;
-        XLSX.writeFile(workbook, fileName);
-    }, [filteredData, columns]);
 
     // Loader display
     if (loading) {
@@ -163,12 +140,6 @@ export default function MBSWise() {
                         Open Filters
                     </button>
 
-                    <button
-                        onClick={exportToExcel}
-                        className=" px-2 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-                    >
-                        Export to Excel
-                    </button>
 
                 </div>
             </div>

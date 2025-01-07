@@ -564,7 +564,9 @@ export default function Page() {
 
 
                         <div className="sm:col-span-6 col-span-12">
-                            <label className="block text-[15px] text-gray-700">Phone Number <span className=" text-red-700">*</span></label>
+                            <label className="block text-[15px] text-gray-700">
+                                Phone Number <span className=" text-red-700">*</span>
+                            </label>
                             <PhoneInput
                                 country={"in"}
                                 value={formData.studentContact.phoneNumber}
@@ -573,9 +575,24 @@ export default function Page() {
                                     onKeyDown: (e) => handleKeyDown(e, 3),
                                 }}
                                 onChange={(phone) =>
-                                    setFormData({
-                                        ...formData,
-                                        studentContact: { ...formData.studentContact, phoneNumber: phone },
+                                    setFormData((prevFormData) => {
+                                        const updatedFormData = {
+                                            ...prevFormData,
+                                            studentContact: {
+                                                ...prevFormData.studentContact,
+                                                phoneNumber: phone,
+                                            },
+                                        };
+
+                                        // Auto-update whatsappNumber if it's empty or matches the previous phoneNumber
+                                        if (
+                                            !prevFormData.studentContact.whatsappNumber ||
+                                            prevFormData.studentContact.whatsappNumber === prevFormData.studentContact.phoneNumber
+                                        ) {
+                                            updatedFormData.studentContact.whatsappNumber = phone;
+                                        }
+
+                                        return updatedFormData;
                                     })
                                 }
                                 className="w-full rounded-0"
@@ -595,10 +612,13 @@ export default function Page() {
                                     onKeyDown: (e) => handleKeyDown(e, 4),
                                 }}
                                 onChange={(phone) =>
-                                    setFormData({
-                                        ...formData,
-                                        studentContact: { ...formData.studentContact, whatsappNumber: phone },
-                                    })
+                                    setFormData((prevFormData) => ({
+                                        ...prevFormData,
+                                        studentContact: {
+                                            ...prevFormData.studentContact,
+                                            whatsappNumber: phone,
+                                        },
+                                    }))
                                 }
                                 className="w-full rounded-0"
                             />
@@ -606,6 +626,7 @@ export default function Page() {
                                 <p className="text-red-500 text-[8px] mt-1">{errors.whatsappNumber}</p>
                             )}
                         </div>
+
                         <div className="sm:col-span-6 col-span-12">
                             <label htmlFor="assignedToreq" className="block text-[15px] text-gray-700">
                                 Assigned To
@@ -825,7 +846,7 @@ export default function Page() {
                                             name="deadline"
                                             value={formData.deadline}
                                             onChange={handleChange}
-                                           
+
                                             ref={(el) => (inputRefs.current[11] = el)} // Assign ref
                                             onKeyDown={(e) => handleKeyDown(e, 11)}
                                             className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"

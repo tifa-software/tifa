@@ -175,19 +175,19 @@ export default function UpdateQuery5({ query, audit }) {
           <option value="C">Grade C (Student will visit beyond 7 days)</option>
         </select>
       </div>
-
-      <div className="mb-6 transition-opacity duration-300 ease-in-out">
-        <label htmlFor="deadline" className="block text-lg font-medium text-gray-700 mb-2">Deadline:</label>
-        <input
-          type="date"
-          id="deadline"
-          value={deadline}
-          min={today} // Prevent selection of past dates
-          onChange={handleDeadlineChange}
-          className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
-        />
-      </div>
-
+      {connectionOption === 'connected' && (
+        <div className="mb-6 transition-opacity duration-300 ease-in-out">
+          <label htmlFor="deadline" className="block text-lg font-medium text-gray-700 mb-2">Deadline:</label>
+          <input
+            type="date"
+            id="deadline"
+            value={deadline}
+            min={today} // Prevent selection of past dates
+            onChange={handleDeadlineChange}
+            className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+          />
+        </div>
+      )}
       <div className="mb-6 transition-opacity duration-300 ease-in-out">
         <h4 className="text-lg font-semibold mb-3 text-[#29234b]">Message:</h4>
         <textarea

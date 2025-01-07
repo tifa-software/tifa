@@ -15,8 +15,7 @@ export const Menulist = [
 
             { name: "Enrolled Students", icon: CheckSquare, href: "/staff/page/enroll" },
             { name: "Our Demo Count", icon: ListCollapse, href: "/staff/page/demo" },
-            { name: "New Admissions", icon: UserPlus, href: "/staff/page/addquery" },
-            { name: "Branch Visits", icon: User, href: "/staff/underdevelopment" },
+            { name: "New Admissions", icon: UserPlus, href: "/staff/page/addquery" }
 
         ],
     },

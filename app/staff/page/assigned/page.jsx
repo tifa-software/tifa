@@ -142,9 +142,17 @@ export default function Assigned() {
                 (selectedEnrollStatus === 'Enroll' && query.addmission) ||
                 (selectedEnrollStatus === 'Pending' && !query.addmission);
 
+            const start = startDate ? new Date(startDate) : null;
+            const end = endDate ? new Date(endDate) : null;
+
+            // Ensure the end date includes the entire day (not just 00:00 time)
+            if (end) {
+                end.setHours(23, 59, 59, 999);
+            }
+
             const matchesDateRange =
-                (!startDate || queryAssignedDate >= new Date(startDate)) &&
-                (!endDate || queryAssignedDate <= new Date(endDate));
+                (!start || (queryAssignedDate && queryAssignedDate >= start)) &&
+                (!end || (queryAssignedDate && queryAssignedDate <= end));
 
             return matchesBranch && matchesDeadline && matchesEnrollStatus && matchesDateRange;
         })
@@ -167,11 +175,6 @@ export default function Assigned() {
         });
 
 
-
-    const toggleBranchDetails = (branchName) => {
-        setOpenBranchDetails(prev => (prev === branchName ? null : branchName));
-        setSelectedBranch(prev => (prev === branchName ? 'All' : branchName));
-    };
 
     const sortedQueries = filteredQueries.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
 
@@ -247,8 +250,9 @@ export default function Assigned() {
                                         <tr>
                                             <th className="px-1 py-4">SN.</th>
                                             <th className="px-1 py-4">Student Name</th>
-                                            <th className="px-1 py-4">Branch</th>
-                                            <th className="px-1 py-4">Assigned To</th>
+                                            <th className="px-1 py-4">Contact No</th>
+                                            <th className="px-1 py-4">Assigned Date</th>
+                                            <th className="px-1 py-4">Assigned From</th>
                                             <th className="px-1 py-4">Deadline</th>
                                             <th className="px-1 py-4">Status</th>
                                         </tr>
@@ -271,6 +275,7 @@ export default function Assigned() {
                                                 .map((query, index) => {
 
                                                     const deadline = new Date(query.deadline);
+                                                    const assigneddate = new Date(query.assigneddate);
                                                     const isToday = deadline.toDateString() === new Date().toDateString();
                                                     const isPastDeadline = deadline < new Date();
                                                     const isIn24Hours = deadline.toDateString() === new Date(Date.now() + 24 * 60 * 60 * 1000).toDateString();
@@ -284,7 +289,7 @@ export default function Assigned() {
                                                                 : isIn24Hours ? 'bg-[#fcccba] text-black'
                                                                     : isIn48Hours ? 'bg-[#ffe9bf] text-black'
                                                                         : '';
-                                                    const matchedUser = user.find((u) => u._id == query.assignedreceivedhistory);
+                                                    const matchedUser = user.find((u) => u._id == query.assignedsenthistory);
                                                     return (
                                                         <tr
                                                             key={query._id}
@@ -293,7 +298,8 @@ export default function Assigned() {
                                                         >
                                                             <td className="px-2 py-1 font-semibold">{(indexOfFirstQuery + index + 1)}</td>
                                                             <td className="px-2 py-1 font-semibold">{query.studentName}</td>
-                                                            <td className="px-2 py-1">{query.branch}</td>
+                                                            <td className="px-2 py-1 font-semibold">{query.studentContact.phoneNumber}</td>
+                                                            <td className="px-2 py-1">{assigneddate.toLocaleDateString()}</td>
                                                             <td className="px-2 py-1">
                                                                 {matchedUser
                                                                     ? `${matchedUser.name} (${matchedUser.branch}) Branch`
@@ -377,38 +383,36 @@ export default function Assigned() {
                     {/* Branch Filter */}
                     <div className="shadow-lg rounded-lg bg-white p-4">
                         <h2 className="text-xl font-semibold mb-4 text-gray-800">Branch Statistics</h2>
-                        <ul className="space-y-2 text-sm">
+                        {loading ? (
+                            <tr>
+                                <td colSpan="4" className="px-2 py-4 text-center">
+                                    <div className="flex items-center justify-center h-full">
+                                        <Loader />
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : sortedQueries.length > 0 ? (
+                            Object.entries(
+                                sortedQueries.reduce((acc, query) => {
+                                    const matchedUser = user.find((u) => u._id == query.assignedsenthistory);
+                                    const branchName = matchedUser ? `${matchedUser.branch} Branch` : "Branch not found";
+                                    acc[branchName] = (acc[branchName] || 0) + 1; // Count queries per branch
+                                    return acc;
+                                }, {})
+                            ).map(([branchName, count]) => (
+                                <tr key={branchName}>
+                                    <td className="px-2 py-1">{branchName}</td>
+                                    <td className="px-2 py-1">{count} queries</td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="4" className="px-2 py-4 text-center text-gray-500">
+                                    No queries available
+                                </td>
+                            </tr>
+                        )}
 
-                            {branches.map(branch => {
-                                // Calculate total count of Enrolls and Pending
-                                const totalCount = branchDetails[branch.branch_name].Enrolls + branchDetails[branch.branch_name].pending;
-
-                                return (
-                                    <li key={branch._id}>
-                                        <button
-                                            onClick={() => toggleBranchDetails(branch.branch_name)}
-                                            className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${selectedBranch === branch.branch_name ? 'bg-gray-200 font-semibold' : 'hover:bg-gray-100'}`}
-                                        >
-                                            {/* Show branch name with total count in parentheses */}
-                                            <span>
-                                                {branch.branch_name} ({totalCount})
-                                            </span>
-                                            <span className="ml-2 text-gray-500">
-                                                {selectedBranch === branch.branch_name ? '-' : '+'}
-                                            </span>
-                                        </button>
-
-                                        {openBranchDetails === branch.branch_name && (
-                                            <div className="pl-4 py-2 bg-gray-100 rounded mt-2 space-y-2 transition-all duration-300 ease-in-out">
-                                                <p className="text-gray-700">Enrolls: <span className="font-semibold">{branchDetails[branch.branch_name].Enrolls}</span></p>
-                                                <p className="text-gray-700">Visited: <span className="font-semibold">{branchDetails[branch.branch_name].Enrolls}</span></p>
-                                                <p className="text-gray-700">Pending: <span className="font-semibold">{branchDetails[branch.branch_name].pending}</span></p>
-                                            </div>
-                                        )}
-                                    </li>
-                                );
-                            })}
-                        </ul>
                     </div>
 
 

@@ -16,32 +16,30 @@ import {
     Mail,
     Gauge,
     ListCollapse
-    
+
 } from 'lucide-react';
 
 export const Menulist = [
     {
         id: "1",
         title: "Admission",
-        icon: CheckSquare ,
+        icon: CheckSquare,
         submenu: [
-            { name: "New Admissions", icon: UserPlus ,href:"/branch/page/addquery"},
-            { name: "Our Demo Count", icon: ListCollapse ,href:"/branch/page/demo"},
-            { name: "Enrolled Students", icon: CheckSquare ,href:"/branch/page/enroll"},
-            { name: "Student Interaction History", icon: Book ,href:"/branch/underdevelopment"},
-            { name: "Class Scheduling", icon: Calendar ,href:"/branch/underdevelopment"},
-          
+            { name: "New Admissions", icon: UserPlus, href: "/branch/page/addquery" },
+            { name: "Our Demo Count", icon: ListCollapse, href: "/branch/page/demo" },
+            { name: "Enrolled Students", icon: CheckSquare, href: "/branch/page/enroll" }
+
         ],
-    }, 
+    },
     {
         id: "2",
         title: "Branches",
         icon: MapPinHouse,
         submenu: [
-            { name: "Register Staff", icon: ShieldCheck,href:"/branch/page/registerstaff" },
-            { name: "Staff", icon: Users,href:"/branch/page/staff" },
-            { name: "Branch Reports", icon: Download,href:"/branch/page/branchreport" },
-            { name: "Branch Performance", icon: Gauge,href:"/branch/page/performance" }
+            { name: "Register Staff", icon: ShieldCheck, href: "/branch/page/registerstaff" },
+            { name: "Staff", icon: Users, href: "/branch/page/staff" },
+            { name: "Branch Reports", icon: Download, href: "/branch/page/branchreport" },
+            { name: "Branch Performance", icon: Gauge, href: "/branch/page/performance" }
         ],
     },
     // {

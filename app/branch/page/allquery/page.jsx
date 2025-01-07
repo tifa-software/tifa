@@ -49,8 +49,6 @@ export default function AllQuery() {
       try {
         const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
         setAdminData(response.data); // Make sure response.data contains branch and _id
-        setFilterCourse(response.data.branch);
-        setFilterAssignedFrom(response.data._id)
       } catch (err) {
         setError(err.message);
       } finally {

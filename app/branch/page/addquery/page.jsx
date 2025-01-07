@@ -564,7 +564,9 @@ export default function Page() {
 
 
                         <div className="sm:col-span-6 col-span-12">
-                            <label className="block text-[15px] text-gray-700">Phone Number <span className=" text-red-700">*</span></label>
+                            <label className="block text-[15px] text-gray-700">
+                                Phone Number <span className=" text-red-700">*</span>
+                            </label>
                             <PhoneInput
                                 country={"in"}
                                 value={formData.studentContact.phoneNumber}
@@ -573,9 +575,24 @@ export default function Page() {
                                     onKeyDown: (e) => handleKeyDown(e, 3),
                                 }}
                                 onChange={(phone) =>
-                                    setFormData({
-                                        ...formData,
-                                        studentContact: { ...formData.studentContact, phoneNumber: phone },
+                                    setFormData((prevFormData) => {
+                                        const updatedFormData = {
+                                            ...prevFormData,
+                                            studentContact: {
+                                                ...prevFormData.studentContact,
+                                                phoneNumber: phone,
+                                            },
+                                        };
+
+                                        // Auto-update whatsappNumber if it's empty or matches the previous phoneNumber
+                                        if (
+                                            !prevFormData.studentContact.whatsappNumber ||
+                                            prevFormData.studentContact.whatsappNumber === prevFormData.studentContact.phoneNumber
+                                        ) {
+                                            updatedFormData.studentContact.whatsappNumber = phone;
+                                        }
+
+                                        return updatedFormData;
                                     })
                                 }
                                 className="w-full rounded-0"
@@ -595,10 +612,13 @@ export default function Page() {
                                     onKeyDown: (e) => handleKeyDown(e, 4),
                                 }}
                                 onChange={(phone) =>
-                                    setFormData({
-                                        ...formData,
-                                        studentContact: { ...formData.studentContact, whatsappNumber: phone },
-                                    })
+                                    setFormData((prevFormData) => ({
+                                        ...prevFormData,
+                                        studentContact: {
+                                            ...prevFormData.studentContact,
+                                            whatsappNumber: phone,
+                                        },
+                                    }))
                                 }
                                 className="w-full rounded-0"
                             />

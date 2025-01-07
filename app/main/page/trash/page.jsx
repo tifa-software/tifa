@@ -343,33 +343,7 @@ export default function AllQuery() {
           </div>
         </div>
 
-        {/* Legend Item */}
-        <div className=' flex flex-wrap gap-4'>
-          <div className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full animate-blink"></span>
-            <span className="text-gray-600">Past Due</span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-red-500"></span>
-            <span className="text-gray-600">Due Today</span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-[#fcccba]"></span>
-            <span className="text-gray-600">Due Tomorrow</span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-[#ffe9bf]"></span>
-            <span className="text-gray-600">Due Day After Tomorrow</span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-[#6cb049]"></span>
-            <span className="text-gray-600">Enrolled</span>
-          </div>
-        </div>
+        
       </div>
 
       {/* querie Table */}
@@ -423,14 +397,7 @@ export default function AllQuery() {
                   <>
                     <tr
                       key={querie._id}
-                      className={`border-b cursor-pointer transition-colors duration-200 relative
-          ${querie.addmission ? 'bg-[#6cb049] text-white' :
-                          new Date(querie.deadline).toDateString() === new Date().toDateString() ? 'bg-red-500 text-white' :
-                            new Date(querie.deadline) < new Date() ? 'text-white animate-blink' :
-                              new Date(querie.deadline).toDateString() === new Date(Date.now() + 24 * 60 * 60 * 1000).toDateString() ? 'bg-[#fcccba] text-black' :
-                                new Date(querie.deadline).toDateString() === new Date(Date.now() + 48 * 60 * 60 * 1000).toDateString() ? 'bg-[#ffe9bf] text-black' :
-                                  ''
-                        }`}
+                     className=' cursor-pointer'
                     >
                       <td className="px-4 py-2 relative">
                         <input
@@ -476,19 +443,6 @@ export default function AllQuery() {
                         {querie.studentContact.address}
                       </td>
 
-                      <span className="absolute right-0 top-0 bottom-0 flex items-center">
-                        {!querie.addmission && (
-                          new Date(querie.lastDeadline) < new Date() && new Date(querie.lastDeadline).toDateString() !== new Date().toDateString() ? (
-                            <span className="inline-flex items-center px-2 text-[10px] font-semibold text-red-600 bg-red-200 rounded-full shadow-md">
-                              ✖️ Today Update
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 text-[10px] font-semibold text-green-600 bg-green-200 rounded-full shadow-md">
-                              ✔️ Checked
-                            </span>
-                          )
-                        )}
-                      </span>
                     </tr>
 
 

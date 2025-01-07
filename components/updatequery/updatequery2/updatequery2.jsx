@@ -94,7 +94,19 @@ export default function UpdateQuery2({ query, audit }) {
         console.error('Error updating audit:', auditResponse.statusText);
       }
 
-      if (statusCountsUpdate.interested_but_not_proper_response >= 3) {
+      if (selectedOption === 'not_interested') {
+        // Directly close the query if the user is not interested
+        const queryUpdateData = {
+          id: queryid,
+          autoclosed: 'close',
+        };
+        const queryResponse = await axios.patch('/api/queries/update', queryUpdateData);
+        if (queryResponse.status === 200) {
+          console.log('Query updated with autoclosed successfully:', queryResponse.data);
+        } else {
+          console.error('Error updating query for autoclosed:', queryResponse.statusText);
+        }
+      } else  if (statusCountsUpdate.interested_but_not_proper_response >= 3) {
         const queryUpdateData = {
           id: queryid,
           autoclosed: 'close',
@@ -133,34 +145,42 @@ export default function UpdateQuery2({ query, audit }) {
 
         </select>
       </div>
-      <div className="mb-6">
-        <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
-          Interested Status:
-        </label>
-        <select
-          id="statusSelect"
-          value={selectedOption}
-          onChange={handleOptionChange}
-          className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
-        >
-          <option value="" disabled>-- Select Interested Status --</option>
-          <option value="admission">Enroll</option>
-          <option value="interested_but_not_proper_response">Not Proper Response</option>
-          <option value="response">Response</option>
-        </select>
-      </div>
 
-      <div className="mb-6">
-        <label htmlFor="deadline" className="block text-lg font-medium text-gray-700 mb-2">Deadline:</label>
-        <input
-          type="date"
-          id="deadline"
-          value={deadline}
-          min={today}
-          onChange={handleDeadlineChange}
-          className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
-        />
-      </div>
+      {connectionOption === 'connected' && (
+
+        <div className="mb-6">
+          <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
+            Interested Status:
+          </label>
+          <select
+            id="statusSelect"
+            value={selectedOption}
+            onChange={handleOptionChange}
+            className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+          >
+            <option value="" disabled>-- Select Interested Status --</option>
+            <option value="admission">Enroll</option>
+            <option value="interested_but_not_proper_response">Not Proper Response</option>
+            <option value="response">Response</option>
+            <option value="not_interested">Not Interested</option>
+          </select>
+        </div>
+      )}
+      {connectionOption === 'connected' && (
+
+        <div className="mb-6">
+          <label htmlFor="deadline" className="block text-lg font-medium text-gray-700 mb-2">Deadline:</label>
+          <input
+            type="date"
+            id="deadline"
+            value={deadline}
+            min={today}
+            onChange={handleDeadlineChange}
+            className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+          />
+        </div>
+      )}
+
       <div className="mb-6">
         <label htmlFor="gradeSelect" className="block text-lg font-medium text-gray-700 mb-2">
           Student Visit Grade:
