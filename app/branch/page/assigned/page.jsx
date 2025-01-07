@@ -10,6 +10,7 @@ export default function Assigned() {
     const [branches, setBranches] = useState([]);
     const [loading, setLoading] = useState(true);
     const [adminId, setAdminId] = useState(null);
+    const [adminBranch, setAdminBranch] = useState(null);
     const { data: session } = useSession();
     const router = useRouter();
     const [user, setuser] = useState([]);
@@ -42,7 +43,7 @@ export default function Assigned() {
         if (!selectedQuery) return;
 
         try {
-            const data = { id: selectedQuery._id, assignedTo: adminId, assignedTostatus: false }; // Update status to "Accepted"
+            const data = { id: selectedQuery._id, assignedTo: adminId, assignedTostatus: false, branch: adminBranch };
             const response = await axios.patch('/api/queries/update', data);
 
             if (response.status === 200) {
@@ -66,6 +67,7 @@ export default function Assigned() {
                 try {
                     const { data } = await axios.get(`/api/admin/find-admin-byemail/${session.user.email}`);
                     setAdminId(data._id);
+                    setAdminBranch(data.branch)
                 } catch (error) {
                     console.error(error.message);
                 }
@@ -142,18 +144,18 @@ export default function Assigned() {
                 (selectedEnrollStatus === 'Enroll' && query.addmission) ||
                 (selectedEnrollStatus === 'Pending' && !query.addmission);
 
-                const start = startDate ? new Date(startDate) : null;
-                const end = endDate ? new Date(endDate) : null;
-        
-                // Ensure the end date includes the entire day (not just 00:00 time)
-                if (end) {
-                    end.setHours(23, 59, 59, 999);
-                }
-        
-                const matchesDateRange =
-                    (!start || (queryAssignedDate && queryAssignedDate >= start)) &&
-                    (!end || (queryAssignedDate && queryAssignedDate <= end));
-        
+            const start = startDate ? new Date(startDate) : null;
+            const end = endDate ? new Date(endDate) : null;
+
+            // Ensure the end date includes the entire day (not just 00:00 time)
+            if (end) {
+                end.setHours(23, 59, 59, 999);
+            }
+
+            const matchesDateRange =
+                (!start || (queryAssignedDate && queryAssignedDate >= start)) &&
+                (!end || (queryAssignedDate && queryAssignedDate <= end));
+
             return matchesBranch && matchesDeadline && matchesEnrollStatus && matchesDateRange;
         })
         .sort((a, b) => {

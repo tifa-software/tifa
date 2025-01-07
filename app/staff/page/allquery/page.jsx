@@ -8,22 +8,40 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 
 export default function AllQuery() {
-  const [queries, setqueries] = useState([]);
+  const [queries, setQueries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [adminData, setAdminData] = useState(null);
-
   const [currentPage, setCurrentPage] = useState(1);
   const [queriesPerPage] = useState(8);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedqueries, setSelectedqueries] = useState([]);
   const [sortOrder, setSortOrder] = useState("newest");
   const [filterCourse, setFilterCourse] = useState("");
-  const [filterByGrade, setFilterByGrade] = useState("");
+  const [filteradmin, setFilteradmin] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [user, setuser] = useState([]);
   const [deadlineFilter, setDeadlineFilter] = useState(""); // State for deadline filter
-
+  const [adminData, setAdminData] = useState(null);
   const { data: session } = useSession();
+  const [filterAssignedFrom, setFilterAssignedFrom] = useState('');
+  const [filterByGrade, setFilterByGrade] = useState("");
+
+
+
+
+  useEffect(() => {
+    const fetchuserData = async () => {
+      try {
+        const response = await axios.get('/api/admin/fetchall/admin');
+        setuser(response.data.fetch);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchuserData();
+  }, []);
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -50,7 +68,7 @@ export default function AllQuery() {
           setLoading(true);
           const autoclosedStatus = 'open'; // or 'close', based on your logic
           const response = await axios.get(`/api/queries/fetchall-byuser/${adminData}?autoclosed=${autoclosedStatus}`);
-          setqueries(response.data.fetch);
+          setQueries(response.data.fetch);
         } catch (error) {
           console.error('Error fetching query data:', error);
         } finally {
@@ -63,22 +81,6 @@ export default function AllQuery() {
   }, [adminData]);
 
 
-  useEffect(() => {
-    const fetchuserData = async () => {
-      try {
-        const response = await axios.get('/api/admin/fetchall/admin');
-        setuser(response.data.fetch);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchuserData();
-  }, []);
-
-
 
   const router = useRouter();
   const handleRowClick = (id) => {
@@ -87,8 +89,6 @@ export default function AllQuery() {
   const toggleFilterPopup = () => {
     setIsFilterOpen(!isFilterOpen);
   };
-
-  // Sort queries based on selected order
   // Sort queries based on selected order
   const sortqueries = (queries) => {
     const today = new Date().setHours(0, 0, 0, 0);
@@ -114,12 +114,6 @@ export default function AllQuery() {
 
     return sortedQueries;
   };
-
-
-
-
-
-
 
 
   // Declare all required states
@@ -166,10 +160,12 @@ export default function AllQuery() {
         (querie.referenceid && querie.referenceid.toLowerCase().includes(searchTerm.toLowerCase()))
       ) &&
       (filterCourse === "" || querie.branch?.includes(filterCourse)) &&
+      (filterAssignedFrom === "" || querie.assignedreceivedhistory?.includes(filterAssignedFrom)) &&
       filterByDeadline(querie) && // Ensure the deadline filter is applied
       (filterByGrade === "" || querie.lastgrade === filterByGrade) // Add filter by grade
     )
   );
+
 
 
 
@@ -204,7 +200,7 @@ export default function AllQuery() {
         });
 
         // Filter out the deleted branches from the state
-        setqueries(queries.filter(querie => !selectedqueries.includes(querie._id)));
+        setQueries(queries.filter(querie => !selectedqueries.includes(querie._id)));
 
         // Clear the selected branches after deletion
         setSelectedqueries([]);
@@ -259,6 +255,7 @@ export default function AllQuery() {
                     <option key={index} value={branch}>{branch}</option>
                   ))}
                 </select>
+
                 <select
                   className="border px-3 py-2 focus:outline-none text-sm"
                   value={deadlineFilter} // Binding the deadline filter state
@@ -284,12 +281,12 @@ export default function AllQuery() {
                 )}
 
 
-                <Link href={'/staff/page/importquery'}>
+                <Link href={'/branch/page/importquery'}>
                   <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
                     <CirclePlus size={16} className='me-1' /> Import Query
                   </button>
                 </Link>
-                <Link href={'/staff/page/addquery'}>
+                <Link href={'/branch/page/addquery'}>
                   <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2">
                     <CirclePlus size={16} className='me-1' /> Add Query
                   </button>
@@ -315,10 +312,36 @@ export default function AllQuery() {
             onChange={(e) => setFilterCourse(e.target.value)}
           >
             <option value="">All Branch</option>
-            {Array.from(new Set(queries.flatMap(querie => querie.branch))).map((branch, index) => (
-              <option key={index} value={branch}>{branch}</option>
-            ))}
+            {Array.from(new Set(queries.flatMap((querie) => querie.branch)))
+              .filter((branch) => branch && branch.trim() !== "") // Exclude undefined or empty values
+              .map((branch, index) => (
+                <option key={index} value={branch}>
+                  {branch}
+                </option>
+              ))}
           </select>
+
+
+          <select
+            className="border px-3 py-2 focus:outline-none text-sm"
+            value={filterAssignedFrom}
+            onChange={(e) => setFilterAssignedFrom(e.target.value)}
+          >
+            <option value="">All Assigned</option>
+            {Array.from(new Set(queries.flatMap((querie) => querie.assignedreceivedhistory)))
+              .map((assignedFrom) => {
+                const userName = user.find((u) => u._id === assignedFrom)?.name;
+                return userName ? { id: assignedFrom, name: userName } : null;
+              })
+              .filter((option) => option !== null) // Remove null options
+              .map((option, index) => (
+                <option key={index} value={option.id}>
+                  {option.name}
+                </option>
+              ))}
+          </select>
+
+
           <select
             value={filterByGrade}
             onChange={(e) => setFilterByGrade(e.target.value)}
@@ -350,12 +373,12 @@ export default function AllQuery() {
             {/* Show custom date picker when "Custom Date" is selected */}
             {deadlineFilter === "custom" && (
               <div className=' absolute'>
-              <input
-                type="date"
-                className="border px-3 py-2 focus:outline-none text-sm"
-                value={customDate}
-                onChange={(e) => setCustomDate(e.target.value)} // Update custom date state
-              />
+                <input
+                  type="date"
+                  className="border px-3 py-2 focus:outline-none text-sm"
+                  value={customDate}
+                  onChange={(e) => setCustomDate(e.target.value)} // Update custom date state
+                />
               </div>
             )}
 
@@ -382,13 +405,13 @@ export default function AllQuery() {
 
 
 
-          <Link href={'/staff/page/importquery'}>
+          <Link href={'/branch/page/importquery'}>
             <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
               <CirclePlus size={16} className='me-1' /> Import Query
             </button>
           </Link>
 
-          <Link href={'/staff/page/addquery'}>
+          <Link href={'/branch/page/addquery'}>
             <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
               <CirclePlus size={16} className='me-1' /> Add Query
             </button>
@@ -485,11 +508,10 @@ export default function AllQuery() {
             ) : filteredqueries.length > 0 ? (
               filteredqueries.map((querie, index) => {
 
-
-
                 const matchedUser = user.find((u) => u._id === querie.userid);
                 const matchedassignedUser = user.find((u) => u._id == querie.assignedreceivedhistory);
                 const matchedassignedsenderUser = user.find((u) => u._id == querie.assignedsenthistory);
+
 
                 return (
                   <>
