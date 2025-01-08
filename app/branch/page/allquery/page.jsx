@@ -314,7 +314,7 @@ export default function AllQuery() {
 
         {/* Desktop Filter Section */}
         <div className="hidden lg:flex flex-wrap space-x-3">
-          <select
+          {/* <select
             className="border px-3 py-2 focus:outline-none text-sm"
             value={filterCourse}
             onChange={(e) => setFilterCourse(e.target.value)}
@@ -327,7 +327,7 @@ export default function AllQuery() {
                   {branch}
                 </option>
               ))}
-          </select>
+          </select> */}
 
 
           <select

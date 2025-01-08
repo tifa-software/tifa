@@ -281,12 +281,12 @@ export default function AllQuery() {
                 )}
 
 
-                <Link href={'/branch/page/importquery'}>
+                <Link href={'/staff/page/importquery'}>
                   <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
                     <CirclePlus size={16} className='me-1' /> Import Query
                   </button>
                 </Link>
-                <Link href={'/branch/page/addquery'}>
+                <Link href={'/staff/page/addquery'}>
                   <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2">
                     <CirclePlus size={16} className='me-1' /> Add Query
                   </button>
@@ -306,7 +306,7 @@ export default function AllQuery() {
 
         {/* Desktop Filter Section */}
         <div className="hidden lg:flex flex-wrap space-x-3">
-          <select
+          {/* <select
             className="border px-3 py-2 focus:outline-none text-sm"
             value={filterCourse}
             onChange={(e) => setFilterCourse(e.target.value)}
@@ -319,7 +319,7 @@ export default function AllQuery() {
                   {branch}
                 </option>
               ))}
-          </select>
+          </select> */}
 
 
           <select
@@ -405,13 +405,13 @@ export default function AllQuery() {
 
 
 
-          <Link href={'/branch/page/importquery'}>
+          <Link href={'/staff/page/importquery'}>
             <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
               <CirclePlus size={16} className='me-1' /> Import Query
             </button>
           </Link>
 
-          <Link href={'/branch/page/addquery'}>
+          <Link href={'/staff/page/addquery'}>
             <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
               <CirclePlus size={16} className='me-1' /> Add Query
             </button>

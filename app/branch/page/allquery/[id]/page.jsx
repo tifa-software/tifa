@@ -8,16 +8,35 @@ import UpdateQuere from "@/app/main/component/Updatequere/UpdateQuere";
 import AssignedQuery from "@/components/AssignedQuery/AssignedQuery";
 import QueryHistory from "@/components/QueryHistory/QueryHistory";
 import Fees from "@/components/fees/Fees";
+import { useSession } from 'next-auth/react';
 
 export default function Page({ params }) {
     const { id } = params;
     const [query, setQuery] = useState(null);
+    const [adminId, setAdminId] = useState(null);
+    const { data: session } = useSession();
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [dataLoaded, setDataLoaded] = useState(false);
     const [courses, setCourses] = useState([]); // State to store courses
     const [courseName, setCourseName] = useState(""); // State to store the course name
+
+    useEffect(() => {
+        const fetchAdminData = async () => {
+            try {
+                const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
+                setAdminId(response.data._id); // Make sure response.data contains branch and _id
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (session?.user?.email) fetchAdminData();
+    }, [session]);
 
     const fetchBranchData = useCallback(async () => {
         try {
@@ -81,40 +100,49 @@ export default function Page({ params }) {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 p-6 bg-gray-50 min-h-screen">
             {/* Left Sidebar */}
             <div className="col-span-1 bg-white shadow-lg rounded-lg p-6">
-                <Link href={`/branch/page/update/${query._id}`}>
-                    <Edit size={15} className=" mb-2 text-[#29234b]" />
-                </Link>
+
                 <div className="sticky top-5">
+
                     <div className="flex flex-col">
-                        <button
-                            onClick={async () => {
-                                if (query.autoclosed === "close") {
-                                    try {
-                                        // Call the update API to change autoclosed to "open"
-                                        const newApiResponse = await axios.patch('/api/queries/update', {
-                                            id: query._id,
-                                            autoclosed: "open"  // Change autoclosed to "open" when recovering query
-                                        });
+                        {((query.assignedTo === "Not-Assigned" && query.userid === adminId) || query.assignedTo === adminId) ? (
+                            <>
+                                <Link href={`/branch/page/update/${query._id}`}>
+                                    <Edit size={15} className=" mb-2 text-[#29234b]" />
+                                </Link>
+                                <button
+                                    onClick={async () => {
+                                        if (query.autoclosed === "close") {
+                                            try {
+                                                // Call the update API to change autoclosed to "open"
+                                                const newApiResponse = await axios.patch('/api/queries/update', {
+                                                    id: query._id,
+                                                    autoclosed: "open"  // Change autoclosed to "open" when recovering query
+                                                });
 
-                                        // Optionally, refresh data after the update
-                                        fetchBranchData();
-                                    } catch (error) {
-                                        console.error("Error updating query:", error);
-                                    }
-                                } else {
-                                    // Open the modal if query.autoclosed is not "close"
-                                    setIsModalOpen(true);
-                                }
-                            }}
-                            className="mb-1 bg-[#29234b] w-full py-1 rounded-md text-white transition duration-300 ease-in-out hover:bg-[#3a2b6f] focus:outline-none focus:ring-2 focus:ring-[#ffbe98] focus:ring-opacity-50"
-                        >
-                            {query.autoclosed === "close" ? "Recover Query" : "Update"}
-                        </button>
+                                                // Optionally, refresh data after the update
+                                                fetchBranchData();
+                                            } catch (error) {
+                                                console.error("Error updating query:", error);
+                                            }
+                                        } else {
+                                            // Open the modal if query.autoclosed is not "close"
+                                            setIsModalOpen(true);
+                                        }
+                                    }}
+                                    className="mb-1 bg-[#29234b] w-full py-1 rounded-md text-white transition duration-300 ease-in-out hover:bg-[#3a2b6f] focus:outline-none focus:ring-2 focus:ring-[#ffbe98] focus:ring-opacity-50"
+                                >
+                                    {query.autoclosed === "close" ? "Recover Query" : "Update"}
+                                </button>
 
-                        <AssignedQuery refreshData={fetchBranchData} initialData={query} />
+                                <AssignedQuery refreshData={fetchBranchData} initialData={query} />
+                                <Fees id={query._id} />
+                            </>) : (
+                            <p className="text-red-500 text-center mt-4">
+                                You are Not assigned to update this.
+                            </p>
+                        )}
                     </div>
 
-                    <Fees id={query._id} />
                     <h1 className="text-xl font-bold text-[#29234b] mb-3 hover:underline cursor-pointer">
                         {query.studentName}
                     </h1>

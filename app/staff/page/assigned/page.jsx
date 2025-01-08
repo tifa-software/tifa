@@ -11,7 +11,6 @@ export default function Assigned() {
     const [loading, setLoading] = useState(true);
     const [adminId, setAdminId] = useState(null);
     const [adminBranch, setAdminBranch] = useState(null);
-
     const { data: session } = useSession();
     const router = useRouter();
     const [user, setuser] = useState([]);
@@ -111,7 +110,7 @@ export default function Assigned() {
     };
 
     const branchDetails = branches.reduce((acc, branch) => {
-        const branchQueries = queries.filter(query => query.branch === branch.branch_name);
+        const branchQueries = queries.filter(query => query.lastbranch === branch.branch_name);
         acc[branch.branch_name] = {
             count: branchQueries.length,
             Enrolls: branchQueries.filter(query => query.addmission).length,
@@ -132,7 +131,7 @@ export default function Assigned() {
 
     const filteredQueries = queries
         .filter(query => {
-            const matchesBranch = selectedBranch === 'All' || query.branch === selectedBranch;
+            const matchesBranch = selectedBranch === 'All' || query.lastbranch === selectedBranch;
             const queryDeadline = new Date(query.deadline);
             const queryAssignedDate = new Date(query.assigneddate);
 
@@ -178,6 +177,11 @@ export default function Assigned() {
         });
 
 
+
+    const toggleBranchDetails = (branchName) => {
+        setOpenBranchDetails(prev => (prev === branchName ? null : branchName));
+        setSelectedBranch(prev => (prev === branchName ? 'All' : branchName));
+    };
 
     const sortedQueries = filteredQueries.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
 
@@ -386,36 +390,39 @@ export default function Assigned() {
                     {/* Branch Filter */}
                     <div className="shadow-lg rounded-lg bg-white p-4">
                         <h2 className="text-xl font-semibold mb-4 text-gray-800">Branch Statistics</h2>
-                        {loading ? (
-                            <tr>
-                                <td colSpan="4" className="px-2 py-4 text-center">
-                                    <div className="flex items-center justify-center h-full">
-                                        <Loader />
-                                    </div>
-                                </td>
-                            </tr>
-                        ) : sortedQueries.length > 0 ? (
-                            Object.entries(
-                                sortedQueries.reduce((acc, query) => {
-                                    const matchedUser = user.find((u) => u._id == query.assignedsenthistory);
-                                    const branchName = matchedUser ? `${matchedUser.branch} Branch` : "Branch not found";
-                                    acc[branchName] = (acc[branchName] || 0) + 1; // Count queries per branch
-                                    return acc;
-                                }, {})
-                            ).map(([branchName, count]) => (
-                                <tr key={branchName}>
-                                    <td className="px-2 py-1">{branchName}</td>
-                                    <td className="px-2 py-1">{count} queries</td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="4" className="px-2 py-4 text-center text-gray-500">
-                                    No queries available
-                                </td>
-                            </tr>
-                        )}
+                        <h2 className=" bg-gray-800 mb-4 p-1 text-white">Total Queries Received  = {totalRequests}</h2>
+                        <ul className="space-y-2 text-sm">
 
+                            {branches.map(branch => {
+                                // Calculate total count of Enrolls and Pending
+                                const totalCount = branchDetails[branch.branch_name].Enrolls + branchDetails[branch.branch_name].pending;
+
+                                return (
+                                    <li key={branch._id}>
+                                        <button
+                                            onClick={() => toggleBranchDetails(branch.branch_name)}
+                                            className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${selectedBranch === branch.branch_name ? 'bg-gray-200 font-semibold' : 'hover:bg-gray-100'}`}
+                                        >
+                                            {/* Show branch name with total count in parentheses */}
+                                            <span>
+                                                {branch.branch_name} ({totalCount})
+                                            </span>
+                                            <span className="ml-2 text-gray-500">
+                                                {selectedBranch === branch.branch_name ? '-' : '+'}
+                                            </span>
+                                        </button>
+
+                                        {openBranchDetails === branch.branch_name && (
+                                            <div className="pl-4 py-2 bg-gray-100 rounded mt-2 space-y-2 transition-all duration-300 ease-in-out">
+                                                <p className="text-gray-700">Enrolls: <span className="font-semibold">{branchDetails[branch.branch_name].Enrolls}</span></p>
+                                                <p className="text-gray-700">Visited: <span className="font-semibold">{branchDetails[branch.branch_name].Enrolls}</span></p>
+                                                <p className="text-gray-700">Pending: <span className="font-semibold">{branchDetails[branch.branch_name].pending}</span></p>
+                                            </div>
+                                        )}
+                                    </li>
+                                );
+                            })}
+                        </ul>
                     </div>
 
 

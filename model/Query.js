@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-
+import AdminModel from "./Admin";
 const querySchema = new Schema({
     userid: {
         type: String,
@@ -123,7 +123,10 @@ const querySchema = new Schema({
         type: Boolean,
         default: false
     },
-
+    lastbranch: {
+        type: String,
+        required: true,
+    },
     branch: {
         type: String,
         default: "Not_Provided"
@@ -169,12 +172,32 @@ const querySchema = new Schema({
     },
 }, { timestamps: true });
 
-querySchema.pre('validate', function (next) {
+querySchema.pre('validate', async function (next) {
     if (!this.assigneddate) {
         this.assigneddate = this.createdAt || new Date(); // Use createdAt or fallback to current date
     }
+
+    if (this.isNew || this.isModified("userid")) {
+        try {
+            console.log("Fetching admin for branch:", this.branch);
+            const admin = await AdminModel.findOne({ branch: this.branch });
+            if (admin) {
+                console.log("Admin found:", admin);
+                this.lastbranch = admin.branch; // Programmatically set lastbranch if admin is found
+                this.userid = admin._id.toString();
+            } else {
+                console.log("No admin found for branch:", this.branch);
+                return next(new Error("lastbranch is required and cannot be null"));
+            }
+        } catch (error) {
+            console.error("Error fetching admin:", error);
+            return next(error);
+        }
+    }
+
     next();
 });
+
 
 querySchema.pre('save', function (next) {
     // Check if deadline has been modified
@@ -192,6 +215,6 @@ querySchema.pre('save', function (next) {
 
 const QueryModel =
 
-    mongoose.models.Queries44 || mongoose.model('Queries44', querySchema);
+    mongoose.models.AllQueries || mongoose.model('AllQueries', querySchema);
 
 export default QueryModel;

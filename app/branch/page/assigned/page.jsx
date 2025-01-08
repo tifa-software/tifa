@@ -110,7 +110,7 @@ export default function Assigned() {
     };
 
     const branchDetails = branches.reduce((acc, branch) => {
-        const branchQueries = queries.filter(query => query.branch === branch.branch_name);
+        const branchQueries = queries.filter(query => query.lastbranch === branch.branch_name);
         acc[branch.branch_name] = {
             count: branchQueries.length,
             Enrolls: branchQueries.filter(query => query.addmission).length,
@@ -131,7 +131,7 @@ export default function Assigned() {
 
     const filteredQueries = queries
         .filter(query => {
-            const matchesBranch = selectedBranch === 'All' || query.branch === selectedBranch;
+            const matchesBranch = selectedBranch === 'All' || query.lastbranch === selectedBranch;
             const queryDeadline = new Date(query.deadline);
             const queryAssignedDate = new Date(query.assigneddate);
 
@@ -390,6 +390,8 @@ export default function Assigned() {
                     {/* Branch Filter */}
                     <div className="shadow-lg rounded-lg bg-white p-4">
                         <h2 className="text-xl font-semibold mb-4 text-gray-800">Branch Statistics</h2>
+                        <h2 className=" bg-gray-800 mb-4 p-1 text-white">Total Queries Received  = {totalRequests}</h2>
+
                         <ul className="space-y-2 text-sm">
 
                             {branches.map(branch => {

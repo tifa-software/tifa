@@ -13,7 +13,7 @@ export const GET = async (request, context) => {
         // Fetch data dynamically based on the `autoclosed` status
         const fetch = await QueryModel.find({
             $or: [
-                { userid: userid },                // Matches documents with the specified userid
+                { userid: userid, assignedTo: "Not-Assigned" },                // Matches documents with the specified userid
                 { assignedTo: userid }             // Matches documents assigned to the specified userid
             ],
             autoclosed: autoclosedStatus || "open",

@@ -96,67 +96,67 @@ export default function AllQuery() {
   const toggleFilterPopup = () => {
     setIsFilterOpen(!isFilterOpen);
   };
-// Sort queries based on selected order
-const sortqueries = (queries) => {
-  const today = new Date().setHours(0, 0, 0, 0);
+  // Sort queries based on selected order
+  const sortqueries = (queries) => {
+    const today = new Date().setHours(0, 0, 0, 0);
 
-  const sortedQueries = queries.sort((a, b) => {
-    const dateA = new Date(a.deadline).setHours(0, 0, 0, 0);
-    const dateB = new Date(b.deadline).setHours(0, 0, 0, 0);
+    const sortedQueries = queries.sort((a, b) => {
+      const dateA = new Date(a.deadline).setHours(0, 0, 0, 0);
+      const dateB = new Date(b.deadline).setHours(0, 0, 0, 0);
 
-    // Sort today’s dates first
-    if (dateA === today && dateB === today) return 0;
-    if (dateA === today) return -1;
-    if (dateB === today) return 1;
+      // Sort today’s dates first
+      if (dateA === today && dateB === today) return 0;
+      if (dateA === today) return -1;
+      if (dateB === today) return 1;
 
-    // Sort past dates next (in descending order)
-    if (dateA < today && dateB < today) return dateB - dateA;
+      // Sort past dates next (in descending order)
+      if (dateA < today && dateB < today) return dateB - dateA;
 
-    // Sort future dates last (in ascending order)
-    if (dateA > today && dateB > today) return dateA - dateB;
+      // Sort future dates last (in ascending order)
+      if (dateA > today && dateB > today) return dateA - dateB;
 
-    // Place past dates before future dates
-    return dateA < today ? -1 : 1;
-  });
+      // Place past dates before future dates
+      return dateA < today ? -1 : 1;
+    });
 
-  return sortedQueries;
-};
-// Filter queries based on course and search term
-const filterByDeadline = (querie) => {
-  const currentDate = new Date();
-  const querieDeadline = new Date(querie.deadline);
+    return sortedQueries;
+  };
+  // Filter queries based on course and search term
+  const filterByDeadline = (querie) => {
+    const currentDate = new Date();
+    const querieDeadline = new Date(querie.deadline);
 
-  switch (deadlineFilter) {
-    case "today":
-      return querieDeadline.toDateString() === currentDate.toDateString();
-    case "tomorrow":
-      const tomorrow = new Date(currentDate);
-      tomorrow.setDate(currentDate.getDate() + 1);
-      return querieDeadline.toDateString() === tomorrow.toDateString();
-    case "dayAfterTomorrow":
-      const dayAfterTomorrow = new Date(currentDate);
-      dayAfterTomorrow.setDate(currentDate.getDate() + 2);
-      return querieDeadline.toDateString() === dayAfterTomorrow.toDateString();
-    case "past":
-      return querieDeadline < new Date(currentDate.setHours(0, 0, 0, 0));
-    default:
-      return true; // 'All' will display all queries
-  }
-};
+    switch (deadlineFilter) {
+      case "today":
+        return querieDeadline.toDateString() === currentDate.toDateString();
+      case "tomorrow":
+        const tomorrow = new Date(currentDate);
+        tomorrow.setDate(currentDate.getDate() + 1);
+        return querieDeadline.toDateString() === tomorrow.toDateString();
+      case "dayAfterTomorrow":
+        const dayAfterTomorrow = new Date(currentDate);
+        dayAfterTomorrow.setDate(currentDate.getDate() + 2);
+        return querieDeadline.toDateString() === dayAfterTomorrow.toDateString();
+      case "past":
+        return querieDeadline < new Date(currentDate.setHours(0, 0, 0, 0));
+      default:
+        return true; // 'All' will display all queries
+    }
+  };
 
-// Apply filters and sort queries
-const filteredqueries = sortqueries(
-  queries.filter(querie => 
-    (
-      (querie.studentName && querie.studentName.toLowerCase().includes(searchTerm.toLowerCase())) || 
-      (querie.studentContact?.phoneNumber?.includes(searchTerm)) || 
-      (querie.referenceid && querie.referenceid.toLowerCase().includes(searchTerm.toLowerCase()))
-    ) &&
-    (filterCourse === "" || querie.branch?.includes(filterCourse)) &&
-    filterByDeadline(querie) && // Ensure the deadline filter is applied
-    (filterByGrade === "" || querie.lastgrade === filterByGrade) // Add filter by grade
-  )
-);
+  // Apply filters and sort queries
+  const filteredqueries = sortqueries(
+    queries.filter(querie =>
+      (
+        (querie.studentName && querie.studentName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (querie.studentContact?.phoneNumber?.includes(searchTerm)) ||
+        (querie.referenceid && querie.referenceid.toLowerCase().includes(searchTerm.toLowerCase()))
+      ) &&
+      (filterCourse === "" || querie.branch?.includes(filterCourse)) &&
+      filterByDeadline(querie) && // Ensure the deadline filter is applied
+      (filterByGrade === "" || querie.lastgrade === filterByGrade) // Add filter by grade
+    )
+  );
 
 
 
@@ -311,7 +311,7 @@ const filteredqueries = sortqueries(
             <option value="A">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
-         
+
           </select>
 
           <select
@@ -413,7 +413,7 @@ const filteredqueries = sortqueries(
               </tr>
             ) : filteredqueries.length > 0 ? (
               filteredqueries.map((querie, index) => {
-                
+
                 const matchedUser = user.find((u) => u._id === querie.userid);
                 const matchedassignedUser = user.find((u) => u._id == querie.assignedreceivedhistory);
                 const matchedassignedsenderUser = user.find((u) => u._id == querie.assignedsenthistory);
@@ -451,7 +451,7 @@ const filteredqueries = sortqueries(
                       </td>
 
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
-                      {querie.lastgrade}
+                        {querie.lastgrade}
                       </td>
 
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
@@ -469,31 +469,31 @@ const filteredqueries = sortqueries(
                         {querie.studentContact.address}
                       </td>
 
-                     
+
                     </tr>
 
 
-                    
-                      <tr className="border-b bg-gray-200">
-                        <td colSpan="10" className="px-4">
-                          <div className="flex flex-wrap gap-4">
-                            <p className="font-bold text-xs">Last Action</p>
+
+                    <tr className="border-b bg-gray-200">
+                      <td colSpan="10" className="px-4">
+                        <div className="flex flex-wrap gap-4">
+                          <p className="font-bold text-xs">Last Action</p>
 
 
-                            <p className=' text-xs'><strong>Action By = </strong>{querie.lastactionby} </p>
+                          <p className=' text-xs'><strong>Action By = </strong>{querie.lastactionby} </p>
 
-                            <ul>
-                              
-                                <li className=' text-xs'>
-                                  <strong>Message = </strong> {querie.lastmessage}
-                                </li>
-                              
-                            </ul>
+                          <ul>
 
-                          </div>
-                        </td>
-                      </tr>
-                 
+                            <li className=' text-xs'>
+                              <strong>Message = </strong> {querie.lastmessage}
+                            </li>
+
+                          </ul>
+
+                        </div>
+                      </td>
+                    </tr>
+
 
 
                   </>

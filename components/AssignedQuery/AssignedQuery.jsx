@@ -18,6 +18,7 @@ export default function AssignedQuery({ initialData, refreshData }) {
     const [message, setMessage] = useState(''); // State for the message
     const { data: session } = useSession();
     const [adminid, setAdminid] = useState(null);
+    const [adminbranch, setAdminbranch] = useState(null);
     useEffect(() => {
         const fetchAdminData = async () => {
             try {
@@ -27,6 +28,7 @@ export default function AssignedQuery({ initialData, refreshData }) {
                 );
 
                 setAdminid(response.data._id);
+                setAdminbranch(response.data.branch)
 
             } catch (err) {
                 
@@ -79,6 +81,7 @@ export default function AssignedQuery({ initialData, refreshData }) {
             // Update query assignment with actionBy (who is performing the update)
             const queryResponse = await axios.patch('/api/queries/update', {
                 id: initialData._id,
+                lastbranch:adminbranch,
                 assignedToreq,
                 assignedsenthistory: [adminId],
                 assignedreceivedhistory: [assignedUserId], // Add assigned user ID to received history
