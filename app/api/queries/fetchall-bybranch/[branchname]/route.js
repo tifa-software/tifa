@@ -21,13 +21,18 @@ export const GET = async (request, context) => {
 
     try {
         const fetch = await QueryModel.find({
-            $or: [
-                { assignedTo: userid },
-                // { userid: userid },
-                { branch: branchname, assignedTo: "Not-Assigned" }
+            $and: [
+                { addmission: false }, 
+                {
+                    $or: [
+                        { assignedTo: userid },
+                        { branch: branchname, assignedTo: "Not-Assigned" }
+                    ]
+                }
             ],
             autoclosed: autoclosedStatus
         });
+        
 
         return Response.json(
             {

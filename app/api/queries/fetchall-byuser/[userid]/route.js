@@ -17,7 +17,7 @@ export const GET = async (request, context) => {
                 { assignedTo: userid }             // Matches documents assigned to the specified userid
             ],
             autoclosed: autoclosedStatus || "open",
-            addmission: false // Default to "open" if not provided
+            addmission: false 
         });
 
         return Response.json(
