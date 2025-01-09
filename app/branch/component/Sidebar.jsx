@@ -100,7 +100,7 @@ export default function Sidebar({ onToggleSidebar }) {
                     }`}
                 >
                   <ListTodo size={18} />
-                  Under Visit Querys
+                  Under Visit Query
                 </li>
               </Link>
 

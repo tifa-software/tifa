@@ -14,6 +14,7 @@ export default function Table({ data }) {
                             <th className="px-4 py-3 text-[12px]">Message</th>
                             <th className="px-4 py-3 text-[12px]">City</th>
                             <th className="px-4 py-3 text-[12px]">Grade</th>
+                            <th className="px-4 py-3 text-[12px]">Assigned From</th>
                             <th className="px-4 py-3 text-[12px]">Assigned To</th>
                             <th className="px-4 py-3 text-[12px]">Branch</th>
                             <th className="px-4 py-3 text-[12px]">Created Date</th>
@@ -33,14 +34,15 @@ export default function Table({ data }) {
                                 <td className="px-4 py-3 text-[12px]">{data.studentContact.phoneNumber}</td>
                                 <td className="px-4 py-3 text-[12px]"> {data.historyCount}</td>
                                 <td className="px-4 py-3 text-[12px] relative">
-                                    <span className="overflow-hidden whitespace-nowrap text-ellipsis">{data.lastmessage.slice(0, 12)}...</span>
+                                    <span className="overflow-hidden whitespace-nowrap text-ellipsis">{data.lastmessage?.slice(0, 12)}...</span>
                                     <div className="absolute cursor-pointer left-0 bottom-0 bg-gray-800 text-white p-2 rounded-md opacity-0 transition-opacity hover:opacity-100 max-w-xs w-48">
                                         {data.lastmessage}
                                     </div>
                                 </td>
                                 <td className="px-4 py-3 text-[12px]">{data.studentContact.city}</td>
                                 <td className="px-4 py-3 text-[12px]">{data.lastgrade}</td>
-                                <td className="px-4 py-3 text-[12px]">{data.assignedTo}</td>
+                                <td className="px-4 py-3 text-[12px]">{data.assignedsenthistory}</td>
+                                <td className="px-4 py-3 text-[12px]">{data.assignedreceivedhistory}</td>
                                 <td className="px-4 py-3 text-[12px]">{data.branch}</td>
                                 <td className="px-4 py-3 text-[12px]">
                                     {(() => {
