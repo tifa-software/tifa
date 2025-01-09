@@ -142,18 +142,18 @@ export default function Assigned() {
                 (selectedEnrollStatus === 'Enroll' && query.addmission) ||
                 (selectedEnrollStatus === 'Pending' && !query.addmission);
 
-                const start = startDate ? new Date(startDate) : null;
-                const end = endDate ? new Date(endDate) : null;
-        
-                // Ensure the end date includes the entire day (not just 00:00 time)
-                if (end) {
-                    end.setHours(23, 59, 59, 999);
-                }
-        
-                const matchesDateRange =
-                    (!start || (queryAssignedDate && queryAssignedDate >= start)) &&
-                    (!end || (queryAssignedDate && queryAssignedDate <= end));
-        
+            const start = startDate ? new Date(startDate) : null;
+            const end = endDate ? new Date(endDate) : null;
+
+            // Ensure the end date includes the entire day (not just 00:00 time)
+            if (end) {
+                end.setHours(23, 59, 59, 999);
+            }
+
+            const matchesDateRange =
+                (!start || (queryAssignedDate && queryAssignedDate >= start)) &&
+                (!end || (queryAssignedDate && queryAssignedDate <= end));
+
 
             return matchesBranch && matchesDeadline && matchesEnrollStatus && matchesDateRange;
         })
@@ -365,8 +365,13 @@ export default function Assigned() {
                         <ul className="space-y-2 text-sm">
 
                             {branches.map(branch => {
-                                // Calculate total count of Enrolls and Pending
-                                const totalCount = branchDetails[branch.branch_name].Enrolls + branchDetails[branch.branch_name].pending;
+                                // Filter queries specific to the branch
+                                const branchQueries = filteredQueries.filter(query => query.branch === branch.branch_name);
+
+                                // Calculate total counts dynamically from filtered queries
+                                const enrollsCount = branchQueries.filter(query => query.addmission).length;
+                                const pendingCount = branchQueries.filter(query => !query.addmission).length;
+                                const totalCount = enrollsCount + pendingCount;
 
                                 return (
                                     <li key={branch._id}>
@@ -385,9 +390,9 @@ export default function Assigned() {
 
                                         {openBranchDetails === branch.branch_name && (
                                             <div className="pl-4 py-2 bg-gray-100 rounded mt-2 space-y-2 transition-all duration-300 ease-in-out">
-                                                <p className="text-gray-700">Enrolls: <span className="font-semibold">{branchDetails[branch.branch_name].Enrolls}</span></p>
-                                                <p className="text-gray-700">Visited: <span className="font-semibold">{branchDetails[branch.branch_name].Enrolls}</span></p>
-                                                <p className="text-gray-700">Pending: <span className="font-semibold">{branchDetails[branch.branch_name].pending}</span></p>
+                                                <p className="text-gray-700">Enrolls: <span className="font-semibold">{enrollsCount}</span></p>
+                                                <p className="text-gray-700">Visited: <span className="font-semibold">{enrollsCount}</span></p>
+                                                <p className="text-gray-700">Pending: <span className="font-semibold">{pendingCount}</span></p>
                                             </div>
                                         )}
                                     </li>
@@ -395,13 +400,8 @@ export default function Assigned() {
                             })}
                         </ul>
                     </div>
-
-
-
-
-
-
                 </div>
+
             </div>
         </div>
     );

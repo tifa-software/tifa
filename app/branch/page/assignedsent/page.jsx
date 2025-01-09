@@ -359,49 +359,49 @@ export default function Assigned() {
 
                 {/* Filters */}
                 <div className="w-full lg:w-1/3 space-y-6">
-                    {/* Branch Filter */}
-                    <div className="shadow-lg rounded-lg bg-white p-4">
-                        <h2 className="text-xl font-semibold mb-4 text-gray-800">Branch Statistics</h2>
-                        <ul className="space-y-2 text-sm">
+    {/* Branch Filter */}
+    <div className="shadow-lg rounded-lg bg-white p-4">
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">Branch Statistics</h2>
+        <ul className="space-y-2 text-sm">
 
-                            {branches.map(branch => {
-                                // Calculate total count of Enrolls and Pending
-                                const totalCount = branchDetails[branch.branch_name].Enrolls + branchDetails[branch.branch_name].pending;
+            {branches.map(branch => {
+                // Filter queries specific to the branch
+                const branchQueries = filteredQueries.filter(query => query.branch === branch.branch_name);
+                
+                // Calculate total counts dynamically from filtered queries
+                const enrollsCount = branchQueries.filter(query => query.addmission).length;
+                const pendingCount = branchQueries.filter(query => !query.addmission).length;
+                const totalCount = enrollsCount + pendingCount;
 
-                                return (
-                                    <li key={branch._id}>
-                                        <button
-                                            onClick={() => toggleBranchDetails(branch.branch_name)}
-                                            className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${selectedBranch === branch.branch_name ? 'bg-gray-200 font-semibold' : 'hover:bg-gray-100'}`}
-                                        >
-                                            {/* Show branch name with total count in parentheses */}
-                                            <span>
-                                                {branch.branch_name} ({totalCount})
-                                            </span>
-                                            <span className="ml-2 text-gray-500">
-                                                {selectedBranch === branch.branch_name ? '-' : '+'}
-                                            </span>
-                                        </button>
+                return (
+                    <li key={branch._id}>
+                        <button
+                            onClick={() => toggleBranchDetails(branch.branch_name)}
+                            className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${selectedBranch === branch.branch_name ? 'bg-gray-200 font-semibold' : 'hover:bg-gray-100'}`}
+                        >
+                            {/* Show branch name with total count in parentheses */}
+                            <span>
+                                {branch.branch_name} ({totalCount})
+                            </span>
+                            <span className="ml-2 text-gray-500">
+                                {selectedBranch === branch.branch_name ? '-' : '+'}
+                            </span>
+                        </button>
 
-                                        {openBranchDetails === branch.branch_name && (
-                                            <div className="pl-4 py-2 bg-gray-100 rounded mt-2 space-y-2 transition-all duration-300 ease-in-out">
-                                                <p className="text-gray-700">Enrolls: <span className="font-semibold">{branchDetails[branch.branch_name].Enrolls}</span></p>
-                                                <p className="text-gray-700">Visited: <span className="font-semibold">{branchDetails[branch.branch_name].Enrolls}</span></p>
-                                                <p className="text-gray-700">Pending: <span className="font-semibold">{branchDetails[branch.branch_name].pending}</span></p>
-                                            </div>
-                                        )}
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                    </div>
+                        {openBranchDetails === branch.branch_name && (
+                            <div className="pl-4 py-2 bg-gray-100 rounded mt-2 space-y-2 transition-all duration-300 ease-in-out">
+                                <p className="text-gray-700">Enrolls: <span className="font-semibold">{enrollsCount}</span></p>
+                                <p className="text-gray-700">Visited: <span className="font-semibold">{enrollsCount}</span></p>
+                                <p className="text-gray-700">Pending: <span className="font-semibold">{pendingCount}</span></p>
+                            </div>
+                        )}
+                    </li>
+                );
+            })}
+        </ul>
+    </div>
+</div>
 
-
-
-
-
-
-                </div>
             </div>
         </div>
     );

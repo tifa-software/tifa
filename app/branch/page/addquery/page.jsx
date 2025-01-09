@@ -15,7 +15,7 @@ export default function Page() {
     const [displayDate, setDisplayDate] = useState("");
     const [user, setuser] = useState([]);
     const [errors, setErrors] = useState({});
-
+    const [isPhoneNumberExist, setIsPhoneNumberExist] = useState(false);
     const [adminData, setAdminData] = useState(null);
     const [adminid, setAdminid] = useState(null);
     const [adminbranch, setAdminbranch] = useState(null);
@@ -93,6 +93,24 @@ export default function Page() {
 
         fetchData();
     }, []);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                const response = await axios.get("/api/queries/number/s");
+                const phoneNumbers = response.data.fetch.map((item) => item.studentContact.phoneNumber);
+                const phoneExists = phoneNumbers.includes(formData.studentContact.phoneNumber);
+                setIsPhoneNumberExist(phoneExists);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [formData.studentContact.phoneNumber]);
 
     useEffect(() => {
         const fetchAdminData = async () => {
@@ -597,6 +615,9 @@ export default function Page() {
                                 }
                                 className="w-full rounded-0"
                             />
+                            {isPhoneNumberExist && (
+                                <p className="text-red-500 text-[18px] mt-1">This phone number already exists. Please use a different number.</p>
+                            )}
                             {errors.phoneNumber && (
                                 <p className="text-red-500 text-[8px] mt-1">{errors.phoneNumber}</p>
                             )}
@@ -845,7 +866,7 @@ export default function Page() {
                                             name="deadline"
                                             value={formData.deadline}
                                             onChange={handleChange}
-                                          
+
                                             ref={(el) => (inputRefs.current[11] = el)} // Assign ref
                                             onKeyDown={(e) => handleKeyDown(e, 11)}
                                             className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"

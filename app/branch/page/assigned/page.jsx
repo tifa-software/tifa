@@ -390,13 +390,25 @@ export default function Assigned() {
                     {/* Branch Filter */}
                     <div className="shadow-lg rounded-lg bg-white p-4">
                         <h2 className="text-xl font-semibold mb-4 text-gray-800">Branch Statistics</h2>
-                        <h2 className=" bg-gray-800 mb-4 p-1 text-white">Total Queries Received  = {totalRequests}</h2>
-
+                        <h2 className=" bg-gray-800 mb-4 p-1 text-white">
+                            Total Queries Received = {filteredQueries.length}
+                        </h2>
                         <ul className="space-y-2 text-sm">
-
                             {branches.map(branch => {
-                                // Calculate total count of Enrolls and Pending
-                                const totalCount = branchDetails[branch.branch_name].Enrolls + branchDetails[branch.branch_name].pending;
+                                // Filter the queries for the specific branch based on the date filter
+                                const filteredBranchQueries = filteredQueries.filter(
+                                    query => query.lastbranch === branch.branch_name
+                                );
+
+                                // Calculate total count of Enrolls and Pending for this branch
+                                const totalCount = filteredBranchQueries.reduce(
+                                    (acc, query) => {
+                                        if (query.addmission) acc.Enrolls += 1;
+                                        else acc.pending += 1;
+                                        return acc;
+                                    },
+                                    { Enrolls: 0, pending: 0 }
+                                );
 
                                 return (
                                     <li key={branch._id}>
@@ -406,7 +418,7 @@ export default function Assigned() {
                                         >
                                             {/* Show branch name with total count in parentheses */}
                                             <span>
-                                                {branch.branch_name} ({totalCount})
+                                                {branch.branch_name} ({totalCount.Enrolls + totalCount.pending})
                                             </span>
                                             <span className="ml-2 text-gray-500">
                                                 {selectedBranch === branch.branch_name ? '-' : '+'}
@@ -415,9 +427,15 @@ export default function Assigned() {
 
                                         {openBranchDetails === branch.branch_name && (
                                             <div className="pl-4 py-2 bg-gray-100 rounded mt-2 space-y-2 transition-all duration-300 ease-in-out">
-                                                <p className="text-gray-700">Enrolls: <span className="font-semibold">{branchDetails[branch.branch_name].Enrolls}</span></p>
-                                                <p className="text-gray-700">Visited: <span className="font-semibold">{branchDetails[branch.branch_name].Enrolls}</span></p>
-                                                <p className="text-gray-700">Pending: <span className="font-semibold">{branchDetails[branch.branch_name].pending}</span></p>
+                                                <p className="text-gray-700">
+                                                    Enrolls: <span className="font-semibold">{totalCount.Enrolls}</span>
+                                                </p>
+                                                <p className="text-gray-700">
+                                                    Visited: <span className="font-semibold">{totalCount.Enrolls}</span>
+                                                </p>
+                                                <p className="text-gray-700">
+                                                    Pending: <span className="font-semibold">{totalCount.pending}</span>
+                                                </p>
                                             </div>
                                         )}
                                     </li>
@@ -425,12 +443,6 @@ export default function Assigned() {
                             })}
                         </ul>
                     </div>
-
-
-
-
-
-
                 </div>
             </div>
         </div>
