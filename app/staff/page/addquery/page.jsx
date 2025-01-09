@@ -59,21 +59,30 @@ export default function Page() {
     const [success, setSuccess] = useState("");
     const [isFormValid, setIsFormValid] = useState(false);
     useEffect(() => {
+        let isMounted = true; // To prevent state updates if the component unmounts during the fetch
+    
         const fetchData = async () => {
             setLoading(true);
             try {
                 const response = await axios.get("/api/queries/number/s");
-                const phoneNumbers = response.data.fetch.map((item) => item.studentContact.phoneNumber);
-                const phoneExists = phoneNumbers.includes(formData.studentContact.phoneNumber);
-                setIsPhoneNumberExist(phoneExists);
+                if (isMounted) {
+                    const phoneSet = new Set(response.data.fetch.map((item) => item.studentContact.phoneNumber));
+                    setIsPhoneNumberExist(phoneSet.has(formData.studentContact.phoneNumber));
+                }
             } catch (error) {
                 console.error("Error fetching data:", error);
             } finally {
-                setLoading(false);
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
         };
-
+    
         fetchData();
+    
+        return () => {
+            isMounted = false; // Cleanup to avoid setting state on unmounted component
+        };
     }, [formData.studentContact.phoneNumber]);
     // const today = new Date().toISOString().split('T')[0];
     const currentYear = new Date().getFullYear();

@@ -32,10 +32,7 @@ export const Menulist = [
             { name: "Our Reference Count", icon: ListCollapse ,href:"/main/page/referencecount"},
             { name: "Our Demo Count", icon: ListCollapse ,href:"/main/page/demo"},
             { name: "New Admissions", icon: UserPlus ,href:"/main/page/addquery"},
-            { name: "Branch Visits", icon: User ,href:"/main/underdevelopment"},
             { name: "Enrolled Students", icon: CheckSquare ,href:"/main/page/enroll"},
-            { name: "Class Scheduling", icon: Calendar ,href:"/main/underdevelopment"},
-            { name: "Emergency Contacts", icon: Phone ,href:"/main/underdevelopment"},
         ],
     }, 
     {
@@ -47,8 +44,6 @@ export const Menulist = [
             { name: "New Branch", icon: MapPinPlus,href:"/main/page/addbranch" },
             { name: "Register Staff", icon: ShieldCheck,href:"/main/page/registerstaff" },
             { name: "Staff", icon: Users,href:"/main/page/staff" },
-            { name: "Branch Reports", icon: Download,href:"/main/page/branchreport" },
-            { name: "Branch Performance", icon: Gauge,href:"/main/page/performance" }
         ],
     },
     // {
