@@ -38,8 +38,7 @@ export const Menulist = [
         submenu: [
             { name: "Register Staff", icon: ShieldCheck, href: "/branch/page/registerstaff" },
             { name: "Staff", icon: Users, href: "/branch/page/staff" },
-            { name: "Branch Reports", icon: Download, href: "/branch/page/branchreport" },
-            { name: "Branch Performance", icon: Gauge, href: "/branch/page/performance" }
+            { name: "Branch Reports", icon: Download, href: "/branch/page/report" },
         ],
     },
     // {

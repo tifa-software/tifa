@@ -1,7 +1,7 @@
 import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
 import AdminModel from "@/model/Admin";
-import AuditLog from "@/model/AuditLog"
+import AuditLog from "@/model/AuditLog";
 
 // Helper function to escape special characters in a regex
 const escapeRegex = (string) => {
@@ -15,7 +15,7 @@ export const GET = async (request) => {
     // Parse query parameters
     const { searchParams } = new URL(request.url);
     const referenceId = searchParams.get("referenceId");
-    const suboption = searchParams.get("suboption")
+    const suboption = searchParams.get("suboption");
     const fromDate = searchParams.get("fromDate");
     const toDate = searchParams.get("toDate");
     const admission = searchParams.get("admission");
@@ -24,20 +24,17 @@ export const GET = async (request) => {
     const city = searchParams.get("city");
     const assignedName = searchParams.get("assignedName");
 
-
     // Build MongoDB query
     const queryFilter = { defaultdata: "query" };
 
     if (referenceId) {
-      // Decode and escape referenceId for regex
-      const decodedReferenceId = decodeURIComponent(referenceId);  // Decode URL-encoded referenceId
-      const escapedReferenceId = escapeRegex(decodedReferenceId);  // Escape special characters
-      queryFilter.referenceid = { $regex: escapedReferenceId, $options: "i" };  // Case-insensitive match
+      const decodedReferenceId = decodeURIComponent(referenceId);
+      const escapedReferenceId = escapeRegex(decodedReferenceId);
+      queryFilter.referenceid = { $regex: escapedReferenceId, $options: "i" };
     }
     if (suboption) {
       queryFilter.suboption = { $regex: suboption, $options: "i" };
     }
-
     if (fromDate && toDate) {
       const from = new Date(fromDate);
       const to = new Date(toDate);
@@ -49,9 +46,8 @@ export const GET = async (request) => {
         throw new Error("Invalid date format for fromDate or toDate");
       }
     }
-
     if (admission) {
-      queryFilter.addmission = admission === "true"; // Convert to boolean
+      queryFilter.addmission = admission === "true";
     }
     if (grade) {
       queryFilter.lastgrade = { $regex: grade, $options: "i" };
@@ -61,18 +57,12 @@ export const GET = async (request) => {
     }
     if (city) {
       if (city.toLowerCase() === "jaipur") {
-        // If city is Jaipur, show only records with Jaipur
-        queryFilter["studentContact.city"] = { $regex: "^Jaipur$", $options: "i" }; // Exact match for Jaipur, case-insensitive
+        queryFilter["studentContact.city"] = { $regex: "^Jaipur$", $options: "i" };
       } else {
-        // If city is not Jaipur, exclude records with Jaipur
-        queryFilter["studentContact.city"] = { $ne: "Jaipur" }; // Exclude Jaipur
+        queryFilter["studentContact.city"] = { $ne: "Jaipur" };
       }
     }
-    
-    
-
     if (assignedName) {
-      // Fetch admin ID for assignedName
       const admin = await AdminModel.findOne({ name: { $regex: assignedName, $options: "i" } });
       if (admin) {
         queryFilter.assignedTo = admin._id;
@@ -89,20 +79,22 @@ export const GET = async (request) => {
       return map;
     }, {});
 
+    // Fetch audit logs for all queries
+    const auditLogs = await AuditLog.find({ queryId: { $in: queries.map((query) => query._id) } });
 
-    const auditLogs = await AuditLog.find({ queryId: { $in: queries.map(query => query._id) } });
-
-    // Create a map of history counts for each queryId
-    const historyCountMap = auditLogs.reduce((map, log) => {
+    // Create a map of stages and history counts for each queryId
+    const auditLogMap = auditLogs.reduce((map, log) => {
       const queryId = log.queryId.toString();
       if (!map[queryId]) {
-        map[queryId] = 0;
+        map[queryId] = { stage: log.stage, historyCount: 0 };
       }
-      map[queryId] += log.history.length; // Count the number of history entries (actions)
+      map[queryId].historyCount += log.history.length;
       return map;
     }, {});
+
     // Format the queries for response
     const formattedQueries = queries.map((query) => {
+      const auditData = auditLogMap[query._id.toString()] || { stage: 0, historyCount: 0 };
       return {
         ...query._doc,
         userid: adminMap[query.userid] || query.userid,
@@ -110,7 +102,8 @@ export const GET = async (request) => {
         assignedsenthistory: query.assignedsenthistory.map((id) => adminMap[id] || id),
         assignedreceivedhistory: query.assignedreceivedhistory.map((id) => adminMap[id] || id),
         assignedToreq: adminMap[query.assignedToreq] || query.assignedToreq,
-        historyCount: historyCountMap[query._id.toString()] || 0,
+        historyCount: auditData.historyCount,
+        stage: auditData.stage,
       };
     });
 
