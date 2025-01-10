@@ -9,7 +9,7 @@ export default function LeadTransfer() {
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState([]);
     const [modalData, setModalData] = useState({ type: "", queryIds: [] });
-    const [ branch, setBranch ] = useState("");
+    const [branch, setBranch] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { data: session } = useSession();
 
@@ -44,10 +44,10 @@ export default function LeadTransfer() {
                 setLoading(false);
             }
         };
-    
+
         if (branch) fetchData();
     }, [branch]);
-    
+
 
     const openModal = (type, queryIds) => {
         setModalData({ type, queryIds });
@@ -147,10 +147,16 @@ export default function LeadTransfer() {
                             <table className="min-w-full table-auto">
                                 <thead>
                                     <tr className="bg-gray-100">
-                                        <th className="px-4 py-2 text-left">Name</th>
-                                        <th className="px-4 py-2 text-left">Assigned Date</th>
-                                        <th className="px-4 py-2 text-left">Assigned By</th>
-                                        <th className="px-4 py-2 text-left">Assigned To</th>
+                                        <th className="px-4 py-3 text-[12px]">Student Name</th>
+                                        <th className="px-4 py-3 text-[12px]">Phone Number</th>
+                                        <th className="px-4 py-3 text-[12px]">City</th>
+                                        <th className="px-4 py-3 text-[12px]">Grade</th>
+                                        <th className="px-4 py-3 text-[12px]">Query Sender</th>
+                                        <th className="px-4 py-3 text-[12px]">Query Receiver</th>
+                                        <th className="px-4 py-3 text-[12px]">Branch</th>
+                                        <th className="px-4 py-3 text-[12px]">Demo</th>
+                                        {/* <th className="px-4 py-3 text-[12px]">Assigned Date</th> */}
+                                        <th className="px-4 py-3 text-[12px]">Enroll</th>
 
                                     </tr>
                                 </thead>
@@ -165,9 +171,19 @@ export default function LeadTransfer() {
                                         return (
                                             <tr key={idx} className="border-t">
                                                 <td className="px-4 py-2">{query.queryDetails.studentName}</td>
-                                                <td className="px-4 py-2">{formattedDate}</td>
+                                                <td className="px-4 py-2">{query.queryDetails.studentContact.phoneNumber}</td>
+                                                <td className="px-4 py-2">{query.queryDetails.studentContact.city}</td>
+                                                <td className="px-4 py-2">{query.queryDetails.lastgrade}</td>
                                                 <td className="px-4 py-2">{query.queryDetails.assignedsenthistory}</td>
                                                 <td className="px-4 py-2">{query.queryDetails.assignedreceivedhistory}</td>
+                                                <td className="px-4 py-2">{query.queryDetails.branch}</td>
+                                                <td className="px-4 py-2">{query.queryDetails.demo  ? "Yes" : "No"}</td>
+
+                                                {/* <td className="px-4 py-2">{formattedDate}</td> */}
+                                                <td className="px-4 py-2">{query.queryDetails.addmission ? "Yes" : "No"}</td>
+                                                {/* <td className="px-4 py-2">{formattedDate}</td>
+                                                <td className="px-4 py-2">{query.queryDetails.assignedsenthistory}</td>
+                                                <td className="px-4 py-2">{query.queryDetails.assignedreceivedhistory}</td> */}
                                             </tr>
                                         );
                                     })}

@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import QueryReport from '../../component/Report/QueryReport/QueryReport';
 import MBSWise from '../../component/Report/MBSWise/MBSWise';
 import LeadTransfer from '../../component/Report/LeadTransfer/LeadTransfer';
+import Demo from '../../component/Report/Demo/Demo';
+import Visit from '../../component/Report/Visit/Visit';
 export default function BranchReportPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,6 +38,23 @@ export default function BranchReportPage() {
                             onClick={() => handleOpenModal(<QueryReport />)}
                         >
                             OVERVIEW
+                        </button>
+                    </div>
+
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<Demo />)}
+                        >
+                           Demo Querys
+                        </button>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<Visit />)}
+                        >
+                           Visit Querys
                         </button>
                     </div>
 

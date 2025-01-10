@@ -142,18 +142,18 @@ export default function Assigned() {
                 (selectedEnrollStatus === 'Enroll' && query.addmission) ||
                 (selectedEnrollStatus === 'Pending' && !query.addmission);
 
-                const start = startDate ? new Date(startDate) : null;
-                const end = endDate ? new Date(endDate) : null;
-        
-                // Ensure the end date includes the entire day (not just 00:00 time)
-                if (end) {
-                    end.setHours(23, 59, 59, 999);
-                }
-        
-                const matchesDateRange =
-                    (!start || (queryAssignedDate && queryAssignedDate >= start)) &&
-                    (!end || (queryAssignedDate && queryAssignedDate <= end));
-        
+            const start = startDate ? new Date(startDate) : null;
+            const end = endDate ? new Date(endDate) : null;
+
+            // Ensure the end date includes the entire day (not just 00:00 time)
+            if (end) {
+                end.setHours(23, 59, 59, 999);
+            }
+
+            const matchesDateRange =
+                (!start || (queryAssignedDate && queryAssignedDate >= start)) &&
+                (!end || (queryAssignedDate && queryAssignedDate <= end));
+
 
             return matchesBranch && matchesDeadline && matchesEnrollStatus && matchesDateRange;
         })
@@ -240,6 +240,27 @@ export default function Assigned() {
                                             onChange={(e) => setEndDate(e.target.value)}
                                         />
                                     </div>
+                                    <button
+                                        className="w-full md:w-auto mt-2 md:mt-0 px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-all"
+                                        onClick={() => {
+                                            const now = new Date();
+                                            const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+                                            // Format dates as YYYY-MM-DD
+                                            const formatDate = (date) => {
+                                                const year = date.getFullYear();
+                                                const month = String(date.getMonth() + 1).padStart(2, '0');
+                                                const day = String(date.getDate()).padStart(2, '0');
+                                                return `${year}-${month}-${day}`;
+                                            };
+
+                                            setStartDate(formatDate(firstDayOfMonth));
+                                            setEndDate(formatDate(now));
+                                        }}
+                                    >
+                                        This Month
+                                    </button>
+
                                     <button
                                         className="w-full md:w-auto mt-2 md:mt-0 px-4 py-2 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition-all"
                                         onClick={resetFilters}
@@ -359,48 +380,48 @@ export default function Assigned() {
 
                 {/* Filters */}
                 <div className="w-full lg:w-1/3 space-y-6">
-    {/* Branch Filter */}
-    <div className="shadow-lg rounded-lg bg-white p-4">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">Branch Statistics</h2>
-        <ul className="space-y-2 text-sm">
+                    {/* Branch Filter */}
+                    <div className="shadow-lg rounded-lg bg-white p-4">
+                        <h2 className="text-xl font-semibold mb-4 text-gray-800">Branch Statistics</h2>
+                        <ul className="space-y-2 text-sm">
 
-            {branches.map(branch => {
-                // Filter queries specific to the branch
-                const branchQueries = filteredQueries.filter(query => query.branch === branch.branch_name);
-                
-                // Calculate total counts dynamically from filtered queries
-                const enrollsCount = branchQueries.filter(query => query.addmission).length;
-                const pendingCount = branchQueries.filter(query => !query.addmission).length;
-                const totalCount = enrollsCount + pendingCount;
+                            {branches.map(branch => {
+                                // Filter queries specific to the branch
+                                const branchQueries = filteredQueries.filter(query => query.branch === branch.branch_name);
 
-                return (
-                    <li key={branch._id}>
-                        <button
-                            onClick={() => toggleBranchDetails(branch.branch_name)}
-                            className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${selectedBranch === branch.branch_name ? 'bg-gray-200 font-semibold' : 'hover:bg-gray-100'}`}
-                        >
-                            {/* Show branch name with total count in parentheses */}
-                            <span>
-                                {branch.branch_name} ({totalCount})
-                            </span>
-                            <span className="ml-2 text-gray-500">
-                                {selectedBranch === branch.branch_name ? '-' : '+'}
-                            </span>
-                        </button>
+                                // Calculate total counts dynamically from filtered queries
+                                const enrollsCount = branchQueries.filter(query => query.addmission).length;
+                                const pendingCount = branchQueries.filter(query => !query.addmission).length;
+                                const totalCount = enrollsCount + pendingCount;
 
-                        {openBranchDetails === branch.branch_name && (
-                            <div className="pl-4 py-2 bg-gray-100 rounded mt-2 space-y-2 transition-all duration-300 ease-in-out">
-                                <p className="text-gray-700">Enrolls: <span className="font-semibold">{enrollsCount}</span></p>
-                                <p className="text-gray-700">Visited: <span className="font-semibold">{enrollsCount}</span></p>
-                                <p className="text-gray-700">Pending: <span className="font-semibold">{pendingCount}</span></p>
-                            </div>
-                        )}
-                    </li>
-                );
-            })}
-        </ul>
-    </div>
-</div>
+                                return (
+                                    <li key={branch._id}>
+                                        <button
+                                            onClick={() => toggleBranchDetails(branch.branch_name)}
+                                            className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${selectedBranch === branch.branch_name ? 'bg-gray-200 font-semibold' : 'hover:bg-gray-100'}`}
+                                        >
+                                            {/* Show branch name with total count in parentheses */}
+                                            <span>
+                                                {branch.branch_name} ({totalCount})
+                                            </span>
+                                            <span className="ml-2 text-gray-500">
+                                                {selectedBranch === branch.branch_name ? '-' : '+'}
+                                            </span>
+                                        </button>
+
+                                        {openBranchDetails === branch.branch_name && (
+                                            <div className="pl-4 py-2 bg-gray-100 rounded mt-2 space-y-2 transition-all duration-300 ease-in-out">
+                                                <p className="text-gray-700">Enrolls: <span className="font-semibold">{enrollsCount}</span></p>
+                                                <p className="text-gray-700">Visited: <span className="font-semibold">{enrollsCount}</span></p>
+                                                <p className="text-gray-700">Pending: <span className="font-semibold">{pendingCount}</span></p>
+                                            </div>
+                                        )}
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                </div>
 
             </div>
         </div>

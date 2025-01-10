@@ -10,7 +10,7 @@ export default function MBSWise() {
     const [data, setData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const { data: session } = useSession();
-    const [ branch, setBranch ] = useState("");
+    const [branch, setBranch] = useState("");
 
     const [filters, setFilters] = useState({
         userName: "",
@@ -46,10 +46,10 @@ export default function MBSWise() {
             try {
                 const response = await axios.get("/api/branchreport/MBS/query");
                 const reportData = response.data.data.userActivityReport || [];
-    
+
                 // Filter data based on the branch
                 const filteredByBranch = reportData.filter(item => item.branch === branch);
-                
+
                 setData(filteredByBranch);
                 setFilteredData(filteredByBranch);
             } catch (error) {
@@ -63,10 +63,10 @@ export default function MBSWise() {
             fetchData();
         }
     }, [branch]);  // This effect will now run whenever `branch` changes
-    
 
-    
-  
+
+
+
 
 
     const handleFilterChange = useCallback((e) => {
@@ -191,7 +191,9 @@ export default function MBSWise() {
                                                             return (
                                                                 <tr key={date}>
                                                                     <td className="border border-gray-300 p-2 text-gray-700">{formattedDate}</td>
-                                                                    <td className="border border-gray-300 p-2 text-gray-700">{actions} actions {admissions > 0 && (<span className=" bg-green-500 text-white text-sm  rounded-full px-2">{admissions} Addmission Done</span>)}</td>
+                                                                    <td className="border border-gray-300 p-2 text-gray-700">{actions} actions
+                                                                        {/* {admissions > 0 && (<span className=" bg-green-500 text-white text-sm  rounded-full px-2">{admissions} Addmission Done</span>)} */}
+                                                                    </td>
 
                                                                 </tr>
                                                             );
@@ -237,7 +239,9 @@ export default function MBSWise() {
                                                             return (
                                                                 <tr key={date}>
                                                                     <td className="border border-gray-300 p-2 text-gray-700">{formattedDate}</td>
-                                                                    <td className="border border-gray-300 p-2 text-gray-700">{actions} actions {admissions} Addmission</td>
+                                                                    <td className="border border-gray-300 p-2 text-gray-700">{actions} actions
+                                                                        {/* {admissions} Addmission */}
+                                                                    </td>
                                                                 </tr>
                                                             );
                                                         })}
@@ -310,7 +314,7 @@ export default function MBSWise() {
                                 className="p-2 border rounded"
                                 aria-label="Filter by Staff Name"
                             />
-                          
+
                             <input
                                 type="date"
                                 name="date"

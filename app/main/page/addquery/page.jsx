@@ -102,6 +102,8 @@ export default function Page() {
             isMounted = false; // Cleanup to avoid setting state on unmounted component
         };
     }, [formData.studentContact.phoneNumber]);
+    {isPhoneNumberExist && toast.error("Phone Number Already Exists")}
+    
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);

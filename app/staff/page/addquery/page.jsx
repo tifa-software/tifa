@@ -84,6 +84,7 @@ export default function Page() {
             isMounted = false; // Cleanup to avoid setting state on unmounted component
         };
     }, [formData.studentContact.phoneNumber]);
+    {isPhoneNumberExist && toast.error("Phone Number Already Exists")}
     // const today = new Date().toISOString().split('T')[0];
     const currentYear = new Date().getFullYear();
     const sessionStart = new Date(currentYear, 2, 1); // March 1 of the current year

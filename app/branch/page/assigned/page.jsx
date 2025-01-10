@@ -242,6 +242,27 @@ export default function Assigned() {
                                         />
                                     </div>
                                     <button
+                                        className="w-full md:w-auto mt-2 md:mt-0 px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transition-all"
+                                        onClick={() => {
+                                            const now = new Date();
+                                            const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+                                            // Format dates as YYYY-MM-DD
+                                            const formatDate = (date) => {
+                                                const year = date.getFullYear();
+                                                const month = String(date.getMonth() + 1).padStart(2, '0');
+                                                const day = String(date.getDate()).padStart(2, '0');
+                                                return `${year}-${month}-${day}`;
+                                            };
+
+                                            setStartDate(formatDate(firstDayOfMonth));
+                                            setEndDate(formatDate(now));
+                                        }}
+                                    >
+                                        This Month
+                                    </button>
+
+                                    <button
                                         className="w-full md:w-auto mt-2 md:mt-0 px-4 py-2 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition-all"
                                         onClick={resetFilters}
                                     >
