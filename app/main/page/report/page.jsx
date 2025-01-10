@@ -4,6 +4,9 @@ import React, { useState } from 'react';
 import QueryReport from '../../component/Report/QueryReport/QueryReport';
 import MBSWise from '../../component/Report/MBSWise/MBSWise';
 import LeadTransfer from '../../component/Report/LeadTransfer/LeadTransfer';
+import Demo from '../../component/Report/Demo/Demo';
+import Visit from '../../component/Report/Visit/Visit';
+import Addmission from '../../component/Addmission/Addmission';
 export default function BranchReportPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,9 +45,26 @@ export default function BranchReportPage() {
                     <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
                         <button
                             className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<Demo />)}
+                        >
+                            Demo Query
+                        </button>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<Visit />)}
+                        >
+                            Visit Query
+                        </button>
+                    </div>
+
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
                             onClick={() => handleOpenModal(<MBSWise />)}
                         >
-                           Lead Update Report
+                            Lead Update Report
                         </button>
                     </div>
                     <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
@@ -52,12 +72,19 @@ export default function BranchReportPage() {
                             className="text-[#29234b] "
                             onClick={() => handleOpenModal(<LeadTransfer />)}
                         >
-                           Lead Transfer Report
+                            Lead Transfer Report
                         </button>
                     </div>
 
 
-
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<Addmission />)}
+                        >
+                            AddMission Register
+                        </button>
+                    </div>
 
                 </div>
             </div>

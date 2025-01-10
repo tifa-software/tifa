@@ -193,8 +193,10 @@ export default function MBSWise() {
                                                             return (
                                                                 <tr key={date}>
                                                                     <td className="border border-gray-300 p-2 text-gray-700">{formattedDate}</td>
-                                                                    <td className="border border-gray-300 p-2 text-gray-700">{actions} actions {admissions > 0 && ( <span className=" bg-green-500 text-white text-sm  rounded-full px-2">{admissions} Addmission Done</span>)}</td>
-                                                                    
+                                                                    <td className="border border-gray-300 p-2 text-gray-700">{actions} actions
+                                                                        {/* {admissions > 0 && ( <span className=" bg-green-500 text-white text-sm  rounded-full px-2">{admissions} Addmission Done</span>)} */}
+                                                                    </td>
+
                                                                 </tr>
                                                             );
                                                         })}
@@ -239,7 +241,9 @@ export default function MBSWise() {
                                                             return (
                                                                 <tr key={date}>
                                                                     <td className="border border-gray-300 p-2 text-gray-700">{formattedDate}</td>
-                                                                    <td className="border border-gray-300 p-2 text-gray-700">{actions} actions {admissions} Addmission</td>
+                                                                    <td className="border border-gray-300 p-2 text-gray-700">{actions} actions
+                                                                        {/* {admissions} Addmission */}
+                                                                    </td>
                                                                 </tr>
                                                             );
                                                         })}

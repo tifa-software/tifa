@@ -988,7 +988,7 @@ export default function Page() {
                             className={`${!isFormValid || loading ? "bg-gray-400" : "bg-[#6cb049]"
                                 } text-white w-full font-bold py-2 px-4 rounded-md`}
                         >
-                            {loading ? "Submitting..." : "Add Query"}
+                            {loading ? "Wait..." : "Add Query"}
                         </button>
                     </div>
                 </form>
