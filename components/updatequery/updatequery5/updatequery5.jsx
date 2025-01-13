@@ -140,6 +140,46 @@ export default function UpdateQuery5({ query, audit }) {
 
         </select>
       </div>
+
+      {connectionOption === 'no_connected' && (
+
+<div className="mb-6">
+  <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
+    Reason:
+  </label>
+  <select
+    id="statusSelect"
+    value={selectedOption}
+    onChange={handleOptionChange}
+    className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+  >
+    <option value="" disabled>-- Select Interested Status --</option>
+    <option value="no_visit_branch_yet">Switch Off </option>
+    <option value="no_visit_branch_yet">Network Error</option>
+    <option value="no_visit_branch_yet">Other</option>
+  </select>
+</div>
+)}
+
+{connectionOption === 'not_lifting' && (
+
+<div className="mb-6">
+  <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
+    Reason:
+  </label>
+  <select
+    id="statusSelect"
+    value={selectedOption}
+    onChange={handleOptionChange}
+    className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+  >
+    <option value="" disabled>-- Select Interested Status --</option>
+    <option value="no_visit_branch_yet">Busy</option>
+    <option value="no_visit_branch_yet">Other</option>
+  </select>
+</div>
+)}
+      {connectionOption === 'connected' && (
       <div className="mb-6">
         <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
           Status:
@@ -158,7 +198,7 @@ export default function UpdateQuery5({ query, audit }) {
           <option value="response">Response</option>
         </select>
       </div>
-
+      )}
       <div className="mb-6">
         <label htmlFor="gradeSelect" className="block text-lg font-medium text-gray-700 mb-2">
           Student Visit Grade:

@@ -106,7 +106,7 @@ export default function UpdateQuery2({ query, audit }) {
         } else {
           console.error('Error updating query for autoclosed:', queryResponse.statusText);
         }
-      } else  if (statusCountsUpdate.interested_but_not_proper_response >= 3) {
+      } else if (statusCountsUpdate.interested_but_not_proper_response >= 3) {
         const queryUpdateData = {
           id: queryid,
           autoclosed: 'close',
@@ -146,6 +146,44 @@ export default function UpdateQuery2({ query, audit }) {
         </select>
       </div>
 
+      {connectionOption === 'no_connected' && (
+
+        <div className="mb-6">
+          <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
+            Reason:
+          </label>
+          <select
+            id="statusSelect"
+            value={selectedOption}
+            onChange={handleOptionChange}
+            className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+          >
+            <option value="" disabled>-- Select Interested Status --</option>
+            <option value="interested_but_not_proper_response">Switch Off </option>
+            <option value="interested_but_not_proper_response">Network Error</option>
+            <option value="interested_but_not_proper_response">Other</option>
+          </select>
+        </div>
+      )}
+
+      {connectionOption === 'not_lifting' && (
+
+        <div className="mb-6">
+          <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
+            Reason:
+          </label>
+          <select
+            id="statusSelect"
+            value={selectedOption}
+            onChange={handleOptionChange}
+            className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+          >
+            <option value="" disabled>-- Select Interested Status --</option>
+            <option value="interested_but_not_proper_response">Busy</option>
+            <option value="interested_but_not_proper_response">Other</option>
+          </select>
+        </div>
+      )}
       {connectionOption === 'connected' && (
 
         <div className="mb-6">

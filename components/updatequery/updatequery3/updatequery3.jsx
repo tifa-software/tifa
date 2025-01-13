@@ -172,26 +172,67 @@ export default function UpdateQuery3({ query, audit }) {
 
         </select>
       </div>
-      <div className="mb-6">
-        <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
-          Status:
-        </label>
-        <select
-          id="statusSelect"
-          value={selectedOption}
-          onChange={handleOptionChange}
-          className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
-        >
-          <option value="" disabled>-- Select Status --</option>
-          <option value="admission">Enroll</option>
-          <option value="interested_but_not_proper_response">Not Proper Response</option>
-          <option value="response">Response</option>
-          <option value="ready_visit">Ready for Visit</option>
-          <option value="not_interested">Not Interested</option>
 
-        </select>
-      </div>
+      {connectionOption === 'no_connected' && (
 
+        <div className="mb-6">
+          <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
+            Reason:
+          </label>
+          <select
+            id="statusSelect"
+            value={selectedOption}
+            onChange={handleOptionChange}
+            className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+          >
+            <option value="" disabled>-- Select Interested Status --</option>
+            <option value="interested_but_not_proper_response">Switch Off </option>
+            <option value="interested_but_not_proper_response">Network Error</option>
+            <option value="interested_but_not_proper_response">Other</option>
+          </select>
+        </div>
+      )}
+
+      {connectionOption === 'not_lifting' && (
+
+        <div className="mb-6">
+          <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
+            Reason:
+          </label>
+          <select
+            id="statusSelect"
+            value={selectedOption}
+            onChange={handleOptionChange}
+            className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+          >
+            <option value="" disabled>-- Select Interested Status --</option>
+            <option value="interested_but_not_proper_response">Busy</option>
+            <option value="interested_but_not_proper_response">Other</option>
+          </select>
+        </div>
+      )}
+      {connectionOption === 'connected' && (
+
+        <div className="mb-6">
+          <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
+            Status:
+          </label>
+          <select
+            id="statusSelect"
+            value={selectedOption}
+            onChange={handleOptionChange}
+            className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+          >
+            <option value="" disabled>-- Select Status --</option>
+            <option value="admission">Enroll</option>
+            <option value="interested_but_not_proper_response">Not Proper Response</option>
+            <option value="response">Response</option>
+            <option value="ready_visit">Ready for Visit</option>
+            <option value="not_interested">Not Interested</option>
+
+          </select>
+        </div>
+      )}
       {connectionOption === 'connected' && (
 
         <div className="mb-6 transition-opacity duration-300 ease-in-out">

@@ -47,7 +47,7 @@ export default function BranchReportPage() {
                             className="text-[#29234b] "
                             onClick={() => handleOpenModal(<Demo />)}
                         >
-                            Demo Query
+                            Demo Queries
                         </button>
                     </div>
                     <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
@@ -55,7 +55,7 @@ export default function BranchReportPage() {
                             className="text-[#29234b] "
                             onClick={() => handleOpenModal(<Visit />)}
                         >
-                            Visit Query
+                            Visit Queries
                         </button>
                     </div>
 
