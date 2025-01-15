@@ -184,7 +184,6 @@ querySchema.pre('validate', async function (next) {
             if (admin) {
                 console.log("Admin found:", admin);
                 this.lastbranch = admin.branch; // Programmatically set lastbranch if admin is found
-                this.userid = admin._id.toString();
             } else {
                 console.log("No admin found for branch:", this.branch);
                 return next(new Error("lastbranch is required and cannot be null"));
@@ -215,6 +214,6 @@ querySchema.pre('save', function (next) {
 
 const QueryModel =
 
-    mongoose.models.AllQueries || mongoose.model('AllQueries', querySchema);
+    mongoose.models.AllQueries2 || mongoose.model('AllQueries2', querySchema);
 
 export default QueryModel;
