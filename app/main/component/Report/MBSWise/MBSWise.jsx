@@ -3,7 +3,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import * as XLSX from "xlsx";
-
+import Link from "next/link";
 export default function MBSWise() {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -174,15 +174,18 @@ export default function MBSWise() {
                                     <td className="border border-gray-300 p-2 font-semibold">Daily Activity</td>
                                     <td className="border border-gray-300 p-2">
                                         <ul className="list-disc list-inside">
-                                            <table className=" w-full">
+                                            <table className="w-full">
                                                 <thead>
-                                                    <th className="border border-gray-300 p-2 bg-gray-100">Date</th>
-                                                    <th className="border border-gray-300 p-2 bg-gray-100">Action</th>
+                                                    <tr>
+                                                        <th className="border border-gray-300 p-2 bg-gray-100">Date</th>
+                                                        <th className="border border-gray-300 p-2 bg-gray-100">Action</th>
+                                                        <th className="border border-gray-300 p-2 bg-gray-100">Query IDs</th>
+                                                    </tr>
                                                 </thead>
                                                 <tbody>
                                                     {Object.entries(user.dailyActivity)
                                                         .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB)) // Sort dates in ascending order
-                                                        .map(([date, [actions, admissions]]) => { // Destructure actions and admissions from the array
+                                                        .map(([date, { count, queries }]) => { // Destructure count and queries from the object
                                                             // Format the date
                                                             const formattedDate = new Date(date).toLocaleDateString("en-GB", {
                                                                 day: "numeric",
@@ -193,17 +196,20 @@ export default function MBSWise() {
                                                             return (
                                                                 <tr key={date}>
                                                                     <td className="border border-gray-300 p-2 text-gray-700">{formattedDate}</td>
-                                                                    <td className="border border-gray-300 p-2 text-gray-700">{actions} actions
-                                                                        {/* {admissions > 0 && ( <span className=" bg-green-500 text-white text-sm  rounded-full px-2">{admissions} Addmission Done</span>)} */}
+                                                                    <td className="border border-gray-300 p-2 text-gray-700">{count[0]} actions</td>
+                                                                    <td className="border border-gray-300 p-2 text-gray-700">
+                                                                        <ul className="list-disc list-inside flex flex-col">
+                                                                            {queries.map((queryId, index) => (
+                                                                                <Link className=" hover:text-blue-400" key={queryId} href={`/main/page/allquery/${queryId}`}>
+                                                                                    Query {index + 1}
+                                                                                </Link>
+                                                                            ))}
+                                                                        </ul>
                                                                     </td>
-
                                                                 </tr>
                                                             );
                                                         })}
-
-
                                                 </tbody>
-
                                             </table>
                                         </ul>
                                     </td>
