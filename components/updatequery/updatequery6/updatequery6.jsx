@@ -68,7 +68,7 @@ export default function UpdateQuery6({ query, audit }) {
     // Prepare data to send to the backend for the audit update
     const data = {
       queryId: queryid,
-      actionby: userid,
+      actionby: session?.user?.name,
       connectionStatus: connectionOption,
       oflinesubStatus: selectedOption,
       message: message,
