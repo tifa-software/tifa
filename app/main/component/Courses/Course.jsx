@@ -12,6 +12,9 @@ export default function Page() {
         course_name: '',
         description: '',
         category: '',
+        fees: '',
+        enrollpercent: ''
+
     });
     const [loading, setLoading] = useState(false);
 
@@ -52,6 +55,8 @@ export default function Page() {
                 course_name: '',
                 description: '',
                 category: '',
+                fees: '',
+                enrollpercent: ''
             });
 
             setTimeout(() => {
@@ -83,6 +88,34 @@ export default function Page() {
                                     id="course_name"
                                     name="course_name"
                                     value={formData.course_name}
+                                    onChange={handleInputChange}
+                                    icon={<Book size={15} />}
+                                    required
+                                />
+                            </div>
+
+                            <div className='relative'>
+                                <Input
+                                    placeholder="Enter Fees"
+                                    type="number"
+                                    id="fees"
+                                    min="0"
+                                    name="fees"
+                                    value={formData.fees}
+                                    onChange={handleInputChange}
+                                    icon={<Book size={15} />}
+                                    required
+                                />
+                            </div>
+
+                            <div className='relative'>
+                                <Input
+                                    placeholder="Enter Enroll Fees Percent"
+                                    type="number"
+                                    min="0"
+                                    id="enrollpercent"
+                                    name="enrollpercent"
+                                    value={formData.enrollpercent}
                                     onChange={handleInputChange}
                                     icon={<Book size={15} />}
                                     required

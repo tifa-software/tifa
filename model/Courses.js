@@ -7,6 +7,12 @@ const CourseSchema = new Schema(
         category: {
             type: String, required: true,
         },
+        fees: {
+            type: String, required: true
+        },
+        enrollpercent: {
+            type: String, required: true
+        },
 
         defaultdata: { type: String, required: true, default: "Courses" }
 
@@ -15,6 +21,6 @@ const CourseSchema = new Schema(
 );
 
 const CourseModel =
-    mongoose.models.course1 || mongoose.model("course1", CourseSchema);
+    mongoose.models.course2 || mongoose.model("course2", CourseSchema);
 
 export default CourseModel
