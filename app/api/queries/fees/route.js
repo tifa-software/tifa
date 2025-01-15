@@ -1,5 +1,6 @@
 import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
+import CourseModel from "@/model/Courses";
 
 export const PATCH = async (request) => {
     await dbConnect();
@@ -38,14 +39,33 @@ export const PATCH = async (request) => {
                 querie.fees.reduce((sum, fee) => sum + fee.feesAmount, 0) +
                 newFee.feesAmount;
 
-            // Determine addmission and demo status based on the total amount
+            // Fetch the course data to determine the enrollment threshold
+            const course = await CourseModel.findOne({ _id: data.courseId });
+
+            if (!course) {
+                return new Response(
+                    JSON.stringify({
+                        message: "Course not found!",
+                        success: false,
+                    }),
+                    { status: 404 }
+                );
+            }
+
+            const courseFees = parseFloat(course.fees) || 0;
+            const enrollPercent = parseFloat(course.enrollpercent) || 0;
+
+            // Calculate the enrollment threshold based on the percentage
+            const enrollThreshold = (courseFees * enrollPercent) / 100;
+
+            // Determine admission and demo status based on the threshold
             let addmissionStatus = false;
             let demoStatus = false;
 
-            if (totalAmount >= 5000) {
-                addmissionStatus = true; // Set addmission to true if total is >= 5000
-            } else if (totalAmount > 1 && totalAmount < 5000) {
-                demoStatus = true; // Set demo to true if total is > 1 and < 5000
+            if (totalAmount >= enrollThreshold) {
+                addmissionStatus = true; // Set admission to true if total >= threshold
+            } else if (totalAmount > 1 && totalAmount < enrollThreshold) {
+                demoStatus = true; // Set demo to true if total > 1 and < threshold
             }
 
             // Create an object to store all updated fields

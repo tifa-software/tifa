@@ -40,7 +40,7 @@ export default function UpdateQuery2({ query, audit }) {
     // API call for fees update
     const feesData = {
       id: queryid,
-
+      courseId :query.courseInterest,
       fees: {
         feesType,
         feesAmount: parseFloat(feesAmount),

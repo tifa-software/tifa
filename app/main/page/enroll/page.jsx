@@ -62,11 +62,18 @@ export default function Assigned() {
     };
 
     // Filter queries based on search term (name or contact number)
-    const filteredQueries = queries.filter((query) =>
-        query.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        query.studentContact.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        query.studentContact.city.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredQueries = queries.filter((query) => {
+        const studentName = query.studentName || ""; // Default to empty string if undefined
+        const phoneNumber = query.studentContact?.phoneNumber || ""; // Optional chaining for nested property
+        const city = query.studentContact?.city || ""; // Optional chaining for nested property
+    
+        return (
+            studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            phoneNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            city.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    });
+    
 
     // Pagination Logic
     const indexOfLastQuery = currentPage * itemsPerPage;

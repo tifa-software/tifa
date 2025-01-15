@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef,useCallback } from "react";
+import React, { useState, useEffect, useRef ,useCallback} from "react";
 import axios from "axios";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
@@ -15,13 +15,14 @@ export default function Page({ params }) {
     const [referenceData, setReferenceData] = useState([]);
     const [displayDate, setDisplayDate] = useState("");
     const [user, setuser] = useState([]);
+    const [errors, setErrors] = useState({});
 
     const [adminData, setAdminData] = useState(null);
     const [adminid, setAdminid] = useState(null);
     const [adminbranch, setAdminbranch] = useState(null);
     const { data: session } = useSession();
     const [formData, setFormData] = useState({
-        // userid: "",
+        userid: "",
         referenceid: "",
         suboption: "null",
         studentName: "",
@@ -57,7 +58,7 @@ export default function Page({ params }) {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [isFormValid, setIsFormValid] = useState(false);
-
+    
     // const today = new Date().toISOString().split('T')[0];
     const currentYear = new Date().getFullYear();
     const sessionStart = new Date(currentYear, 2, 1); // March 1 of the current year
@@ -75,9 +76,6 @@ export default function Page({ params }) {
             }
         }
     };
-
-
-    
     const fetchExistingData = useCallback(async () => {
         try {
             setLoading(true);
@@ -95,8 +93,6 @@ export default function Page({ params }) {
     useEffect(() => {
         fetchExistingData();
     }, [fetchExistingData]);
-
-
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
@@ -237,31 +233,36 @@ export default function Page({ params }) {
 
 
     useEffect(() => {
-        const isFormFilled =
-            (formData.referenceid === 'Online' && formData.studentContact.phoneNumber) || // Only phone number required if referenceid is 'Online'
-            (
-                formData.studentName &&
-                formData.gender &&
-                // formData.assignedTo &&
-                // formData.assignedToreq &&
-                // formData.assignedreceivedhistory &&
-                // formData.assignedsenthistory &&
+        const newErrors = {};
 
-                formData.referenceid &&
-                formData.studentContact.phoneNumber &&
-                formData.studentContact.whatsappNumber &&
-                formData.studentContact.address &&
-                formData.studentContact.city &&
-                formData.courseInterest &&
-                formData.deadline &&
-                // formData.branch &&
-                formData.notes &&
-                formData.qualification &&
-                formData.profession
-            );
+        // Base validation: referenceid === 'Online' only requires phoneNumber
+        if (formData.referenceid === 'Online') {
+            if (!formData.studentContact.phoneNumber) {
+                newErrors.phoneNumber = "Phone Number is required for online reference";
+            }
+        } else {
+            // Full validation for other reference types
+            if (!formData.studentName) newErrors.studentName = "Student Name is required";
+            if (!formData.gender) newErrors.gender = "Gender is required";
+            if (!formData.referenceid) newErrors.referenceid = "Reference ID is required";
+            if (!formData.studentContact.phoneNumber) newErrors.phoneNumber = "Phone Number is required";
+            if (!formData.studentContact.whatsappNumber) newErrors.whatsappNumber = "WhatsApp Number is required";
+            if (!formData.studentContact.address) newErrors.address = "Address is required";
+            if (!formData.studentContact.city) newErrors.city = "City is required";
+            if (!formData.courseInterest) newErrors.courseInterest = "Course Interest is required";
+            if (!formData.deadline) newErrors.deadline = "Deadline is required";
+            if (!formData.notes) newErrors.notes = "Notes are required";
+            if (!formData.qualification) newErrors.qualification = "Qualification is required";
+            if (!formData.profession) newErrors.profession = "Profession is required";
+        }
 
+        // Determine overall form validity based on the absence of errors
+        const isFormFilled = Object.keys(newErrors).length === 0;
+
+        setErrors(newErrors);
         setIsFormValid(isFormFilled);
     }, [formData]);
+
 
 
 
@@ -287,50 +288,106 @@ export default function Page({ params }) {
         }));
     };
 
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-    
-        // Check if phone numbers are valid
-        if (formData.studentContact?.phoneNumber && formData.studentContact.phoneNumber.length < 10) {
+        if (formData.studentContact?.phoneNumber && formData.studentContact.phoneNumber.length < 12) {
             toast.error("Phone number must be at least 10 digits");
             return;
         }
-        if (formData.studentContact?.whatsappNumber && formData.studentContact.whatsappNumber.length < 10) {
+        if (formData.studentContact?.whatsappNumber && formData.studentContact.whatsappNumber.length < 12) {
             toast.error("WhatsApp number must be at least 10 digits");
             return;
         }
-    
-        // Ensure the `id` is included in the `formData`
-        if (!id) {
-            toast.error("Query ID is missing. Cannot update the query.");
-            return;
-        }
-    
+
+        setLoading(true);
         setLoading(true);
         setError("");
         setSuccess("");
-    
+
         try {
-            // Add `id` to `formData` before the API call
             const updatedFormData = { ...formData, id };
     
             // Make the API call
             const response = await axios.patch("/api/queries/updatedetails", updatedFormData);
     
+
             if (response.status === 200) {
-                setSuccess("Query successfully updated!");
-                toast.success("Query successfully updated!");
-            } else {
-                throw new Error("Update failed");
+                const { queryId } = response.data;
+                setSuccess("Query successfully Added!");
+                toast.success("Query successfully Added!");
+
+                // Check if audit API call is required based on the selected interest status
+                if (["not_connected", "not_lifting", "wrong_no"].includes(interestStatus)) {
+                    // Run the audit API call
+                    await axios.patch("/api/audit/update", { queryId, connectionStatus: interestStatus });
+                }
+                if (interestStatus === "ready_visit") {
+                    await axios.patch("/api/audit/update", { queryId, stage: 5 });
+                }
+
+                if (gradeStatus) {
+                    await axios.patch("/api/audit/update", { queryId, grade: gradeStatus });
+                }
+                // Now check if the query needs to be auto-closed based on additional criteria
+                if (
+                    interestStatus === 'wrong_no' ||  // Check if the status is 'wrong_no'
+                    formData.suboption === 'not_interested' ||  // Check if the subOption is 'not_interested'
+                    statusCountsUpdate.busy >= 3 ||  // Check if the busy count reaches 3
+                    statusCountsUpdate.call_back >= 3 ||  // Check if the call_back count reaches 3
+                    statusCountsUpdate.switch_off >= 3 ||  // Check if the switch_off count reaches 3
+                    statusCountsUpdate.network_error >= 3  // Check if the network_error count reaches 3
+                ) {
+                    // Second API call to auto-close the query if conditions are met
+                    const newApiResponse = await axios.patch('/api/queries/update', {
+                        id: queryId,
+                        autoclosed: 'close', // Close the query if conditions are met
+                    });
+
+                    if (newApiResponse.status === 200) {
+                        console.log('Query auto-closed successfully:', newApiResponse.data);
+                    } else {
+                        console.error('Error in auto-closing query:', newApiResponse.statusText);
+                    }
+                }
+
+                // Reset form data after successful submission
+                setFormData({
+                    userid: adminData._id,
+                    studentName: "",
+                    gender: "Not_Defined",
+                    category: "Not_Defined",
+                    // assignedTo: "Not-Assigned",
+                    assignedToreq: "",
+                    assignedreceivedhistory: "",
+                    assignedsenthistory: "",
+                    referenceid: "",
+                    suboption: "",
+                    studentContact: {
+                        phoneNumber: "",
+                        whatsappNumber: "",
+                        address: "",
+                        city: ""
+                    },
+                    courseInterest: "",
+                    deadline: "",
+                    branch: "",
+                    notes: "",
+                    qualification: "",
+                    profession: "",
+                    professiontype: "",
+                    reference_name: "",
+                });
             }
         } catch (err) {
-            setError("Failed to update the query. Please try again.");
-            console.error("Error updating query:", err);
+            setError("Failed to Add Query. Please try again.");
+            console.error("Error adding query:", err);
         } finally {
             setLoading(false);
+            window.location.reload();
         }
     };
-    
+
 
     return (
         <div className="container lg:w-[90%] mx-auto py-5">
@@ -409,6 +466,9 @@ export default function Page({ params }) {
                                     <option key={index} value={data.referencename}>{data.referencename}</option>
                                 ))}
                             </select>
+                            {errors.referenceid && (
+                                <p className="text-red-500 text-[8px] mt-1">{errors.referenceid}</p>
+                            )}
 
                         </div>
 
@@ -441,7 +501,7 @@ export default function Page({ params }) {
                                 </label>
                                 <select name="reference_name" value={formData.reference_name} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
                                     <option value="" disabled selected>Select Reference name</option>
-                                    <option value= {adminData?.name ? adminData.name : 'Loading...'}>Self</option>
+                                    <option value={adminData.name}>Self</option>
                                     {user.map((user, index) => (
                                         <option key={index} value={user.name}>{user.name}</option>
                                     ))}
@@ -470,6 +530,9 @@ export default function Page({ params }) {
                                 onKeyDown={(e) => handleKeyDown(e, 1)}
                                 className="block capitalize w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                             />
+                            {errors.studentName && (
+                                <p className="text-red-500 text-[8px] mt-1">{errors.studentName}</p>
+                            )}
                         </div>
 
                         <div className="sm:col-span-6 col-span-12">
@@ -513,12 +576,17 @@ export default function Page({ params }) {
                                     <span className="ml-2 text-sm">Other</span>
                                 </label>
                             </div>
+                            {errors.gender && (
+                                <p className="text-red-500 text-[8px] mt-1">{errors.gender}</p>
+                            )}
                         </div>
 
 
 
                         <div className="sm:col-span-6 col-span-12">
-                            <label className="block text-[15px] text-gray-700">Phone Number <span className=" text-red-700">*</span></label>
+                            <label className="block text-[15px] text-gray-700">
+                                Phone Number <span className=" text-red-700">*</span>
+                            </label>
                             <PhoneInput
                                 country={"in"}
                                 value={formData.studentContact.phoneNumber}
@@ -527,13 +595,32 @@ export default function Page({ params }) {
                                     onKeyDown: (e) => handleKeyDown(e, 3),
                                 }}
                                 onChange={(phone) =>
-                                    setFormData({
-                                        ...formData,
-                                        studentContact: { ...formData.studentContact, phoneNumber: phone },
+                                    setFormData((prevFormData) => {
+                                        const updatedFormData = {
+                                            ...prevFormData,
+                                            studentContact: {
+                                                ...prevFormData.studentContact,
+                                                phoneNumber: phone,
+                                            },
+                                        };
+
+                                        // Auto-update whatsappNumber if it's empty or matches the previous phoneNumber
+                                        if (
+                                            !prevFormData.studentContact.whatsappNumber ||
+                                            prevFormData.studentContact.whatsappNumber === prevFormData.studentContact.phoneNumber
+                                        ) {
+                                            updatedFormData.studentContact.whatsappNumber = phone;
+                                        }
+
+                                        return updatedFormData;
                                     })
                                 }
                                 className="w-full rounded-0"
                             />
+                            
+                            {errors.phoneNumber && (
+                                <p className="text-red-500 text-[8px] mt-1">{errors.phoneNumber}</p>
+                            )}
                         </div>
 
                         <div className="sm:col-span-6 col-span-12">
@@ -546,20 +633,26 @@ export default function Page({ params }) {
                                     onKeyDown: (e) => handleKeyDown(e, 4),
                                 }}
                                 onChange={(phone) =>
-                                    setFormData({
-                                        ...formData,
-                                        studentContact: { ...formData.studentContact, whatsappNumber: phone },
-                                    })
+                                    setFormData((prevFormData) => ({
+                                        ...prevFormData,
+                                        studentContact: {
+                                            ...prevFormData.studentContact,
+                                            whatsappNumber: phone,
+                                        },
+                                    }))
                                 }
                                 className="w-full rounded-0"
                             />
+                            {errors.whatsappNumber && (
+                                <p className="text-red-500 text-[8px] mt-1">{errors.whatsappNumber}</p>
+                            )}
                         </div>
                         <div className="sm:col-span-6 col-span-12">
                             <label htmlFor="assignedToreq" className="block text-[15px] text-gray-700">
                                 Assigned To
                             </label>
                             <select name="assignedToreq" value={formData.assignedToreq} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
-                            <option value=""  >Select name (Not Assign)</option>
+                                <option value=""  >Select name (Not Assign)</option>
 
                                 {user
                                     .filter((user) => user.usertype !== "2" && user._id !== adminid)
@@ -570,6 +663,7 @@ export default function Page({ params }) {
                                     ))
                                 }
                             </select>
+
 
                         </div>
 
@@ -593,6 +687,9 @@ export default function Page({ params }) {
                                 <option value="B">B</option>
                                 <option value="C">C</option>
                             </select>
+                            {errors.lastgrade && (
+                                <p className="text-red-500 text-[8px] mt-1">{errors.lastgrade}</p>
+                            )}
                         </div>
 
                         {formData.studentContact.city === 'Jaipur' ? (
@@ -607,6 +704,9 @@ export default function Page({ params }) {
                                     <option value="Out of Jaipur" >Out of Jaipur</option>
 
                                 </select>
+                                {errors.city && (
+                                    <p className="text-red-500 text-[8px] mt-1">{errors.city}</p>
+                                )}
 
                             </div>
 
@@ -642,6 +742,9 @@ export default function Page({ params }) {
                                 ref={(el) => (inputRefs.current[10] = el)} // Assign ref
                                 onKeyDown={(e) => handleKeyDown(e, 10)}
                             />
+                            {errors.address && (
+                                <p className="text-red-500 text-[8px] mt-1">{errors.address}</p>
+                            )}
                         </div>
 
 
@@ -667,6 +770,9 @@ export default function Page({ params }) {
                                         onChange={handleChange}
                                         className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                                     />
+                                    {errors.qualification && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.qualification}</p>
+                                    )}
                                 </div>
 
 
@@ -686,6 +792,9 @@ export default function Page({ params }) {
                                         <option value="Student">Student</option>
                                         <option value="Working">Working</option>
                                     </select>
+                                    {errors.profession && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.profession}</p>
+                                    )}
                                 </div>
 
                                 {formData.profession === 'Working' && (
@@ -701,6 +810,9 @@ export default function Page({ params }) {
                                             onChange={handleChange}
                                             className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                                         />
+                                        {errors.professiontype && (
+                                            <p className="text-red-500 text-[8px] mt-1">{errors.professiontype}</p>
+                                        )}
                                     </div>
                                 )}
 
@@ -718,7 +830,9 @@ export default function Page({ params }) {
                                         <option value="OBC">OBC</option>
                                         <option value="Other">Other</option>
                                     </select>
-
+                                    {errors.category && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.category}</p>
+                                    )}
                                 </div>
 
                                 <div className="sm:col-span-6 col-span-12">
@@ -733,6 +847,9 @@ export default function Page({ params }) {
                                             <option key={index} value={allCourses._id}>{allCourses.course_name}</option>
                                         ))}
                                     </select>
+                                    {errors.courseInterest && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.courseInterest}</p>
+                                    )}
 
                                 </div>
 
@@ -749,7 +866,7 @@ export default function Page({ params }) {
                                             name="deadline"
                                             value={formData.deadline}
                                             onChange={handleChange}
-                                       
+
                                             ref={(el) => (inputRefs.current[11] = el)} // Assign ref
                                             onKeyDown={(e) => handleKeyDown(e, 11)}
                                             className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
@@ -758,6 +875,9 @@ export default function Page({ params }) {
                                             {displayDate ? displayDate : "select deadline"}
                                         </span>
                                     </div>
+                                    {errors.deadline && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.deadline}</p>
+                                    )}
                                 </div>
 
 
@@ -770,7 +890,9 @@ export default function Page({ params }) {
                                         <option value={adminbranch} disabled selected>{adminbranch}</option>
 
                                     </select>
-
+                                    {errors.branch && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.branch}</p>
+                                    )}
                                 </div>
 
                                 <div className="sm:col-span-6 col-span-12">
@@ -794,6 +916,9 @@ export default function Page({ params }) {
                                         <option value="not_lifting">Not Lifting</option>
                                         <option value="wrong_no">Wrong Number</option>
                                     </select>
+                                    {errors.interestStatus && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.interestStatus}</p>
+                                    )}
                                 </div>
 
 
@@ -813,6 +938,9 @@ export default function Page({ params }) {
                                         onChange={handleChange}
                                         className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                                     />
+                                    {errors.notes && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.notes}</p>
+                                    )}
                                 </div>
 
                             </>
@@ -851,7 +979,7 @@ export default function Page({ params }) {
                             className={`${!isFormValid || loading ? "bg-gray-400" : "bg-[#6cb049]"
                                 } text-white w-full font-bold py-2 px-4 rounded-md`}
                         >
-                            {loading ? "Submitting..." : "Update Query"}
+                            {loading ? "Wait..." : "Update Query"}
                         </button>
                     </div>
                 </form>
