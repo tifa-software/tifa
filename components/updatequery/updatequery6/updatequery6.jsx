@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 export default function UpdateQuery6({ query, audit }) {
   const queryid = query._id;
   const userid = query.userid;
   const [connectionOption, setConnectionOption] = useState('');
-
+  const { data: session } = useSession();
   const [selectedOption, setSelectedOption] = useState('');
   const [message, setMessage] = useState('');
   const [deadline, setDeadline] = useState('');
