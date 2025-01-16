@@ -383,6 +383,9 @@ export default function Assigned() {
                     {/* Branch Filter */}
                     <div className="shadow-lg rounded-lg bg-white p-4">
                         <h2 className="text-xl font-semibold mb-4 text-gray-800">Branch Statistics</h2>
+                        <h2 className=" bg-gray-800 mb-4 p-1 text-white">
+                            Total Queries Send = {filteredQueries?.length}
+                        </h2>
                         <ul className="space-y-2 text-sm">
 
                             {branches.map(branch => {
