@@ -75,7 +75,7 @@ export default function AssignedQuery({ initialData, refreshData }) {
         setSuccess('');
 
         try {
-            const adminId = matchorignaluser; // Get the ID of the user performing the update
+           
             const assignedUserId = assignedToreq; // The ID of the assigned user
 
             // Update query assignment with actionBy (who is performing the update)
@@ -83,7 +83,7 @@ export default function AssignedQuery({ initialData, refreshData }) {
                 id: initialData._id,
                 lastbranch:adminbranch,
                 assignedToreq,
-                assignedsenthistory: [adminId],
+                assignedsenthistory: adminid,
                 assignedreceivedhistory: [assignedUserId], // Add assigned user ID to received history
                 assignedTostatus: true,
                 actionBy: session?.user?.name,
@@ -171,7 +171,7 @@ export default function AssignedQuery({ initialData, refreshData }) {
             {isEditing && (
                 <div className="fixed inset-0 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                        <h2 className="text-xl font-semibold mb-4">Update Assigned User & Message</h2> {adminid}
+                        <h2 className="text-xl font-semibold mb-4">Update Assigned User & Message</h2>
 
                         <div className="relative">
                             <input

@@ -353,7 +353,7 @@ export default function AllQuery() {
           <thead className="bg-[#29234b] text-white uppercase">
             <tr>
               <th scope="col" className="px-4 font-medium capitalize py-2">
-                <input
+                {/* <input
                   type="checkbox"
                   onChange={(e) =>
                     setSelectedqueries(
@@ -363,7 +363,8 @@ export default function AllQuery() {
                     )
                   }
                   checked={selectedqueries.length === queries.length}
-                />
+                /> */}
+                N/O
               </th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Staff Name</th> {/* Added User Name column */}
               <th scope="col" className="px-4 font-medium capitalize py-2">Student Name <span className=' text-xs'>(Reference)</span></th>

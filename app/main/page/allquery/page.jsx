@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Loader from '@/components/Loader/Loader';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Search, Trash2, CirclePlus, Filter, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Search, Trash2, CirclePlus, Filter, X ,Send, XCircleIcon } from "lucide-react";
+import BulkAssign from '@/components/BulkAssign/BulkAssign';
 import Link from 'next/link';
 
 export default function AllQuery() {
@@ -20,6 +21,9 @@ export default function AllQuery() {
   const [user, setuser] = useState([]);
   const [deadlineFilter, setDeadlineFilter] = useState(""); // State for deadline filter
   const [grades, setGrades] = useState({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalData, setModalData] = useState(null);
+
 
 
 
@@ -187,6 +191,29 @@ export default function AllQuery() {
       }
     }
   };
+
+  const handleBulkAssign = async () => {
+    const isConfirmed = window.confirm("Are you sure you want to Assign these Queries?");
+    if (isConfirmed) {
+      try {
+        // Open the modal and pass the selected queries
+        setIsModalOpen(true); // Assuming you have a state to manage the modal visibility
+        setModalData({ ids: selectedqueries }); // Pass the selected queries to the modal
+
+        // Optionally, you can perform additional operations here
+        console.log("Modal opened with data:", selectedqueries);
+      } catch (error) {
+        console.error("Error handling bulk assign:", error);
+        alert("An error occurred while assigning queries.");
+      }
+    }
+  };
+
+  const handleremovebulk = async () => {
+    setIsModalOpen(false);
+  }
+
+
 
   return (
     <div className='container lg:w-[95%] mx-auto py-5'>
@@ -375,6 +402,37 @@ export default function AllQuery() {
           >
             <Trash2 size={16} />
           </button>
+
+          
+          <button
+            className="text-blue-500 rounded-md border border-blue-500 hover:bg-blue-200 duration-150 cursor-pointer px-3 py-2"
+            onClick={handleBulkAssign}
+            disabled={selectedqueries.length === 0}
+          >
+            <Send size={16} />
+          </button>
+
+          {isModalOpen && (
+            <>
+              <div
+                className="fixed   inset-0 flex items-center justify-center  z-50"
+                role="dialog"
+                aria-modal="true"
+              >
+                <div className='bg-white p-6 rounded-lg shadow-lg max-w-lg w-full'>
+                  <div className=' flex justify-end'>
+                    <button onClick={handleremovebulk}><XCircleIcon className=' text-red-600' /></button>
+                  </div>
+                  <BulkAssign
+                    onClose={() => setIsModalOpen(false)}
+                    data={modalData}
+                    initialData={modalData}
+                  />
+                </div>
+              </div>
+
+            </>
+          )}
         </div>
 
       </div>
@@ -424,7 +482,7 @@ export default function AllQuery() {
           <thead className="bg-[#29234b] text-white uppercase">
             <tr>
               <th scope="col" className="px-4 font-medium capitalize py-2">
-                <input
+                {/* <input
                   type="checkbox"
                   onChange={(e) =>
                     setSelectedqueries(
@@ -434,7 +492,8 @@ export default function AllQuery() {
                     )
                   }
                   checked={selectedqueries.length === queries.length}
-                />
+                /> */}
+                N/O
               </th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Staff Name</th> {/* Added User Name column */}
               <th scope="col" className="px-4 font-medium capitalize py-2">Student Name <span className=' text-xs'>(Reference)</span></th>
