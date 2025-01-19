@@ -18,7 +18,7 @@ export default function Visit() {
         const fetchQueryData = async () => {
             try {
                 setLoading(true);
-                const { data } = await axios.get(`/api/queries/fetchgrade/query`);
+                const { data } = await axios.get(`/api/report/allvisit/query`);
                 setQueries(data.queries);
                 setFilteredQueries(data.queries);
             } catch (error) {

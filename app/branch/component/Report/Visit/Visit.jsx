@@ -2,16 +2,15 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Loader from "@/components/Loader/Loader";
-import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 export default function UnderVisit() {
   const [queries, setQueries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const { data: session } = useSession();
   const [adminData, setAdminData] = useState(null);
+  const [courses, setCourses] = useState({}); // To store course ID to name mapping
 
   // Fetch admin data based on session email
   useEffect(() => {
@@ -39,7 +38,7 @@ export default function UnderVisit() {
 
       setLoading(true);
       try {
-        const { data } = await axios.get(`/api/queries/fetchgrade-bybranch/${adminData}`);
+        const { data } = await axios.get(`/api/report/visit/${adminData}`);
         setQueries(data.queries);
       } catch (error) {
         console.error("Error fetching query data:", error.message);
@@ -50,6 +49,24 @@ export default function UnderVisit() {
 
     fetchQueryData();
   }, [adminData]);
+
+  // Fetch all courses and map IDs to names
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await axios.get(`/api/course/fetchall/courses`);
+        const courseMapping = response.data.fetch.reduce((acc, course) => {
+          acc[course._id] = course.course_name; // Assuming each course has _id and name
+          return acc;
+        }, {});
+        setCourses(courseMapping);
+      } catch (error) {
+        console.error("Error fetching courses:", error.message);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   return (
     <div className="container mx-auto p-5">
@@ -68,9 +85,11 @@ export default function UnderVisit() {
                     <thead className="bg-[#29234b] text-white uppercase">
                       <tr>
                         <th className="px-6 py-4">Student Name</th>
-                        <th className="px-6 py-4">Grade</th>
-                        <th className="px-6 py-4">Deadline</th>
-                        <th className="px-6 py-4">Visit</th>
+                        <th className="px-6 py-4">Mobile Number</th>
+                        <th className="px-6 py-4">Course</th>
+                        <th className="px-6 py-4">Qualification</th>
+                        <th className="px-6 py-4">Address</th>
+                        <th className="px-6 py-4">Reference</th>
                         <th className="px-6 py-4">Status</th>
                       </tr>
                     </thead>
@@ -82,7 +101,7 @@ export default function UnderVisit() {
                             return gradeOrder[a.grade] - gradeOrder[b.grade];
                           })
                           .map((query) => {
-                            const deadline = new Date(query.deadline);
+                            const courseName = courses[query.courseInterest] || "Unknown Course";
                             return (
                               <tr
                                 key={query._id}
@@ -91,16 +110,18 @@ export default function UnderVisit() {
                                 <td className="px-6 py-1 font-semibold">
                                   <Link href={`/branch/page/allquery/${query._id}`}>{query.studentName}</Link>
                                 </td>
-                                <td className="px-6 py-1">{query.grade}</td>
-                                <td className="px-6 py-1">{deadline.toLocaleDateString()}</td>
-                                <td className="px-6 py-1">True</td>
+                                <td className="px-6 py-1">{query.studentContact.phoneNumber}</td>
+                                <td className="px-6 py-1">{courseName}</td>
+                                <td className="px-6 py-1">{query.qualification}</td>
+                                <td className="px-6 py-1">{query.studentContact.address}</td>
+                                <td className="px-6 py-1">{query.referenceid}</td>
                                 <td className="px-6 py-1">{query.addmission ? "Enroll" : "Pending"}</td>
                               </tr>
                             );
                           })
                       ) : (
                         <tr>
-                          <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                          <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
                             No queries available
                           </td>
                         </tr>
