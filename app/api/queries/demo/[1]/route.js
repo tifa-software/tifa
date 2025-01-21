@@ -5,7 +5,7 @@ export const GET = async (request) => {
     await dbConnect();
 
     try {
-        const fetch = await QueryModel.find({ demo: true });
+        const fetch = await QueryModel.find({ demo: true ,autoclosed: "open"});
         return Response.json(
             {
                 message: "All data fetched!",

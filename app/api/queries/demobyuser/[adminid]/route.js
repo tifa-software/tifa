@@ -4,13 +4,14 @@ import QueryModel from "@/model/Query";
 export const GET = async (request, context) => {
     await dbConnect();
     const userid = context.params.adminid;
-    
+
 
     try {
-      
-        const fetch = await QueryModel.find({ 
-            userid: userid, 
-            demo: true
+
+        const fetch = await QueryModel.find({
+            userid: userid,
+            demo: true,
+            autoclosed: "open"
         });
 
         return Response.json(
