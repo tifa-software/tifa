@@ -6,7 +6,7 @@ export const GET = async (request) => {
 
     try {
         // Fetch only the phoneNumber field from the studentContact object
-        const fetch = await QueryModel.find({ defaultdata: "query" }).select('studentContact.phoneNumber');
+        const fetch = await QueryModel.find({ defaultdata: "query" }).select('studentContact.phoneNumber branch');
 
         return Response.json(
             {

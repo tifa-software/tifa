@@ -94,6 +94,9 @@ export default function Page() {
         fetchData();
     }, []);
 
+    
+    const [existingBranch, setExistingBranch] = useState("");
+
     useEffect(() => {
         let isMounted = true; // To prevent state updates if the component unmounts during the fetch
     
@@ -102,8 +105,22 @@ export default function Page() {
             try {
                 const response = await axios.get("/api/queries/number/s");
                 if (isMounted) {
-                    const phoneSet = new Set(response.data.fetch.map((item) => item.studentContact.phoneNumber));
-                    setIsPhoneNumberExist(phoneSet.has(formData.studentContact.phoneNumber));
+                    // Create a map of phone numbers to their branches
+                    const phoneBranchMap = new Map(
+                        response.data.fetch.map((item) => [
+                            item.studentContact.phoneNumber,
+                            item.branch,
+                        ])
+                    );
+    
+                    const branch = phoneBranchMap.get(formData.studentContact.phoneNumber);
+                    setIsPhoneNumberExist(!!branch); // Update state to reflect if the phone number exists
+                    setExistingBranch(branch || null); // Set the branch if the phone number exists
+    
+                    // Trigger toast if the phone number exists
+                    if (branch) {
+                        toast.error(`Phone Number already exists in branch: ${branch}`);
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -120,7 +137,7 @@ export default function Page() {
             isMounted = false; // Cleanup to avoid setting state on unmounted component
         };
     }, [formData.studentContact.phoneNumber]);
-    {isPhoneNumberExist && toast.error("Phone Number Already Exists")}
+
     useEffect(() => {
         const fetchAdminData = async () => {
             try {
@@ -624,8 +641,10 @@ export default function Page() {
                                 }
                                 className="w-full rounded-0"
                             />
-                            {isPhoneNumberExist && (
-                                <p className="text-red-500 text-[18px] mt-1">This phone number already exists. Please use a different number.</p>
+                            {isPhoneNumberExist && existingBranch && (
+                                <p className="text-red-500 text-[18px] mt-1">
+                                    This phone number already exists in branch: <strong>{existingBranch}</strong>. Please use a different number.
+                                </p>
                             )}
                             {errors.phoneNumber && (
                                 <p className="text-red-500 text-[8px] mt-1">{errors.phoneNumber}</p>
