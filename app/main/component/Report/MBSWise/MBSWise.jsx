@@ -148,161 +148,158 @@ export default function MBSWise() {
 
 
             {filteredData.map((user, index) => (
-                <div key={index} className="p-4 border rounded mb-4">
-                    <table className="table-auto w-full border-collapse border border-gray-300">
+                <div key={index} className="p-6 border rounded-lg mb-6 shadow-lg bg-white">
+                    {/* Report Header */}
+                    <div className="border-b-4 border-blue-500 pb-4 mb-4">
+                        <h2 className="text-2xl font-bold text-blue-800">User Report</h2>
+                        <p className="text-gray-500 text-sm">
+                            Generated on: {new Date().toLocaleDateString()}
+                        </p>
+                    </div>
+
+                    {/* User Info Table */}
+                    <table className="table-auto w-full border-collapse border border-gray-300 mb-6">
                         <thead>
-                            <tr>
-                                <th className="border border-gray-300 p-2 bg-gray-100">User Info</th>
-                                <th className="border border-gray-300 p-2 bg-gray-100">Details</th>
+                            <tr className="bg-blue-50">
+                                <th className="border border-gray-300 p-3 text-left text-sm font-semibold text-blue-700">Category</th>
+                                <th className="border border-gray-300 p-3 text-left text-sm font-semibold text-blue-700">Details</th>
                             </tr>
                         </thead>
                         <tbody>
                             {columns.userName && (
                                 <tr>
-                                    <td className="border border-gray-300 p-2 font-semibold">User Name</td>
-                                    <td className="border border-gray-300 p-2 text-gray-700">{user.userName}</td>
+                                    <td className="border border-gray-300 p-3 font-medium">User Name</td>
+                                    <td className="border border-gray-300 p-3">{user.userName}</td>
                                 </tr>
                             )}
                             {columns.branch && (
-                                <tr>
-                                    <td className="border border-gray-300 p-2 font-semibold">Branch</td>
-                                    <td className="border border-gray-300 p-2 text-gray-600">{user.branch}</td>
-                                </tr>
-                            )}
-                            {columns.dailyActivity && (
-                                <tr>
-                                    <td className="border border-gray-300 p-2 font-semibold">Daily Activity</td>
-                                    <td className="border border-gray-300 p-2">
-                                        <ul className="list-disc list-inside">
-                                            <table className="w-full">
-                                                <thead>
-                                                    <tr>
-                                                        <th className="border border-gray-300 p-2 bg-gray-100">Date</th>
-                                                        <th className="border border-gray-300 p-2 bg-gray-100">Action</th>
-                                                        <th className="border border-gray-300 p-2 bg-gray-100">Query IDs</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {Object.entries(user.dailyActivity)
-                                                        .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB)) // Sort dates in ascending order
-                                                        .map(([date, { count, queries }]) => { // Destructure count and queries from the object
-                                                            // Format the date
-                                                            const formattedDate = new Date(date).toLocaleDateString("en-GB", {
-                                                                day: "numeric",
-                                                                month: "long",
-                                                                year: "numeric",
-                                                            });
-
-                                                            return (
-                                                                <tr key={date}>
-                                                                    <td className="border border-gray-300 p-2 text-gray-700">{formattedDate}</td>
-                                                                    <td className="border border-gray-300 p-2 text-gray-700">{count[0]} actions</td>
-                                                                    <td className="border border-gray-300 p-2 text-gray-700">
-                                                                        <ul className="list-disc list-inside flex flex-col">
-                                                                            {queries.map((queryId, index) => (
-                                                                                <Link className=" hover:text-blue-400" key={queryId} href={`/main/page/allquery/${queryId}`}>
-                                                                                    Query {index + 1}
-                                                                                </Link>
-                                                                            ))}
-                                                                        </ul>
-                                                                    </td>
-                                                                </tr>
-                                                            );
-                                                        })}
-                                                </tbody>
-                                            </table>
-                                        </ul>
-                                    </td>
-                                </tr>
-                            )}
-                            {columns.weeklyActivity && (
-                                <tr>
-                                    <td className="border border-gray-300 p-2 font-semibold">Current Week Activity</td>
-                                    <td className="border border-gray-300 p-2 text-gray-600">{user.weeklyActivity} Update in this Weak</td>
-                                </tr>
-                            )}
-
-                            {columns.monthlyActivity && (
-                                <tr>
-                                    <td className="border border-gray-300 p-2 font-semibold">Monthly Activity</td>
-                                    <td className="border border-gray-300 p-2">
-                                        <ul className="list-disc list-inside">
-                                            <table className=" w-full">
-                                                <thead>
-                                                    <th className="border border-gray-300 p-2 bg-gray-100">Month</th>
-                                                    <th className="border border-gray-300 p-2 bg-gray-100">Action</th>
-                                                </thead>
-                                                <tbody>
-
-                                                    {Object.entries(user.monthlyActivity)
-                                                        .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB))  // Sort dates in ascending order
-                                                        .map(([date, [actions, admissions]]) => {
-                                                            // Convert the string date to a Date object and format it
-                                                            const formattedDate = new Date(date).toLocaleDateString("en-GB", {
-
-                                                                month: "long",
-                                                                year: "numeric",
-                                                            });
-
-                                                            return (
-                                                                <tr key={date}>
-                                                                    <td className="border border-gray-300 p-2 text-gray-700">{formattedDate}</td>
-                                                                    <td className="border border-gray-300 p-2 text-gray-700">{actions} actions
-                                                                        {/* {admissions} Addmission */}
-                                                                    </td>
-                                                                </tr>
-                                                            );
-                                                        })}
-
-                                                </tbody>
-
-                                            </table>
-                                        </ul>
-                                    </td>
-                                </tr>
-                            )}
-
-                            {columns.trendAnalysis && user.trendAnalysis && (
-
-
-                                <tr>
-                                    <td className="border border-gray-300 p-2 font-semibold">Trend Analysis</td>
-                                    <td className="border border-gray-300 p-2">
-                                        <ul className="list-disc list-inside">
-                                            <table className=" w-full">
-
-                                                <tbody>
-                                                    <tr>
-                                                        <td className="border border-gray-300 p-2 bg-gray-100">Current Week</td>
-                                                        <td className="border border-gray-300 p-2 bg-gray-100">{user.trendAnalysis.currentWeek}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td className="border border-gray-300 p-2 bg-gray-100">Last Week</td>
-                                                        <td className="border border-gray-300 p-2 bg-gray-100">{user.trendAnalysis.lastWeek}</td>
-                                                    </tr>
-                                                    <tr>
-
-                                                        <td className="border border-gray-300 p-2 bg-gray-100">Change</td>
-                                                        <td className={
-                                                            user.trendAnalysis.change > 0
-                                                                ? "text-green-600 border border-gray-300 p-2 bg-gray-100"
-                                                                : user.trendAnalysis.change < 0
-                                                                    ? "text-red-600 border border-gray-300 p-2 bg-gray-100"
-                                                                    : "text-gray-600 border border-gray-300 p-2 bg-gray-100"
-                                                        }>{user.trendAnalysis.change}</td>
-                                                    </tr>
-                                                </tbody>
-
-                                            </table>
-                                        </ul>
-                                    </td>
+                                <tr className="bg-gray-50">
+                                    <td className="border border-gray-300 p-3 font-medium">Branch</td>
+                                    <td className="border border-gray-300 p-3">{user.branch}</td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
+
+                    {/* Daily Activity */}
+                    {columns.dailyActivity && (
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold text-blue-700 mb-2">Daily Activity Report</h3>
+                            <table className="w-full border-collapse">
+                                <thead>
+                                    <tr className="bg-blue-100">
+                                        <th className="border border-gray-300 p-3 text-left text-sm font-semibold">Date</th>
+                                        <th className="border border-gray-300 p-3 text-left text-sm font-semibold">Actions</th>
+                                        <th className="border border-gray-300 p-3 text-left text-sm font-semibold">Query IDs</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Object.entries(user.dailyActivity)
+                                        .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB))
+                                        .map(([date, { count, queries }], index) => {
+                                            const formattedDate = new Date(date).toLocaleDateString("en-GB", {
+                                                day: "numeric",
+                                                month: "short",
+                                                year: "numeric",
+                                            });
+                                            return (
+                                                <tr key={date} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                                                    <td className="border border-gray-300 p-3">{formattedDate}</td>
+                                                    <td className="border border-gray-300 p-3">{count[0]} actions</td>
+                                                    <td className="border border-gray-300 p-3">
+                                                        <ul className="flex flex-wrap gap-2">
+                                                            {queries.map((queryId, index) => (
+                                                                <li key={queryId}>
+                                                                    <Link
+                                                                        href={`/main/page/allquery/${queryId}`}
+                                                                        className="bg-blue-100 px-3 py-1 rounded-full text-blue-700 text-xs font-medium hover:bg-blue-200 transition"
+                                                                    >
+                                                                        Query {index + 1}
+                                                                    </Link>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+
+                    {/* Weekly Activity */}
+                    {columns.weeklyActivity && (
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold text-blue-700">Weekly Activity</h3>
+                            <p className="text-gray-600 mt-1">{user.weeklyActivity} Updates this week</p>
+                        </div>
+                    )}
+
+                    {/* Monthly Activity */}
+                    {columns.monthlyActivity && (
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold text-blue-700 mb-2">Monthly Activity</h3>
+                            <table className="w-full border-collapse">
+                                <thead>
+                                    <tr className="bg-blue-100">
+                                        <th className="border border-gray-300 p-3">Month</th>
+                                        <th className="border border-gray-300 p-3">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Object.entries(user.monthlyActivity)
+                                        .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB))
+                                        .map(([date, [actions]]) => {
+                                            const formattedDate = new Date(date).toLocaleDateString("en-GB", {
+                                                month: "long",
+                                                year: "numeric",
+                                            });
+                                            return (
+                                                <tr key={date}>
+                                                    <td className="border border-gray-300 p-3">{formattedDate}</td>
+                                                    <td className="border border-gray-300 p-3">{actions} actions</td>
+                                                </tr>
+                                            );
+                                        })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+
+                    {/* Trend Analysis */}
+                    {columns.trendAnalysis && user.trendAnalysis && (
+                        <div>
+                            <h3 className="text-lg font-semibold text-blue-700 mb-2">Trend Analysis</h3>
+                            <table className="w-full border-collapse">
+                                <tbody>
+                                    <tr>
+                                        <td className="border border-gray-300 p-3 font-medium bg-blue-50">Current Week</td>
+                                        <td className="border border-gray-300 p-3">{user.trendAnalysis.currentWeek}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="border border-gray-300 p-3 font-medium bg-blue-50">Last Week</td>
+                                        <td className="border border-gray-300 p-3">{user.trendAnalysis.lastWeek}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="border border-gray-300 p-3 font-medium bg-blue-50">Change</td>
+                                        <td
+                                            className={`border border-gray-300 p-3 font-medium ${user.trendAnalysis.change > 0
+                                                    ? "text-green-600"
+                                                    : user.trendAnalysis.change < 0
+                                                        ? "text-red-600"
+                                                        : "text-gray-600"
+                                                }`}
+                                        >
+                                            {user.trendAnalysis.change}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
-            ))
-            }
+            ))}
 
 
 
