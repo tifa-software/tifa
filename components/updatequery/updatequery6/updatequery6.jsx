@@ -37,6 +37,10 @@ export default function UpdateQuery6({ query, audit }) {
 
 
   const handleModalSubmit = async () => {
+    if (!query.courseInterest || typeof query.courseInterest !== 'string' || !/^[a-f\d]{24}$/i.test(query.courseInterest)) {
+      alert("Please update the course first with a valid ID before updating fees.");
+      return;
+    }
     // API call for fees update
     const feesData = {
       id: queryid,
