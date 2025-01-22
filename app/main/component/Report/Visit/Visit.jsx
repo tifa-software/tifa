@@ -17,6 +17,8 @@ export default function Visit() {
         enroll: "",
     });
     const [courses, setCourses] = useState({});
+    const [coursesfee, setCoursesfee] = useState({});
+    const [user, setUser] = useState({});
 
     const router = useRouter();
 
@@ -46,6 +48,23 @@ export default function Visit() {
                     return acc;
                 }, {});
                 setCourses(courseMapping);
+
+                const coursesfeeMapping = response.data.fetch.reduce((acc, coursesfee) => {
+                    // Parse enrollpercent as a number and calculate the enrollment fee
+                    const enrollPercent = parseFloat(coursesfee.enrollpercent) || 0; // Default to 0 if enrollpercent is invalid
+                    const enrollmentFee = coursesfee.fees * (enrollPercent / 100); // Calculate the enrollment fee
+
+                    acc[coursesfee._id] = {
+                        totalFee: coursesfee.fees,
+                        enrollPercent: enrollPercent,
+                        enrollmentFee: enrollmentFee.toFixed() // Keep the fee to two decimal places
+                    };
+                    return acc;
+                }, {});
+
+                setCoursesfee(coursesfeeMapping);
+
+
             } catch (error) {
                 console.error("Error fetching courses:", error.message);
             }
@@ -55,8 +74,28 @@ export default function Visit() {
     }, []);
 
     useEffect(() => {
+        const fetchuserData = async () => {
+            try {
+                const response = await axios.get('/api/admin/fetchall/admin');
+                const userMapping = response.data.fetch.reduce((acc, user) => {
+                    acc[user._id] = user.name;
+                    return acc;
+                }, {});
+                setUser(userMapping);
+            } catch (error) {
+                console.error("Error fetching user:", error.message);
+            }
+        };
+
+        fetchuserData();
+    }, []);
+
+
+
+    useEffect(() => {
         const filtered = queries.filter((query) => {
             const courseName = courses[query.courseInterest] || "Unknown Course";
+            const UserName = user[query.assignedTo] || "Unknown User";
 
             return (
                 (filters.studentName
@@ -68,6 +107,9 @@ export default function Visit() {
                 (filters.courseInterest
                     ? courseName.toLowerCase().includes(filters.courseInterest.toLowerCase())
                     : true) &&
+                (filters.assignedTo
+                    ? UserName.toLowerCase().includes(filters.assignedTo.toLowerCase())
+                    : true) &&
                 (filters.branch
                     ? query.branch.toLowerCase().includes(filters.branch.toLowerCase())
                     : true) &&
@@ -76,7 +118,7 @@ export default function Visit() {
                     : true) &&
                 (filters.enroll
                     ? (filters.enroll === "Enroll" && query.addmission) ||
-                      (filters.enroll === "Not Enroll" && !query.addmission)
+                    (filters.enroll === "Not Enroll" && !query.addmission)
                     : true)
             );
         });
@@ -118,7 +160,7 @@ export default function Visit() {
                                         <tr>
                                             <th className="px-6 py-4">S/N</th>
                                             <th className="px-6 py-4">
-                                              
+
                                                 <input
                                                     type="text"
                                                     className="w-full mt-1 text-black px-2 py-1 rounded"
@@ -129,7 +171,7 @@ export default function Visit() {
                                                 />
                                             </th>
                                             <th className="px-6 py-4">
-                                               
+
                                                 <input
                                                     type="text"
                                                     className="w-full mt-1 text-black px-2 py-1 rounded"
@@ -140,7 +182,7 @@ export default function Visit() {
                                                 />
                                             </th>
                                             <th className="px-6 py-4">
-                                               
+
                                                 <input
                                                     type="text"
                                                     className="w-full mt-1 text-black px-2 py-1 rounded"
@@ -150,8 +192,20 @@ export default function Visit() {
                                                     }
                                                 />
                                             </th>
+
                                             <th className="px-6 py-4">
-                                                
+
+                                                <input
+                                                    type="text"
+                                                    className="w-full mt-1 text-black px-2 py-1 rounded"
+                                                    placeholder="Assigned To"
+                                                    onChange={(e) =>
+                                                        handleFilterChange("assignedTo", e.target.value)
+                                                    }
+                                                />
+                                            </th>
+                                            <th className="px-6 py-4">
+
                                                 <input
                                                     type="text"
                                                     className="w-full mt-1 text-black px-2 py-1 rounded"
@@ -161,8 +215,9 @@ export default function Visit() {
                                                     }
                                                 />
                                             </th>
+
                                             <th className="px-6 py-4">
-                                                
+
                                                 <input
                                                     type="text"
                                                     className="w-full mt-1 text-black px-2 py-1 rounded"
@@ -172,9 +227,15 @@ export default function Visit() {
                                                     }
                                                 />
                                             </th>
-                                            <th className="px-6 py-4">Deadline</th>
                                             <th className="px-6 py-4">
-                                                
+                                                Enroll Fees
+                                            </th>
+                                            <th className="px-6 py-4">
+                                                Received Fees
+                                            </th>
+                                            {/* <th className="px-6 py-4">Deadline</th> */}
+                                            <th className="px-6 py-4">
+
                                                 <select
                                                     className="w-full mt-1 text-black px-2 py-1 rounded"
                                                     onChange={(e) =>
@@ -201,6 +262,9 @@ export default function Visit() {
                                             filteredQueries.map((query, index) => {
                                                 const deadline = new Date(query.deadline);
                                                 const courseName = courses[query.courseInterest] || "Unknown Course";
+                                                const coursesfeen = coursesfee[query.courseInterest] || "N/A";
+
+                                                const UserName = user[query.assignedTo] || user[query.userid] || "Unknown User";
                                                 return (
                                                     <tr
                                                         key={query._id}
@@ -211,11 +275,14 @@ export default function Visit() {
                                                         <td className="px-6 py-1 font-semibold">{query.studentName}</td>
                                                         <td className="px-6 py-1 font-semibold">{query.studentContact.phoneNumber}</td>
                                                         <td className="px-6 py-1 font-semibold">{courseName}</td>
+                                                        <td className="px-6 py-1 font-semibold">{UserName}</td>
                                                         <td className="px-6 py-1">{query.branch}</td>
                                                         <td className="px-6 py-1">{query.studentContact.city}</td>
-                                                        <td className="px-6 py-1">
+                                                        <td className="px-6 py-1">{coursesfeen.enrollmentFee} ₹</td>
+                                                        <td className="px-6 py-1">{query.total} ₹</td>
+                                                        {/* <td className="px-6 py-1">
                                                             {deadline.toLocaleDateString()}
-                                                        </td>
+                                                        </td> */}
                                                         <td className="px-6 py-1">
                                                             {query.addmission ? "Enroll" : "Not Enroll"}
                                                         </td>
