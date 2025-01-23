@@ -3,7 +3,7 @@ import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
-
+import { ChevronDownSquare } from "lucide-react"
 export default function Visit() {
     const [queries, setQueries] = useState([]);
     const [filteredQueries, setFilteredQueries] = useState([]);
@@ -19,6 +19,8 @@ export default function Visit() {
     const [courses, setCourses] = useState({});
     const [coursesfee, setCoursesfee] = useState({});
     const [user, setUser] = useState({});
+    const [fromDate, setFromDate] = useState(""); // Added fromDate state
+    const [toDate, setToDate] = useState(""); // Added toDate state
 
     const router = useRouter();
 
@@ -91,13 +93,21 @@ export default function Visit() {
     }, []);
 
 
-
     useEffect(() => {
         const filtered = queries.filter((query) => {
             const courseName = courses[query.courseInterest] || "Unknown Course";
             const UserName = user[query.assignedTo] || "Unknown User";
 
+            // Convert the transitionDate from the '1-10-2024' format to a Date object
+            const visitedDate = query.transitionDate ? new Date(query.transitionDate.split('-').reverse().join('-')) : null;
+
+            // Filter based on date range
+            const isWithinDateRange =
+                (!fromDate || visitedDate >= new Date(fromDate)) &&
+                (!toDate || visitedDate <= new Date(toDate));
+
             return (
+                isWithinDateRange &&
                 (filters.studentName
                     ? query.studentName?.toLowerCase().includes(filters.studentName.toLowerCase())
                     : true) &&
@@ -109,6 +119,9 @@ export default function Visit() {
                     : true) &&
                 (filters.assignedTo
                     ? UserName.toLowerCase().includes(filters.assignedTo.toLowerCase())
+                    : true) &&
+                (filters.adminName
+                    ? query.adminName.toLowerCase().includes(filters.adminName.toLowerCase())
                     : true) &&
                 (filters.branch
                     ? query.branch.toLowerCase().includes(filters.branch.toLowerCase())
@@ -123,7 +136,7 @@ export default function Visit() {
             );
         });
         setFilteredQueries(filtered);
-    }, [filters, queries]);
+    }, [filters, queries, fromDate, toDate]);
 
     const handleRowClick = (id) => {
         router.push(`/main/page/allquery/${id}`);
@@ -143,7 +156,9 @@ export default function Visit() {
     return (
         <div className="container mx-auto p-5">
             <div className="flex flex-col lg:flex-row justify-between space-y-6 lg:space-y-0 lg:space-x-6">
-                <div className="w-full">Total Queries: {filteredQueries.length}
+                <div className="w-full">
+                    <h1 className=" text-2xl font-semibold text-center text-blue-800">Demo Report</h1>
+                    Total Queries: {filteredQueries.length}
                     <div className="shadow-lg rounded-lg bg-white mb-6">
                         <div className="p-4">
                             <div className="flex justify-between items-center gap-5 mb-4">
@@ -159,6 +174,17 @@ export default function Visit() {
                                     <thead className="bg-[#29234b] text-white uppercase">
                                         <tr>
                                             <th className="px-6 py-4">S/N</th>
+                                            <th className="px-6 py-4">
+
+                                                <input
+                                                    type="text"
+                                                    className="w-full mt-1 text-black px-2 py-1 rounded"
+                                                    placeholder="Staff Name"
+                                                    onChange={(e) =>
+                                                        handleFilterChange("adminName", e.target.value)
+                                                    }
+                                                />
+                                            </th>
                                             <th className="px-6 py-4">
 
                                                 <input
@@ -227,13 +253,33 @@ export default function Visit() {
                                                     }
                                                 />
                                             </th>
-                                            <th className="px-6 py-4">
-                                                Enroll Fees
+
+                                            <th className="px-4 py-3 text-[12px] relative group flex">Demo Date <ChevronDownSquare className=" ms-2" />
+                                                <div className=" absolute bg-white p-2 hidden group-hover:block">
+
+                                                    <div>
+
+                                                        <input
+                                                            type="date"
+                                                            value={fromDate}
+                                                            onChange={(e) => setFromDate(e.target.value)}
+                                                            className=" text-gray-800  border focus:ring-0 focus:outline-none"
+                                                        />
+                                                    </div>
+                                                    <p className=" text-black text-center">To</p>
+                                                    <div>
+
+                                                        <input
+                                                            type="date"
+                                                            value={toDate}
+                                                            onChange={(e) => setToDate(e.target.value)}
+                                                            className=" text-gray-800  border focus:ring-0 focus:outline-none"
+                                                        />
+                                                    </div>
+                                                </div>
                                             </th>
-                                            <th className="px-6 py-4">
-                                                Received Fees
-                                            </th>
-                                            {/* <th className="px-6 py-4">Deadline</th> */}
+
+
                                             <th className="px-6 py-4">
 
                                                 <select
@@ -265,6 +311,7 @@ export default function Visit() {
                                                 const coursesfeen = coursesfee[query.courseInterest] || "N/A";
 
                                                 const UserName = user[query.assignedTo] || user[query.userid] || "Unknown User";
+
                                                 return (
                                                     <tr
                                                         key={query._id}
@@ -272,17 +319,18 @@ export default function Visit() {
                                                         onClick={() => handleRowClick(query._id)}
                                                     >
                                                         <td className="px-6 py-1 font-semibold">{index + 1}</td>
+                                                        <td className="px-6 py-1 font-semibold">{query.adminName}</td>
                                                         <td className="px-6 py-1 font-semibold">{query.studentName}</td>
                                                         <td className="px-6 py-1 font-semibold">{query.studentContact.phoneNumber}</td>
                                                         <td className="px-6 py-1 font-semibold">{courseName}</td>
                                                         <td className="px-6 py-1 font-semibold">{UserName}</td>
                                                         <td className="px-6 py-1">{query.branch}</td>
                                                         <td className="px-6 py-1">{query.studentContact.city}</td>
-                                                        <td className="px-6 py-1">{coursesfeen.enrollmentFee} ₹</td>
-                                                        <td className="px-6 py-1">{query.total} ₹</td>
-                                                        {/* <td className="px-6 py-1">
-                                                            {deadline.toLocaleDateString()}
-                                                        </td> */}
+                                                        <td className="px-6 py-1">
+                                                            {query.fees.length > 0 ? new Date(query.fees[0].transactionDate).toLocaleDateString() : "No date available"}
+                                                        </td>
+
+
                                                         <td className="px-6 py-1">
                                                             {query.addmission ? "Enroll" : "Not Enroll"}
                                                         </td>
