@@ -3,7 +3,7 @@ import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
-
+import { ChevronDownSquare } from "lucide-react"
 export default function Visit() {
     const [queries, setQueries] = useState([]);
     const [filteredQueries, setFilteredQueries] = useState([]);
@@ -19,6 +19,8 @@ export default function Visit() {
     const [courses, setCourses] = useState({});
     const [coursesfee, setCoursesfee] = useState({});
     const [user, setUser] = useState({});
+    const [fromDate, setFromDate] = useState(""); // Added fromDate state
+    const [toDate, setToDate] = useState(""); // Added toDate state
 
     const router = useRouter();
 
@@ -91,14 +93,21 @@ export default function Visit() {
     }, []);
 
 
-
     useEffect(() => {
         const filtered = queries.filter((query) => {
             const courseName = courses[query.courseInterest] || "Unknown Course";
             const UserName = user[query.assignedTo] || "Unknown User";
-
-
+    
+            // Convert the transitionDate from the '1-10-2024' format to a Date object
+            const visitedDate = query.transitionDate ? new Date(query.transitionDate.split('-').reverse().join('-')) : null;
+    
+            // Filter based on date range
+            const isWithinDateRange =
+                (!fromDate || visitedDate >= new Date(fromDate)) &&
+                (!toDate || visitedDate <= new Date(toDate));
+    
             return (
+                isWithinDateRange &&
                 (filters.studentName
                     ? query.studentName?.toLowerCase().includes(filters.studentName.toLowerCase())
                     : true) &&
@@ -127,8 +136,8 @@ export default function Visit() {
             );
         });
         setFilteredQueries(filtered);
-    }, [filters, queries]);
-
+    }, [filters, queries, fromDate, toDate]);
+    
     const handleRowClick = (id) => {
         router.push(`/main/page/allquery/${id}`);
     };
@@ -243,16 +252,29 @@ export default function Visit() {
                                                 />
                                             </th>
 
-                                            <th className="px-6 py-4">
+                                            <th className="px-4 py-3 text-[12px] relative group flex">Visited Date <ChevronDownSquare className=" ms-2" />
+                                                <div className=" absolute bg-white p-2 hidden group-hover:block">
 
-                                                <input
-                                                    type="text"
-                                                    className="w-full mt-1 text-black px-2 py-1 rounded"
-                                                    placeholder="Visit Date"
-                                                    onChange={(e) =>
-                                                        handleFilterChange("city", e.target.value)
-                                                    }
-                                                />
+                                                    <div>
+
+                                                        <input
+                                                            type="date"
+                                                            value={fromDate}
+                                                            onChange={(e) => setFromDate(e.target.value)}
+                                                            className=" text-gray-800  border focus:ring-0 focus:outline-none"
+                                                        />
+                                                    </div>
+                                                    <p className=" text-black text-center">To</p>
+                                                    <div>
+
+                                                        <input
+                                                            type="date"
+                                                            value={toDate}
+                                                            onChange={(e) => setToDate(e.target.value)}
+                                                            className=" text-gray-800  border focus:ring-0 focus:outline-none"
+                                                        />
+                                                    </div>
+                                                </div>
                                             </th>
 
 
@@ -303,11 +325,7 @@ export default function Visit() {
                                                         <td className="px-6 py-1">{query.branch}</td>
                                                         <td className="px-6 py-1">{query.studentContact.city}</td>
                                                         <td className="px-6 py-1">
-                                                            {new Date(query.transitionDate).toLocaleDateString('en-US', {
-                                                                day: 'numeric',
-                                                                month: 'long',
-                                                                year: 'numeric',
-                                                            })}
+                                                            {query.transitionDate}
                                                         </td>
 
                                                         <td className="px-6 py-1">

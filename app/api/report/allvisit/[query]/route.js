@@ -19,7 +19,9 @@ export const GET = async (request) => {
             // Find the previous log where stage was 5 (if any)
             const prevAuditLog = log.history.find(entry => entry.stage === "5");
             if (prevAuditLog) {
-                stageTransitionDates[log.queryId] = prevAuditLog.actionDate; // Save the transition date
+                const transitionDate = new Date(prevAuditLog.actionDate);
+                // Format the date as '1-10-2024'
+                stageTransitionDates[log.queryId] = `${transitionDate.getDate()}-${transitionDate.getMonth() + 1}-${transitionDate.getFullYear()}`;
             }
         });
 
@@ -44,7 +46,7 @@ export const GET = async (request) => {
             ...query.toObject(),
             grade: queryIdMap[query._id], // Add grade from audit log
             adminName: adminMap[query.userid] || null, // Add admin name
-            transitionDate: stageTransitionDates[query._id] || null, // Add transition date (if any)
+            transitionDate: stageTransitionDates[query._id] || null, // Add formatted transition date (if any)
         }));
 
         return Response.json(
