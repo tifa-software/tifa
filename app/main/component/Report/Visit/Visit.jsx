@@ -164,6 +164,17 @@ export default function Visit() {
                                                 <input
                                                     type="text"
                                                     className="w-full mt-1 text-black px-2 py-1 rounded"
+                                                    placeholder="Staff Name"
+                                                    onChange={(e) =>
+                                                        handleFilterChange("studentName", e.target.value)
+                                                    }
+                                                />
+                                            </th>
+                                            <th className="px-6 py-4">
+
+                                                <input
+                                                    type="text"
+                                                    className="w-full mt-1 text-black px-2 py-1 rounded"
                                                     placeholder="Student Name"
                                                     onChange={(e) =>
                                                         handleFilterChange("studentName", e.target.value)
@@ -227,12 +238,12 @@ export default function Visit() {
                                                     }
                                                 />
                                             </th>
-                                            <th className="px-6 py-4">
+                                            {/* <th className="px-6 py-4">
                                                 Enroll Fees
                                             </th>
                                             <th className="px-6 py-4">
                                                 Received Fees
-                                            </th>
+                                            </th> */}
                                             {/* <th className="px-6 py-4">Deadline</th> */}
                                             <th className="px-6 py-4">
 
@@ -272,15 +283,16 @@ export default function Visit() {
                                                         onClick={() => handleRowClick(query._id)}
                                                     >
                                                         <td className="px-6 py-1 font-semibold">{index + 1}</td>
+                                                        <td className="px-6 py-1 font-semibold">{query.userid}</td>
                                                         <td className="px-6 py-1 font-semibold">{query.studentName}</td>
                                                         <td className="px-6 py-1 font-semibold">{query.studentContact.phoneNumber}</td>
                                                         <td className="px-6 py-1 font-semibold">{courseName}</td>
                                                         <td className="px-6 py-1 font-semibold">{UserName}</td>
                                                         <td className="px-6 py-1">{query.branch}</td>
                                                         <td className="px-6 py-1">{query.studentContact.city}</td>
-                                                        <td className="px-6 py-1">{coursesfeen.enrollmentFee} ₹</td>
+                                                        {/* <td className="px-6 py-1">{coursesfeen.enrollmentFee} ₹</td>
                                                         <td className="px-6 py-1">{query.total} ₹</td>
-                                                        {/* <td className="px-6 py-1">
+                                                        <td className="px-6 py-1">
                                                             {deadline.toLocaleDateString()}
                                                         </td> */}
                                                         <td className="px-6 py-1">

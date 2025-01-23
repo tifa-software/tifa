@@ -8,6 +8,7 @@ export default function Table({ data }) {
                     <thead className="bg-gray-800 text-white">
                         <tr className="divide-x divide-gray-700">
                             <th className="px-4 py-3 text-[12px]">Sr No.</th>
+                            <th className="px-4 py-3 text-[12px]">Staff Name</th>
                             <th className="px-4 py-3 text-[12px]">Student Name</th>
                             <th className="px-4 py-3 text-[12px]">Phone Number</th>
                             <th className="px-4 py-3 text-[12px]">No Of Contact</th>
@@ -31,6 +32,7 @@ export default function Table({ data }) {
                                 className="odd:bg-gray-50 even:bg-gray-100 hover:bg-gray-200 transition-all"
                             >
                                 <td className="px-4 py-3 text-[12px]">{index + 1}</td>
+                                <td className="px-4 py-3 text-[12px]">{data.userid}</td>
                                 <Link href={`/main/page/allquery/${data._id}`}><td className="px-4 py-3 text-[12px]">{data.studentName}</td></Link>
                                 <td className="px-4 py-3 text-[12px]">{data.studentContact.phoneNumber}</td>
                                 <td className="px-4 py-3 text-[12px]"> {data.historyCount}</td>

@@ -23,6 +23,7 @@ export const GET = async (request) => {
     const location = searchParams.get("location");
     const city = searchParams.get("city");
     const assignedName = searchParams.get("assignedName");
+    const userName = searchParams.get("userName");
 
     // Build MongoDB query
     const queryFilter = { defaultdata: "query" };
@@ -63,9 +64,21 @@ export const GET = async (request) => {
       }
     }
     if (assignedName) {
-      const admin = await AdminModel.findOne({ name: { $regex: assignedName, $options: "i" } });
+      if (assignedName === "Not-Assigned") {
+        // Filter for documents where `assignedTo` is exactly "Not-Assigned"
+        queryFilter.assignedTo = "Not-Assigned";
+      } else {
+        const admin = await AdminModel.findOne({ name: { $regex: assignedName, $options: "i" } });
+        if (admin) {
+          queryFilter.assignedTo = admin._id;
+        }
+      }
+    }
+    
+    if (userName) {
+      const admin = await AdminModel.findOne({ name: { $regex: userName, $options: "i" } });
       if (admin) {
-        queryFilter.assignedTo = admin._id;
+        queryFilter.userid = admin._id;
       }
     }
 
