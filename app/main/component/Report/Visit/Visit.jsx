@@ -97,15 +97,15 @@ export default function Visit() {
         const filtered = queries.filter((query) => {
             const courseName = courses[query.courseInterest] || "Unknown Course";
             const UserName = user[query.assignedTo] || "Unknown User";
-    
+
             // Convert the transitionDate from the '1-10-2024' format to a Date object
             const visitedDate = query.transitionDate ? new Date(query.transitionDate.split('-').reverse().join('-')) : null;
-    
+
             // Filter based on date range
             const isWithinDateRange =
                 (!fromDate || visitedDate >= new Date(fromDate)) &&
                 (!toDate || visitedDate <= new Date(toDate));
-    
+
             return (
                 isWithinDateRange &&
                 (filters.studentName
@@ -137,7 +137,7 @@ export default function Visit() {
         });
         setFilteredQueries(filtered);
     }, [filters, queries, fromDate, toDate]);
-    
+
     const handleRowClick = (id) => {
         router.push(`/main/page/allquery/${id}`);
     };
@@ -156,7 +156,9 @@ export default function Visit() {
     return (
         <div className="container mx-auto p-5">
             <div className="flex flex-col lg:flex-row justify-between space-y-6 lg:space-y-0 lg:space-x-6">
-                <div className="w-full">Total Queries: {filteredQueries.length}
+                <div className="w-full">
+                    <h1 className=" text-2xl font-semibold text-center text-blue-800">Visit Report</h1>
+                    Total Queries: {filteredQueries.length}
                     <div className="shadow-lg rounded-lg bg-white mb-6">
                         <div className="p-4">
                             <div className="flex justify-between items-center gap-5 mb-4">
