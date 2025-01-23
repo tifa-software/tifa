@@ -97,6 +97,7 @@ export default function Visit() {
             const courseName = courses[query.courseInterest] || "Unknown Course";
             const UserName = user[query.assignedTo] || "Unknown User";
 
+
             return (
                 (filters.studentName
                     ? query.studentName?.toLowerCase().includes(filters.studentName.toLowerCase())
@@ -109,6 +110,9 @@ export default function Visit() {
                     : true) &&
                 (filters.assignedTo
                     ? UserName.toLowerCase().includes(filters.assignedTo.toLowerCase())
+                    : true) &&
+                (filters.adminName
+                    ? query.adminName.toLowerCase().includes(filters.adminName.toLowerCase())
                     : true) &&
                 (filters.branch
                     ? query.branch.toLowerCase().includes(filters.branch.toLowerCase())
@@ -166,7 +170,7 @@ export default function Visit() {
                                                     className="w-full mt-1 text-black px-2 py-1 rounded"
                                                     placeholder="Staff Name"
                                                     onChange={(e) =>
-                                                        handleFilterChange("studentName", e.target.value)
+                                                        handleFilterChange("adminName", e.target.value)
                                                     }
                                                 />
                                             </th>
@@ -238,13 +242,20 @@ export default function Visit() {
                                                     }
                                                 />
                                             </th>
-                                            {/* <th className="px-6 py-4">
-                                                Enroll Fees
-                                            </th>
+
                                             <th className="px-6 py-4">
-                                                Received Fees
-                                            </th> */}
-                                            {/* <th className="px-6 py-4">Deadline</th> */}
+
+                                                <input
+                                                    type="text"
+                                                    className="w-full mt-1 text-black px-2 py-1 rounded"
+                                                    placeholder="Visit Date"
+                                                    onChange={(e) =>
+                                                        handleFilterChange("city", e.target.value)
+                                                    }
+                                                />
+                                            </th>
+
+
                                             <th className="px-6 py-4">
 
                                                 <select
@@ -276,6 +287,7 @@ export default function Visit() {
                                                 const coursesfeen = coursesfee[query.courseInterest] || "N/A";
 
                                                 const UserName = user[query.assignedTo] || user[query.userid] || "Unknown User";
+
                                                 return (
                                                     <tr
                                                         key={query._id}
@@ -283,18 +295,21 @@ export default function Visit() {
                                                         onClick={() => handleRowClick(query._id)}
                                                     >
                                                         <td className="px-6 py-1 font-semibold">{index + 1}</td>
-                                                        <td className="px-6 py-1 font-semibold">{query.userid}</td>
+                                                        <td className="px-6 py-1 font-semibold">{query.adminName}</td>
                                                         <td className="px-6 py-1 font-semibold">{query.studentName}</td>
                                                         <td className="px-6 py-1 font-semibold">{query.studentContact.phoneNumber}</td>
                                                         <td className="px-6 py-1 font-semibold">{courseName}</td>
                                                         <td className="px-6 py-1 font-semibold">{UserName}</td>
                                                         <td className="px-6 py-1">{query.branch}</td>
                                                         <td className="px-6 py-1">{query.studentContact.city}</td>
-                                                        {/* <td className="px-6 py-1">{coursesfeen.enrollmentFee} ₹</td>
-                                                        <td className="px-6 py-1">{query.total} ₹</td>
                                                         <td className="px-6 py-1">
-                                                            {deadline.toLocaleDateString()}
-                                                        </td> */}
+                                                            {new Date(query.transitionDate).toLocaleDateString('en-US', {
+                                                                day: 'numeric',
+                                                                month: 'long',
+                                                                year: 'numeric',
+                                                            })}
+                                                        </td>
+
                                                         <td className="px-6 py-1">
                                                             {query.addmission ? "Enroll" : "Not Enroll"}
                                                         </td>
