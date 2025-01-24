@@ -26,7 +26,7 @@ export default function Visit() {
         const fetchQueryData = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get("/api/queries/enrolled/5");
+                const response = await axios.get("/api/report/enroll/5");
                 setQueries(response.data.fetch);
                 setFilteredQueries(response.data.fetch);
             } catch (error) {
@@ -89,17 +89,25 @@ export default function Visit() {
 
     useEffect(() => {
         const filtered = queries.filter((query) => {
+            const courseFeeDetails = coursesfee[query.courseInterest] || {};
+            const remainingFees = courseFeeDetails.totalFee - query.total;
+
             return (
                 (!filters.branch || query.branch.toLowerCase().includes(filters.branch.toLowerCase())) &&
+                (filters.staffName
+                    ? query.staffName.toLowerCase().includes(filters.staffName.toLowerCase())
+                    : true) &&
                 (!filters.studentName || query.studentName?.toLowerCase().includes(filters.studentName.toLowerCase())) &&
                 (!filters.contact || query.studentContact.phoneNumber.includes(filters.contact)) &&
                 (!filters.course || (courses[query.courseInterest] || "").toLowerCase().includes(filters.course.toLowerCase())) &&
                 (!filters.assignedTo || (user[query.assignedTo] || user[query.userid] || "").toLowerCase().includes(filters.assignedTo.toLowerCase())) &&
-                (!filters.city || query.studentContact.city.toLowerCase().includes(filters.city.toLowerCase()))
+                (!filters.city || query.studentContact.city.toLowerCase().includes(filters.city.toLowerCase())) &&
+                (!filters.fees || remainingFees.toString().includes(filters.fees))
             );
         });
         setFilteredQueries(filtered);
-    }, [filters, queries, courses, user]);
+    }, [filters, queries, courses, user, coursesfee]);
+
 
     const handleFilterChange = (key, value) => {
         setFilters((prev) => ({ ...prev, [key]: value }));
@@ -120,6 +128,7 @@ export default function Visit() {
         <div className="container mx-auto p-5">
             <div className="flex flex-col lg:flex-row justify-between space-y-6 lg:space-y-0 lg:space-x-6">
                 <div className="w-full">
+                    <h1 className=" text-2xl font-semibold text-center text-blue-800">Admission Report</h1>
                     <h1 className="text-lg font-semibold mb-4">Total Queries: {filteredQueries.length}</h1>
                     <div className="shadow-lg rounded-lg bg-white mb-6">
                         <button
@@ -134,6 +143,18 @@ export default function Visit() {
                                     <thead className="bg-[#29234b] text-white uppercase">
                                         <tr>
                                             <th className="px-6 py-4">S/N</th>
+
+                                            <th className="px-6 py-4">
+
+                                                <input
+                                                    type="text"
+                                                    className="w-full mt-1 text-black px-2 py-1 rounded"
+                                                    placeholder="Staff Name"
+                                                    onChange={(e) =>
+                                                        handleFilterChange("staffName", e.target.value)
+                                                    }
+                                                />
+                                            </th>
                                             <th className="px-6 py-4">
 
                                                 <input
@@ -189,7 +210,15 @@ export default function Visit() {
                                                 />
                                             </th>
                                             <th className="px-6 py-4">Total Fees</th>
-                                            <th className="px-6 py-4">Remaining Fees</th>
+                                            <th className="px-6 py-4">
+
+                                                <input
+                                                    type="text"
+                                                    placeholder="Remaining Fees"
+                                                    className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
+                                                    onChange={(e) => handleFilterChange("fees", e.target.value)}
+                                                />
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -213,12 +242,14 @@ export default function Visit() {
                                                         onClick={() => handleRowClick(query._id)}
                                                     >
                                                         <td className="px-6 py-1 font-semibold">{index + 1}</td>
+                                                        <td className="px-6 py-1 font-semibold">{query.staffName}</td>
                                                         <td className="px-6 py-1 font-semibold">{query.studentName}</td>
                                                         <td className="px-6 py-1 font-semibold">{query.studentContact.phoneNumber}</td>
                                                         <td className="px-6 py-1 font-semibold">{courseName}</td>
                                                         <td className="px-6 py-1 font-semibold">{UserName}</td>
                                                         <td className="px-6 py-1">{query.branch}</td>
                                                         <td className="px-6 py-1">{query.studentContact.city}</td>
+
                                                         <td className="px-6 py-1">{coursesfeen.totalFee ? `${coursesfeen.totalFee} ₹` : "N/A"}</td>
                                                         <td className="px-6 py-1">{coursesfeen.totalFee - query.total} ₹</td>
                                                     </tr>
