@@ -97,15 +97,17 @@ export default function Visit() {
         const filtered = queries.filter((query) => {
             const courseName = courses[query.courseInterest] || "Unknown Course";
             const UserName = user[query.assignedTo] || "Unknown User";
-
-            // Convert the transitionDate from the '1-10-2024' format to a Date object
-            const visitedDate = query.transitionDate ? new Date(query.transitionDate.split('-').reverse().join('-')) : null;
-
+    
+            // Determine the relevant date for filtering
+            const relevantDate = query.fees.length > 0 
+                ? new Date(query.fees[0].transactionDate) 
+                : new Date(query.stage6Date);
+    
             // Filter based on date range
             const isWithinDateRange =
-                (!fromDate || visitedDate >= new Date(fromDate)) &&
-                (!toDate || visitedDate <= new Date(toDate));
-
+                (!fromDate || relevantDate >= new Date(fromDate)) &&
+                (!toDate || relevantDate <= new Date(toDate));
+    
             return (
                 isWithinDateRange &&
                 (filters.studentName
@@ -120,8 +122,8 @@ export default function Visit() {
                 (filters.assignedTo
                     ? UserName.toLowerCase().includes(filters.assignedTo.toLowerCase())
                     : true) &&
-                (filters.adminName
-                    ? query.adminName.toLowerCase().includes(filters.adminName.toLowerCase())
+                (filters.staffName
+                    ? query.staffName.toLowerCase().includes(filters.staffName.toLowerCase())
                     : true) &&
                 (filters.branch
                     ? query.branch.toLowerCase().includes(filters.branch.toLowerCase())
@@ -131,12 +133,13 @@ export default function Visit() {
                     : true) &&
                 (filters.enroll
                     ? (filters.enroll === "Enroll" && query.addmission) ||
-                    (filters.enroll === "Not Enroll" && !query.addmission)
+                      (filters.enroll === "Not Enroll" && !query.addmission)
                     : true)
             );
         });
         setFilteredQueries(filtered);
     }, [filters, queries, fromDate, toDate]);
+    
 
     const handleRowClick = (id) => {
         router.push(`/main/page/allquery/${id}`);
@@ -181,7 +184,7 @@ export default function Visit() {
                                                     className="w-full mt-1 text-black px-2 py-1 rounded"
                                                     placeholder="Staff Name"
                                                     onChange={(e) =>
-                                                        handleFilterChange("adminName", e.target.value)
+                                                        handleFilterChange("staffName", e.target.value)
                                                     }
                                                 />
                                             </th>
@@ -319,7 +322,7 @@ export default function Visit() {
                                                         onClick={() => handleRowClick(query._id)}
                                                     >
                                                         <td className="px-6 py-1 font-semibold">{index + 1}</td>
-                                                        <td className="px-6 py-1 font-semibold">{query.adminName}</td>
+                                                        <td className="px-6 py-1 font-semibold">{query.staffName}</td>
                                                         <td className="px-6 py-1 font-semibold">{query.studentName}</td>
                                                         <td className="px-6 py-1 font-semibold">{query.studentContact.phoneNumber}</td>
                                                         <td className="px-6 py-1 font-semibold">{courseName}</td>
@@ -327,8 +330,11 @@ export default function Visit() {
                                                         <td className="px-6 py-1">{query.branch}</td>
                                                         <td className="px-6 py-1">{query.studentContact.city}</td>
                                                         <td className="px-6 py-1">
-                                                            {query.fees.length > 0 ? new Date(query.fees[0].transactionDate).toLocaleDateString() : "No date available"}
+                                                            {query.fees.length > 0
+                                                                ? new Date(query.fees[0].transactionDate).toLocaleDateString()
+                                                                : new Date(query.stage6Date).toLocaleDateString()}
                                                         </td>
+
 
 
                                                         <td className="px-6 py-1">
