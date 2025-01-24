@@ -97,22 +97,26 @@ export default function Visit() {
         const filtered = queries.filter((query) => {
             const courseName = courses[query.courseInterest] || "Unknown Course";
             const UserName = user[query.assignedTo] || "Unknown User";
-    
+
             // Determine the relevant date for filtering
-            const relevantDate = query.fees.length > 0 
-                ? new Date(query.fees[0].transactionDate) 
+            const relevantDate = query.fees.length > 0
+                ? new Date(query.fees[0].transactionDate)
                 : new Date(query.stage6Date);
-    
+
             // Filter based on date range
             const isWithinDateRange =
                 (!fromDate || relevantDate >= new Date(fromDate)) &&
                 (!toDate || relevantDate <= new Date(toDate));
-    
+
             return (
                 isWithinDateRange &&
                 (filters.studentName
                     ? query.studentName?.toLowerCase().includes(filters.studentName.toLowerCase())
                     : true) &&
+                    (filters.total
+                        ? query.total.toString().includes(filters.total)
+                        : true)
+                     &&
                 (filters.phoneNumber
                     ? query.studentContact.phoneNumber.includes(filters.phoneNumber)
                     : true) &&
@@ -133,13 +137,13 @@ export default function Visit() {
                     : true) &&
                 (filters.enroll
                     ? (filters.enroll === "Enroll" && query.addmission) ||
-                      (filters.enroll === "Not Enroll" && !query.addmission)
+                    (filters.enroll === "Not Enroll" && !query.addmission)
                     : true)
             );
         });
         setFilteredQueries(filtered);
     }, [filters, queries, fromDate, toDate]);
-    
+
 
     const handleRowClick = (id) => {
         router.push(`/main/page/allquery/${id}`);
@@ -282,7 +286,20 @@ export default function Visit() {
                                                 </div>
                                             </th>
 
+                                            <th className="px-6 py-4">
+                                                Enroll Fees
+                                            </th>
+                                            <th className="px-6 py-4">
 
+                                                <input
+                                                    type="text"
+                                                    className="w-full mt-1 text-black px-2 py-1 rounded"
+                                                    placeholder="R.Fees"
+                                                    onChange={(e) =>
+                                                        handleFilterChange("total", e.target.value)
+                                                    }
+                                                />
+                                            </th>
                                             <th className="px-6 py-4">
 
                                                 <select
@@ -329,13 +346,15 @@ export default function Visit() {
                                                         <td className="px-6 py-1 font-semibold">{UserName}</td>
                                                         <td className="px-6 py-1">{query.branch}</td>
                                                         <td className="px-6 py-1">{query.studentContact.city}</td>
+
                                                         <td className="px-6 py-1">
                                                             {query.fees.length > 0
                                                                 ? new Date(query.fees[0].transactionDate).toLocaleDateString()
                                                                 : new Date(query.stage6Date).toLocaleDateString()}
                                                         </td>
 
-
+                                                        <td className="px-6 py-1">{coursesfeen.enrollmentFee} ₹</td>
+                                                        <td className="px-6 py-1">{query.total} ₹</td>
 
                                                         <td className="px-6 py-1">
                                                             {query.addmission ? "Enroll" : "Not Enroll"}
