@@ -119,8 +119,11 @@ export default function QueryReport() {
   };
   return (
     <>
+      <div className="text-xl inline font-extrabold text-center sticky top-0 py-2 px-4 backdrop-blur-md bg-blue-100/80 rounded-br-full   text-blue-800 ">
+        Over-View
+      </div>
       <div className="mt-8 container lg:w-[98%] mx-auto">
-        <h1 className=" text-2xl font-semibold text-center text-blue-800">Over-View</h1>
+
         Total Queries: {allquery.length}
         <div className="flex justify-between gap-5 items-center">
           <div className="py-3 px-4 flex-auto mb-4 bg-blue-100 text-blue-800 rounded-lg shadow-md flex justify-between items-center">
