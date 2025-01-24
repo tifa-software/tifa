@@ -7,6 +7,7 @@ import LeadTransfer from '../../component/Report/LeadTransfer/LeadTransfer';
 import Demo from '../../component/Report/Demo/Demo';
 import Visit from '../../component/Report/Visit/Visit';
 import Addmission from '../../component/Addmission/Addmission';
+import Lead from '../../component/Report/Lead/Lead';
 export default function BranchReportPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -56,6 +57,15 @@ export default function BranchReportPage() {
                             onClick={() => handleOpenModal(<Visit />)}
                         >
                             Visit Queries
+                        </button>
+                    </div>
+
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<Lead />)}
+                        >
+                            Lead Report
                         </button>
                     </div>
 
