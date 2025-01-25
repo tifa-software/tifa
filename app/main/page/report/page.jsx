@@ -8,6 +8,7 @@ import Demo from '../../component/Report/Demo/Demo';
 import Visit from '../../component/Report/Visit/Visit';
 import Addmission from '../../component/Addmission/Addmission';
 import Lead from '../../component/Report/Lead/Lead';
+import Staff from '../../component/Report/Staff/Staff';
 export default function BranchReportPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -69,14 +70,7 @@ export default function BranchReportPage() {
                         </button>
                     </div>
 
-                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
-                        <button
-                            className="text-[#29234b] "
-                            onClick={() => handleOpenModal(<MBSWise />)}
-                        >
-                            Lead Update Report
-                        </button>
-                    </div>
+
                     <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
                         <button
                             className="text-[#29234b] "
@@ -87,6 +81,15 @@ export default function BranchReportPage() {
                     </div>
 
 
+
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<Staff />)}
+                        >
+                            Staff Register
+                        </button>
+                    </div>
                     <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
                         <button
                             className="text-[#29234b] "
@@ -96,6 +99,14 @@ export default function BranchReportPage() {
                         </button>
                     </div>
 
+                    {/* <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<MBSWise />)}
+                        >
+                            Lead Update Report
+                        </button>
+                    </div> */}
                 </div>
             </div>
 
