@@ -9,7 +9,10 @@ export const GET = async (request, context) => {
     try {
 
         const fetch = await QueryModel.find({
-            userid: userid,
+            $or: [
+                { userid: userid, assignedTo: "Not-Assigned" },  
+                { assignedTo: userid }            
+            ],
             demo: true,
             autoclosed: "open"
         });

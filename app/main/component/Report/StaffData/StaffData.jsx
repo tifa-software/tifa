@@ -68,7 +68,7 @@ export default function StaffData({ staffid }) {
                                 <div key={day}>
                                     <button
                                         onClick={() => setActiveDay(activeDay === day ? null : day)}
-                                        className="bg-blue-800 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded w-full text-left"
+                                        className="bg-[#29234b] hover:bg-[#29234b]/80 text-white font-semibold py-2 px-4 rounded w-full text-left"
                                     >
                                         Date: {day} {activeDay === day ? "▼" : "▶"}
                                     </button>
