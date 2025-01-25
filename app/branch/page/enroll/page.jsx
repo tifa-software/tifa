@@ -83,7 +83,7 @@ export default function Assigned() {
 
     // Filter queries based on search term (name or contact number)
     const filteredQueries = queries.filter((query) =>
-        query.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        query.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         query.studentContact.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         query.studentContact.city.toLowerCase().includes(searchTerm.toLowerCase())
     );

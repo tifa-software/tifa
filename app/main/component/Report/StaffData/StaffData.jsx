@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios'
 
 export default function StaffData({ staffid }) {
-    const [queries, setQueries] = useState([]);
+    const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     useEffect(() => {
 
@@ -12,7 +12,8 @@ export default function StaffData({ staffid }) {
                 try {
                     setLoading(true);
                     const response = await axios.get(`/api/report/staffdata/${staffid}`);
-                    setQueries(response.data.fetch);
+                    setData(response.data.data.userActivityReport);
+                    console.log("ok",data)
                 } catch (error) {
                     console.error('Error fetching query data:', error);
                 } finally {
@@ -26,7 +27,7 @@ export default function StaffData({ staffid }) {
     return (
         <>
             <div className="text-xl inline font-extrabold text-center sticky top-0 py-2 px-4 backdrop-blur-md bg-blue-100/80 rounded-br-full   text-blue-800 ">
-                Staff = {staffid}
+                Staff = {data.userName}
             </div>
             <div className='container lg:w-[95%] mx-auto py-5 h-screen flex items-center justify-center'>
               <span className=' text-red-600 text-3xl'>  Under Development</span>
