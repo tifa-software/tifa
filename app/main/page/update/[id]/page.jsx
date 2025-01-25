@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef ,useCallback} from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
@@ -16,7 +16,7 @@ export default function Page({ params }) {
     const [displayDate, setDisplayDate] = useState("");
     const [user, setuser] = useState([]);
     const [errors, setErrors] = useState({});
-
+    const [isChangeFeesChecked, setIsChangeFeesChecked] = useState(false);
     const [adminData, setAdminData] = useState(null);
     const [adminid, setAdminid] = useState(null);
     const [adminbranch, setAdminbranch] = useState(null);
@@ -44,7 +44,7 @@ export default function Page({ params }) {
         deadline: "",
         branch: "",
         notes: "",
-
+        finalfees: "",
         qualification: "Not Provided",
         profession: "",
         professiontype: "null",
@@ -58,7 +58,9 @@ export default function Page({ params }) {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [isFormValid, setIsFormValid] = useState(false);
-    
+    const handleCheckboxChange = (e) => {
+        setIsChangeFeesChecked(e.target.checked);
+    };
     // const today = new Date().toISOString().split('T')[0];
     const currentYear = new Date().getFullYear();
     const sessionStart = new Date(currentYear, 2, 1); // March 1 of the current year
@@ -254,6 +256,7 @@ export default function Page({ params }) {
             if (!formData.notes) newErrors.notes = "Notes are required";
             if (!formData.qualification) newErrors.qualification = "Qualification is required";
             if (!formData.profession) newErrors.profession = "Profession is required";
+
         }
 
         // Determine overall form validity based on the absence of errors
@@ -307,10 +310,10 @@ export default function Page({ params }) {
 
         try {
             const updatedFormData = { ...formData, id };
-    
+
             // Make the API call
             const response = await axios.patch("/api/queries/updatedetails", updatedFormData);
-    
+
 
             if (response.status === 200) {
                 const { queryId } = response.data;
@@ -373,6 +376,7 @@ export default function Page({ params }) {
                     deadline: "",
                     branch: "",
                     notes: "",
+                    finalfees: "",
                     qualification: "",
                     profession: "",
                     professiontype: "",
@@ -397,7 +401,7 @@ export default function Page({ params }) {
             >
 
                 <div className="bg-[#29234b] text-white px-7 py-3 flex justify-between w-full">
-                    <h1 className="text-lg font-bold">Add New Query</h1>
+                    <h1 className="text-lg font-bold">Update Query</h1>
                 </div>
 
 
@@ -617,7 +621,7 @@ export default function Page({ params }) {
                                 }
                                 className="w-full rounded-0"
                             />
-                            
+
                             {errors.phoneNumber && (
                                 <p className="text-red-500 text-[8px] mt-1">{errors.phoneNumber}</p>
                             )}
@@ -970,7 +974,54 @@ export default function Page({ params }) {
                     </div>
 
 
+                    <div className="col-span-12">
+                        <div className="p-6 bg-gray-50 rounded-2xl shadow-lg mx-auto space-y-6">
+                            {/* Change Fees Checkbox */}
+                            <div className="flex items-center space-x-3">
+                                <input
+                                    type="checkbox"
+                                    id="changeFees"
+                                    className="w-5 h-5 text-[#6cb049] border-gray-300 rounded focus:ring-[#6cb049]"
+                                    onChange={handleCheckboxChange}
+                                />
+                                <label
+                                    htmlFor="changeFees"
+                                    className="text-lg font-medium text-gray-700 cursor-pointer"
+                                >
+                                    Change Fees
+                                </label>
+                            </div>
 
+                            {/* Final Fee Input */}
+                            <div className="relative">
+                                <label
+                                    htmlFor="finalfees"
+                                    className="block text-lg font-medium text-gray-700 mb-2"
+                                >
+                                    Final Fee
+                                </label>
+                                <input
+                                    type="number"
+                                    name="finalfees"
+                                    placeholder="Enter Final Fee"
+                                    value={formData.finalfees}
+                                    onChange={handleChange}
+                                    ref={(el) => (inputRefs.current[1] = el)} // Assign ref
+                                    onKeyDown={(e) => handleKeyDown(e, 1)}
+                                    disabled={!isChangeFeesChecked} // Disable input based on checkbox state
+                                    className={`block w-full px-4 py-3 text-gray-700 bg-white border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#6cb049] focus:border-[#6cb049] sm:text-base transition-all duration-300 ${!isChangeFeesChecked
+                                        ? "bg-gray-100 cursor-not-allowed border-gray-300"
+                                        : "hover:shadow-md border-gray-300"
+                                        }`}
+                                />
+                                {!isChangeFeesChecked && (
+                                    <p className="mt-2 text-sm text-gray-500">
+                                        Enable the Change Fees option to edit the final fee.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                     {/* Submit button */}
                     <div>
                         <button

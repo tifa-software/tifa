@@ -115,6 +115,11 @@ const querySchema = new Schema({
             transactionDate: { type: Date, default: Date.now },
         },
     ],
+
+    finalfees: {
+        type: Number,
+        default: 0,
+    },
     total: {
         type: Number,
         default: 0,
@@ -214,6 +219,6 @@ querySchema.pre('save', function (next) {
 
 const QueryModel =
 
-    mongoose.models.AllQueries2 || mongoose.model('AllQueries2', querySchema);
+    mongoose.models.AllQueries4 || mongoose.model('AllQueries4', querySchema);
 
 export default QueryModel;
