@@ -81,7 +81,7 @@ export default function UnderVisit() {
   const filteredQueries = queries.filter((query) => {
     const courseName = courses[query.courseInterest] || "Unknown Course";
     return (
-      query.studentName.toLowerCase().includes(filters.studentName.toLowerCase()) &&
+      query.studentName?.toLowerCase().includes(filters.studentName.toLowerCase()) &&
       query.studentContact.phoneNumber.includes(filters.mobileNumber) &&
       courseName.toLowerCase().includes(filters.course.toLowerCase()) &&
       query.qualification.toLowerCase().includes(filters.qualification.toLowerCase()) &&
