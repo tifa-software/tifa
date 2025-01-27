@@ -213,6 +213,7 @@ export default function Visit() {
                                                     />
                                                 </th>
                                                 <th className="px-6 py-4">Total Fees</th>
+                                                <th className="px-6 py-4">Final Fees</th>
                                                 <th className="px-6 py-4">
 
                                                     <input
@@ -254,6 +255,17 @@ export default function Visit() {
                                                             <td className="px-6 py-1">{query.studentContact.city}</td>
 
                                                             <td className="px-6 py-1">{coursesfeen.totalFee ? `${coursesfeen.totalFee} ₹` : "N/A"}</td>
+                                                            <td className="px-6 py-1">
+                                                                {query.finalfees > 0 ? (
+                                                                    query.finalfees
+                                                                ) : (
+                                                                    <>
+                                                                        {coursesfeen.totalFee ? `${coursesfeen.totalFee} ₹` : "N/A"}
+                                                                    </>
+                                                                )}
+                                                            </td>
+
+
                                                             <td className="px-6 py-1">{coursesfeen.totalFee - query.total} ₹</td>
                                                         </tr>
                                                     );

@@ -39,7 +39,7 @@ export const PATCH = async (request) => {
                 querie.fees.reduce((sum, fee) => sum + fee.feesAmount, 0) +
                 newFee.feesAmount;
 
-            // Fetch the course data to determine the enrollment threshold
+            // Fetch the course data
             const course = await CourseModel.findOne({ _id: data.courseId });
 
             if (!course) {
@@ -52,11 +52,18 @@ export const PATCH = async (request) => {
                 );
             }
 
-            const courseFees = parseFloat(course.fees) || 0;
+            // Determine the enrollment threshold
             const enrollPercent = parseFloat(course.enrollpercent) || 0;
+            let enrollThreshold = 0;
 
-            // Calculate the enrollment threshold based on the percentage
-            const enrollThreshold = (courseFees * enrollPercent) / 100;
+            if (querie.finalfees > 0) {
+                // Use finalfees to calculate the threshold
+                enrollThreshold = (querie.finalfees * enrollPercent) / 100;
+            } else {
+                // Use course fees to calculate the threshold
+                const courseFees = parseFloat(course.fees) || 0;
+                enrollThreshold = (courseFees * enrollPercent) / 100;
+            }
 
             // Determine admission and demo status based on the threshold
             let addmissionStatus = false;
