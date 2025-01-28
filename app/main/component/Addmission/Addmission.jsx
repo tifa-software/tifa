@@ -212,6 +212,7 @@ export default function Visit() {
                                                         onChange={(e) => handleFilterChange("city", e.target.value)}
                                                     />
                                                 </th>
+                                                <th className="px-6 py-4">Admission Date</th>
                                                 <th className="px-6 py-4">Total Fees</th>
                                                 <th className="px-6 py-4">Final Fees</th>
                                                 <th className="px-6 py-4">
@@ -253,6 +254,16 @@ export default function Visit() {
                                                             <td className="px-6 py-1 font-semibold">{UserName}</td>
                                                             <td className="px-6 py-1">{query.branch}</td>
                                                             <td className="px-6 py-1">{query.studentContact.city}</td>
+                                                            <td className="px-6 py-1">
+                                                                {query.addmissiondate
+                                                                    ? new Intl.DateTimeFormat('en-GB', {
+                                                                        day: 'numeric',
+                                                                        month: 'long',
+                                                                        year: 'numeric',
+                                                                    }).format(new Date(query.addmissiondate))
+                                                                    : 'N/A'}
+                                                            </td>
+
 
                                                             <td className="px-6 py-1">{coursesfeen.totalFee ? `${coursesfeen.totalFee} ₹` : "N/A"}</td>
                                                             <td className="px-6 py-1">
