@@ -162,6 +162,9 @@ const querySchema = new Schema({
         type: Boolean,
         default: false
     },
+    addmissiondate:{
+        type: Date,
+    },
     notes: {
         type: String,
     },
@@ -219,6 +222,6 @@ querySchema.pre('save', function (next) {
 
 const QueryModel =
 
-    mongoose.models.AllQueries4 || mongoose.model('AllQueries4', querySchema);
+    mongoose.models.AllQueries6 || mongoose.model('AllQueries6', querySchema);
 
 export default QueryModel;

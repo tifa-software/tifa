@@ -68,9 +68,11 @@ export const PATCH = async (request) => {
             // Determine admission and demo status based on the threshold
             let addmissionStatus = false;
             let demoStatus = false;
+            let addmissionDate = null;
 
             if (totalAmount >= enrollThreshold) {
                 addmissionStatus = true; // Set admission to true if total >= threshold
+                addmissionDate = new Date();
             } else if (totalAmount > 1 && totalAmount < enrollThreshold) {
                 demoStatus = true; // Set demo to true if total > 1 and < threshold
             }
@@ -81,7 +83,9 @@ export const PATCH = async (request) => {
                 addmission: addmissionStatus,
                 demo: demoStatus,
             };
-
+            if (addmissionStatus) {
+                updatedFields.addmissiondate = addmissionDate;
+            }
             // Update the fields in the database
             await QueryModel.updateOne(
                 { _id: data.id },
