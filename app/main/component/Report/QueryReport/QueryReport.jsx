@@ -19,6 +19,7 @@ export default function QueryReport() {
   const [location, setLocation] = useState("");
   const [city, setCity] = useState("");
   const [assignedName, setAssignedName] = useState("");
+  const [assignedFrom, setAssignedFrom] = useState("");
   const [userName, setUserName] = useState("");
   const [referenceData, setReferenceData] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -62,6 +63,7 @@ export default function QueryReport() {
           location,
           city,
           assignedName,
+          assignedFrom,
           userName
         },
       });
@@ -96,7 +98,8 @@ export default function QueryReport() {
     if (grade) filters.push(`Grade: ${grade}`);
     if (location) filters.push(`Branch: ${location}`);
     if (city) filters.push(`City: ${city}`);
-    if (assignedName) filters.push(`Assigned Name: ${assignedName}`);
+    if (assignedName) filters.push(`Assigned To: ${assignedName}`);
+    if (assignedFrom) filters.push(`Assigned From: ${assignedFrom}`);
     if (userName) filters.push(`Creater Name: ${userName}`);
     return filters.length > 0 ? filters.join(" | ") : "No filters applied.";
   };
@@ -221,7 +224,21 @@ export default function QueryReport() {
                     <option value="C">C</option>
                   </select>
                 </th>
-                <th className="px-4 py-3 text-[12px]">Assigned From</th>
+                <th className="px-4 py-3 text-[12px]">Assigned From
+                <select
+                    value={assignedFrom}
+                    onChange={(e) => setAssignedFrom(e.target.value)}
+                    className="w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
+                  >
+                    <option value="">All</option>
+                    <option value="Not-Assigned">Not Assigned</option>
+                    {user.map((data) => (
+                      <option key={data._id} value={data.name}>
+                        {data.name}
+                      </option>
+                    ))}
+                  </select>
+                </th>
                 <th className="px-4 py-3 text-[12px]">Assigned To
                   <select
                     value={assignedName}

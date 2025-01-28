@@ -23,6 +23,7 @@ export const GET = async (request) => {
     const location = searchParams.get("location");
     const city = searchParams.get("city");
     const assignedName = searchParams.get("assignedName");
+    const assignedFrom = searchParams.get("assignedFrom");
     const userName = searchParams.get("userName");
 
     // Build MongoDB query
@@ -71,6 +72,18 @@ export const GET = async (request) => {
         const admin = await AdminModel.findOne({ name: { $regex: assignedName, $options: "i" } });
         if (admin) {
           queryFilter.assignedTo = admin._id;
+        }
+      }
+    }
+    if (assignedFrom) {
+      if (assignedFrom === "Not-Assigned") {
+        // Filter for documents where `assignedsenthistory` contains "Not-Assigned"
+        queryFilter.assignedsenthistory = { $in: [""] };
+      } else {
+        const admin = await AdminModel.findOne({ name: { $regex: assignedFrom, $options: "i" } });
+        if (admin) {
+          // Filter for documents where `assignedsenthistory` contains the admin's ID
+          queryFilter.assignedsenthistory = { $in: [admin._id.toString()] };
         }
       }
     }
