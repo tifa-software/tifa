@@ -113,10 +113,12 @@ export default function Visit() {
                 (filters.studentName
                     ? query.studentName?.toLowerCase().includes(filters.studentName.toLowerCase())
                     : true) &&
-                (filters.total
-                    ? query.total.toString().includes(filters.total)
-                    : true)
-                &&
+                    (filters.total !== undefined
+                        ? filters.total === "0"
+                            ? query.total === 0
+                            : query.total.toString().includes(filters.total)
+                        : true)
+                    &&
                 (filters.phoneNumber
                     ? query.studentContact.phoneNumber.includes(filters.phoneNumber)
                     : true) &&

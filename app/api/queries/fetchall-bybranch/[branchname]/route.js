@@ -26,11 +26,13 @@ export const GET = async (request, context) => {
                 {
                     $or: [
                         { assignedTo: userid },
-                        { branch: branchname, assignedTo: "Not-Assigned" }
+                        { branch: branchname, assignedTo: "Not-Assigned" },
+                        
                     ]
                 }
             ],
-            autoclosed: autoclosedStatus
+            autoclosed: autoclosedStatus,
+            demo:false
         });
         
 
