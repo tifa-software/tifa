@@ -24,7 +24,6 @@ export default function QueryReport() {
   const [referenceData, setReferenceData] = useState([]);
   const [branches, setBranches] = useState([]);
   const [user, setuser] = useState([]);
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedReference, setSelectedReference] = useState(null);
   const { data: session } = useSession();
   const [branch, setBranch] = useState("");
@@ -64,7 +63,7 @@ export default function QueryReport() {
           city,
           assignedName,
           assignedFrom,
-          userName
+          userName,
         },
       });
       setAllquery(response.data.fetch);
@@ -75,14 +74,28 @@ export default function QueryReport() {
     }
   };
 
+  // Fetch data whenever filters change
   useEffect(() => {
     fetchFilteredData();
-  }, []);
-
+  }, [referenceId, suboption, fromDate, toDate, admission, grade, location, city, assignedName, assignedFrom, userName]);
 
   const handleFilter = () => {
-    setIsFilterModalOpen(false); // Close modal
     fetchFilteredData();
+  };
+
+  const removeFilter = () => {
+    // Reset all filter variables to their default values
+    setReferenceId("");
+    setSuboption("");
+    setFromDate("");
+    setToDate("");
+    setAdmission("");
+    setGrade("");
+    setLocation("");
+    setCity("");
+    setAssignedName("");
+    setAssignedFrom("");
+    setUserName("");
   };
 
 
@@ -134,14 +147,19 @@ export default function QueryReport() {
 
           </div>
           <div>
-
+            {/* 
             <button
               onClick={handleFilter}
               className="mb-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
             >
               Apply Filters
+            </button> */}
+            <button
+              onClick={removeFilter}
+              className="mb-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
+            >
+              Remove Filters
             </button>
-
           </div>
         </div>
 
@@ -225,7 +243,7 @@ export default function QueryReport() {
                   </select>
                 </th>
                 <th className="px-4 py-3 text-[12px]">Assigned From
-                <select
+                  <select
                     value={assignedFrom}
                     onChange={(e) => setAssignedFrom(e.target.value)}
                     className="w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
@@ -294,61 +312,62 @@ export default function QueryReport() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {allquery.map((data, index) => (
+              {allquery.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .map((data, index) => (
 
-                <tr
-                  key={index}
-                  className="odd:bg-gray-50 even:bg-gray-100 hover:bg-gray-200 transition-all"
-                >
-                  <td className="px-4 py-3 text-[12px]">{index + 1}</td>
-                  <td className="px-4 py-3 text-[12px]">{data.userid}</td>
-                  <td className="px-4 py-3 text-[12px] text-blue-500"> <Link href={`/main/page/allquery/${data._id}`}>{data.studentName}</Link></td>
-                  <td className="px-4 py-3 text-[12px]">{data.studentContact.phoneNumber}</td>
-                  <td className="px-4 py-3 text-[12px]"> {data.historyCount}</td>
-                  <td className="px-4 py-3 text-[12px]">{data.referenceid} {data.suboption}</td>
-                  <td className="px-4 py-3 text-[12px] relative">
-                    <span className="overflow-hidden whitespace-nowrap text-ellipsis">{data.lastmessage?.slice(0, 12)}...</span>
-                    <div className="absolute cursor-pointer left-0 bottom-0 bg-gray-800 text-white p-2 rounded-md opacity-0 transition-opacity hover:opacity-100 max-w-xs w-48">
-                      {data.lastmessage}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-[12px]">{data.studentContact.city}</td>
-                  <td className="px-4 py-3 text-[12px]">{data.lastgrade}</td>
-                  <td className="px-4 py-3 text-[12px]">{data.assignedsenthistory}</td>
-                  <td className="px-4 py-3 text-[12px]">{data.assignedreceivedhistory}</td>
-                  <td className="px-4 py-3 text-[12px]">
-                    {(() => {
-                      const date = new Date(data.createdAt);
-                      const monthNames = [
-                        'January', 'February', 'March', 'April', 'May', 'June',
-                        'July', 'August', 'September', 'October', 'November', 'December'
-                      ];
-                      const day = date.getDate().toString().padStart(2, '0');
-                      const month = monthNames[date.getMonth()];
-                      const year = date.getFullYear();
-                      return ` ${day} ${month}, ${year}`;
-                    })()}
-                  </td>
+                  <tr
+                    key={index}
+                    className="odd:bg-gray-50 even:bg-gray-100 hover:bg-gray-200 transition-all"
+                  >
+                    <td className="px-4 py-3 text-[12px]">{index + 1}</td>
+                    <td className="px-4 py-3 text-[12px]">{data.userid}</td>
+                    <td className="px-4 py-3 text-[12px] text-blue-500"> <Link href={`/main/page/allquery/${data._id}`}>{data.studentName}</Link></td>
+                    <td className="px-4 py-3 text-[12px]">{data.studentContact.phoneNumber}</td>
+                    <td className="px-4 py-3 text-[12px]"> {data.historyCount}</td>
+                    <td className="px-4 py-3 text-[12px]">{data.referenceid} {data.suboption}</td>
+                    <td className="px-4 py-3 text-[12px] relative">
+                      <span className="overflow-hidden whitespace-nowrap text-ellipsis">{data.lastmessage?.slice(0, 12)}...</span>
+                      <div className="absolute cursor-pointer left-0 bottom-0 bg-gray-800 text-white p-2 rounded-md opacity-0 transition-opacity hover:opacity-100 max-w-xs w-48">
+                        {data.lastmessage}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-[12px]">{data.studentContact.city}</td>
+                    <td className="px-4 py-3 text-[12px]">{data.lastgrade}</td>
+                    <td className="px-4 py-3 text-[12px]">{data.assignedsenthistory}</td>
+                    <td className="px-4 py-3 text-[12px]">{data.assignedreceivedhistory}</td>
+                    <td className="px-4 py-3 text-[12px]">
+                      {(() => {
+                        const date = new Date(data.createdAt);
+                        const monthNames = [
+                          'January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'
+                        ];
+                        const day = date.getDate().toString().padStart(2, '0');
+                        const month = monthNames[date.getMonth()];
+                        const year = date.getFullYear();
+                        return ` ${day} ${month}, ${year}`;
+                      })()}
+                    </td>
 
-                  <td className="px-4 py-3 text-[12px]">{data.stage === 1
-                    ? "1st Stage"
-                    : data.stage === 2
-                      ? "2nd Stage"
-                      : data.stage === 3
-                        ? "3rd Stage"
-                        : data.stage === 4
-                          ? "4th Stage"
-                          : data.stage === 5
-                            ? "5th Stage"
-                            : data.stage === 6
-                              ? "6th Stage"
-                              : "Initial Stage"}
-                  </td>
-                  <td className="px-4 py-3 text-[12px]">{data.addmission ? "Enrolled" : "Not Enrolled"}</td>
+                    <td className="px-4 py-3 text-[12px]">{data.stage === 1
+                      ? "1st Stage"
+                      : data.stage === 2
+                        ? "2nd Stage"
+                        : data.stage === 3
+                          ? "3rd Stage"
+                          : data.stage === 4
+                            ? "4th Stage"
+                            : data.stage === 5
+                              ? "5th Stage"
+                              : data.stage === 6
+                                ? "6th Stage"
+                                : "Initial Stage"}
+                    </td>
+                    <td className="px-4 py-3 text-[12px]">{data.addmission ? "Enrolled" : "Not Enrolled"}</td>
 
-                </tr>
+                  </tr>
 
-              ))}
+                ))}
             </tbody>
           </table>
         </div >
