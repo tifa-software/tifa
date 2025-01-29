@@ -16,7 +16,7 @@ export const GET = async (request, context) => {
                 { status: 400 }
             );
         }
-       
+
         // Step 1: Fetch all unique queryIds from the AuditLog where stage is 5
         const auditLogs = await AuditModel.find({ stage: 5 }).select('queryId grade');
 
@@ -33,9 +33,10 @@ export const GET = async (request, context) => {
         const queries = await QueryModel.find({
             _id: { $in: queryIds },
             $or: [
-                { userid: branch, assignedTo: "Not-Assigned" },  
-                { assignedTo: branch }            
+                { userid: branch, assignedTo: "Not-Assigned" },
+                { assignedTo: branch }
             ],
+            autoclosed:"open"
         });
 
         // Step 5: Map the queries to include the grade from AuditLog

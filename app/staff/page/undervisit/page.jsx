@@ -57,7 +57,7 @@ export default function UnderVisit() {
     }, [adminData]);
 
     const handleRowClick = (id) => {
-        router.push(`/branch/page/allquery/${id}`);
+        router.push(`/staff/page/allquery/${id}`);
     };
     const handleSearch = (e) => {
         setSearchTerm(e.target.value);
@@ -230,7 +230,7 @@ export default function UnderVisit() {
                 <div className="w-full lg:w-1/3 space-y-6">
                     {/* Grade Filter */}
                     <div className="shadow-lg rounded-lg bg-white p-4">
-                        <h3 className="text-lg font-semibold mb-4 text-gray-800">Filter by Grade</h3>{adminData}
+                        <h3 className="text-lg font-semibold mb-4 text-gray-800">Filter by Grade</h3>
                         <div className="space-y-2">
                             {gradeOptions.map((grade) => (
                                 <button

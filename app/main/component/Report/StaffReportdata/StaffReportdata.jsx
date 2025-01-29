@@ -5,14 +5,16 @@ import Loader from '@/components/Loader/Loader';
 import StaffReport from '@/components/StaffReport/StaffReport';
 import StaffReport2 from '@/components/StaffReport2/StaffReport2';
 import StaffReport3 from '@/components/StaffReport3/StaffReport3';
-export default function StaffReportdata({ staffid }) {
+
+export default function StaffReportdata({ staffid ,staffName}) {
     const [allqueries, setAllqueries] = useState([]);
     const [sentqueries, setSentqueries] = useState([]);
     const [receivedqueries, setReceivedqueries] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
 
     useEffect(() => {
-
         const fetchQueryData = async () => {
             if (staffid) {
                 try {
@@ -23,7 +25,6 @@ export default function StaffReportdata({ staffid }) {
                     setSentqueries(response1.data.fetch);
                     const response2 = await axios.get(`/api/report/staffreceivedquery/${staffid}`);
                     setReceivedqueries(response2.data.fetch);
-
                 } catch (error) {
                     console.error('Error fetching query data:', error);
                 } finally {
@@ -31,9 +32,16 @@ export default function StaffReportdata({ staffid }) {
                 }
             }
         };
-
         fetchQueryData();
     }, [staffid]);
+
+    const filterByDate = (data) => {
+        if (!startDate || !endDate) return data;
+        return data.filter(item => {
+            const createdAt = new Date(item.createdAt);
+            return createdAt >= new Date(startDate) && createdAt <= new Date(endDate);
+        });
+    };
 
     if (loading) {
         return (
@@ -43,40 +51,43 @@ export default function StaffReportdata({ staffid }) {
         );
     }
 
-
     return (
         <>
-            <div className="text-xl inline font-extrabold text-center sticky top-0 py-2 px-4 backdrop-blur-md bg-blue-100/80 rounded-br-full   text-blue-800 ">
-                Staff Report
+            <div className="text-2xl  font-extrabold text-center sticky top-0 w-[90%] py-4 px-6 backdrop-blur-md bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-br-full shadow-lg">
+                Staff Report {staffName}d
             </div>
 
-            <div className="">
-
-
-                <div className=' px-4 py-2 mt-5'>
-                    <span className=' font-semibold px-2'>Over View</span>
-
-                    <StaffReport data={allqueries} />
-
-                </div>
-
-                <div className=' px-4 py-2 border bg-gray-100 mt-2'>
-                    <span className=' font-semibold px-2'>Assigned Sent</span>
-
-                    <StaffReport2 data={sentqueries} />
-
-                </div>
-
-                <div className=' px-4 py-2 border bg-gray-100 mt-2'>
-                    <span className=' font-semibold px-2'>Assigned received</span>
-
-                    <StaffReport3 data={receivedqueries} />
-
-                </div>
+            <div className="px-6 py-4 flex gap-4 justify-center items-center bg-gray-50 shadow-md rounded-lg mt-4">
+                <label className="font-semibold">Start Date:</label>
+                <input 
+                    type="date" 
+                    value={startDate} 
+                    onChange={(e) => setStartDate(e.target.value)} 
+                    className="border p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300" 
+                />
+                <label className="font-semibold">End Date:</label>
+                <input 
+                    type="date" 
+                    value={endDate} 
+                    onChange={(e) => setEndDate(e.target.value)} 
+                    className="border p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300" 
+                />
             </div>
 
+            <div className="px-6 py-4 mt-6 bg-white shadow-md rounded-lg">
+                <h2 className="text-lg font-semibold mb-2 text-blue-600">Overview</h2>
+                <StaffReport data={filterByDate(allqueries)} />
+            </div>
 
+            <div className="px-6 py-4 mt-4 bg-gray-100 shadow-md rounded-lg">
+                <h2 className="text-lg font-semibold mb-2 text-green-600">Assigned Sent</h2>
+                <StaffReport2 data={filterByDate(sentqueries)} />
+            </div>
 
+            <div className="px-6 py-4 mt-4 bg-gray-100 shadow-md rounded-lg">
+                <h2 className="text-lg font-semibold mb-2 text-red-600">Assigned Received</h2>
+                <StaffReport3 data={filterByDate(receivedqueries)} />
+            </div>
         </>
-    )
+    );
 }
