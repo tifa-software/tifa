@@ -10,6 +10,7 @@ import Addmission from '../../component/Addmission/Addmission';
 import Lead from '../../component/Report/Lead/Lead';
 import Staff from '../../component/Report/Staff/Staff';
 import LeadCount from '../../component/Report/LeadCount/LeadCount';
+import StaffReport from '../../component/Report/StaffReport/StaffReport';
 export default function BranchReportPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -89,16 +90,23 @@ export default function BranchReportPage() {
                         </button>
                     </div>
 
-
-
                     <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<StaffReport />)}
+                        >
+                            Staff Register
+                        </button>
+                    </div>
+
+                    {/* <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
                         <button
                             className="text-[#29234b] "
                             onClick={() => handleOpenModal(<Staff />)}
                         >
                             Staff Register
                         </button>
-                    </div>
+                    </div> */}
                     <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
                         <button
                             className="text-[#29234b] "

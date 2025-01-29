@@ -102,10 +102,7 @@ export default function Visit() {
                 (!filters.course || (courses[query.courseInterest] || "").toLowerCase().includes(filters.course.toLowerCase())) &&
                 (!filters.assignedTo || (user[query.assignedTo] || user[query.userid] || "").toLowerCase().includes(filters.assignedTo.toLowerCase())) &&
                 (!filters.city || query.studentContact.city.toLowerCase().includes(filters.city.toLowerCase())) &&
-                (!filters.fees || filters.fees === "0"
-                    ? remainingFees === 0
-                    : remainingFees.toString().includes(filters.fees))
-                
+                (!filters.fees || remainingFees.toString().includes(filters.fees))
             );
         });
         setFilteredQueries(filtered);
