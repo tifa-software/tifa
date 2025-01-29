@@ -2,8 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Loader from '@/components/Loader/Loader';
-import { PhoneCall, CheckCircle, CircleDashed, Navigation, Locate, LocateOff, Trash } from "lucide-react";
 import StaffReport from '@/components/StaffReport/StaffReport';
+import StaffReport2 from '@/components/StaffReport2/StaffReport2';
+import StaffReport3 from '@/components/StaffReport3/StaffReport3';
 export default function StaffReportdata({ staffid }) {
     const [allqueries, setAllqueries] = useState([]);
     const [sentqueries, setSentqueries] = useState([]);
@@ -49,7 +50,7 @@ export default function StaffReportdata({ staffid }) {
                 Staff Report
             </div>
 
-            <div className="grid lg:grid-cols-3">
+            <div className="">
 
 
                 <div className=' px-4 py-2 mt-5'>
@@ -59,17 +60,17 @@ export default function StaffReportdata({ staffid }) {
 
                 </div>
 
-                <div className=' px-4 py-2 mt-5'>
+                <div className=' px-4 py-2 border bg-gray-100 mt-2'>
                     <span className=' font-semibold px-2'>Assigned Sent</span>
 
-                    <StaffReport data={sentqueries} />
+                    <StaffReport2 data={sentqueries} />
 
                 </div>
 
-                <div className=' px-4 py-2 mt-5'>
+                <div className=' px-4 py-2 border bg-gray-100 mt-2'>
                     <span className=' font-semibold px-2'>Assigned received</span>
 
-                    <StaffReport data={receivedqueries} />
+                    <StaffReport3 data={receivedqueries} />
 
                 </div>
             </div>
