@@ -4,7 +4,7 @@ import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import { useSession } from 'next-auth/react';
 import Link from "next/link";
-import { PhoneCall } from "lucide-react";
+import { PhoneCall, CheckCircle, CircleDashed, Navigation, Locate, LocateOff, Trash } from "lucide-react";
 export default function Lead() {
     const [allquery, setAllquery] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -149,12 +149,12 @@ export default function Lead() {
             </div>
 
             <div className='grid lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 gap-6 p-6 bg-gray-50 rounded-b-xl'>
-                <div className="flex flex-col bg-white p-4 rounded-lg shadow-md">
+                <div className="flex flex-col bg-white px-2 py-1 rounded-lg shadow-md">
                     <label className="font-semibold mb-2 text-gray-700">Staff</label>
                     <select
                         value={userName}
                         onChange={(e) => setUserName(e.target.value)}
-                        className="p-2 border rounded-lg"
+                        className="p-2 border "
                     >
                         <option value="">All</option>
                         {user.map((data) => (
@@ -165,12 +165,12 @@ export default function Lead() {
                     </select>
                 </div>
 
-                <div className="flex flex-col bg-white p-4 rounded-lg shadow-md">
+                <div className="flex flex-col bg-white px-2 py-1 rounded-lg shadow-md">
                     <label className="font-semibold mb-2 text-gray-700">Course</label>
                     <select
                         value={cours}
                         onChange={(e) => setCours(e.target.value)}
-                        className="p-2 border rounded-lg"
+                        className="p-2 border"
                     >
                         <option value="">All</option>
                         {allCourses.map((data, index) => (
@@ -181,12 +181,12 @@ export default function Lead() {
                     </select>
                 </div>
 
-                <div className="flex flex-col bg-white p-4 rounded-lg shadow-md">
+                <div className="flex flex-col bg-white px-2 py-1 rounded-lg shadow-md">
                     <label className="font-semibold mb-2 text-gray-700">Reference</label>
                     <select
                         value={referenceId}
                         onChange={handleReferenceChange}
-                        className="p-2 border rounded-lg"
+                        className="p-2 border"
                     >
                         <option value="">All</option>
                         {referenceData.map((data) => (
@@ -203,7 +203,7 @@ export default function Lead() {
                         <select
                             value={suboption}
                             onChange={(e) => setSuboption(e.target.value)}
-                            className="p-2 border rounded-lg"
+                            className="p-2 border"
                         >
                             <option value="">All</option>
                             {selectedReference.suboptions.map((suboption, index) => (
@@ -216,12 +216,12 @@ export default function Lead() {
                     )}
                 </div>
 
-                <div className="flex flex-col bg-white p-4 rounded-lg shadow-md">
+                <div className="flex flex-col bg-white px-2 py-1 rounded-lg shadow-md">
                     <label className="font-semibold mb-2 text-gray-700">Branch</label>
                     <select
                         value={branch}
                         onChange={(e) => setBranch(e.target.value)}
-                        className="p-2 border rounded-lg"
+                        className="p-2 border"
                     >
                         <option value="">All</option>
                         {branches.map((data, index) => (
@@ -232,12 +232,12 @@ export default function Lead() {
                     </select>
                 </div>
 
-                <div className="flex flex-col bg-white p-4 rounded-lg shadow-md">
+                <div className="flex flex-col bg-white px-2 py-1 rounded-lg shadow-md">
                     <label className="font-semibold mb-2 text-gray-700">City</label>
                     <select
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
-                        className="p-2 border rounded-lg"
+                        className="p-2 border"
                     >
                         <option value="">All</option>
                         <option value="Jaipur">Jaipur</option>
@@ -245,7 +245,7 @@ export default function Lead() {
                     </select>
                 </div>
 
-                <div className="flex flex-col bg-white p-4 rounded-lg shadow-md">
+                <div className="flex flex-col bg-white px-2 py-1 rounded-lg shadow-md">
                     <label className="font-semibold mb-2 text-gray-700">Created Date</label>
                     <div className="  bg-white flex justify-between gap-2">
 
@@ -255,7 +255,7 @@ export default function Lead() {
                                 type="date"
                                 value={fromDate}
                                 onChange={(e) => setFromDate(e.target.value)}
-                                className=" text-gray-800  border focus:ring-0 focus:outline-none"
+                                 className="p-2 border"
                             />
                         </div>
                         <p className=" text-black text-center">To</p>
@@ -265,7 +265,7 @@ export default function Lead() {
                                 type="date"
                                 value={toDate}
                                 onChange={(e) => setToDate(e.target.value)}
-                                className=" text-gray-800  border focus:ring-0 focus:outline-none"
+                                 className="p-2 border"
                             />
                         </div>
                     </div>
@@ -289,8 +289,8 @@ export default function Lead() {
                 </div>
 
                 <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
-                    <div className='flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full'>
-                        <PhoneCall className='w-8 h-8 text-blue-500' />
+                    <div className='flex items-center justify-center w-16 h-16 bg-green-100 rounded-full'>
+                        <CheckCircle className='w-8 h-8 text-green-500' />
                     </div>
                     <div className='ml-4'>
                         <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.addmission == true).length}
@@ -300,8 +300,8 @@ export default function Lead() {
                 </div>
 
                 <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
-                    <div className='flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full'>
-                        <PhoneCall className='w-8 h-8 text-blue-500' />
+                    <div className='flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full'>
+                        <CircleDashed className='w-8 h-8 text-orange-500' />
                     </div>
                     <div className='ml-4'>
                         <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.addmission == false).length}
@@ -312,7 +312,7 @@ export default function Lead() {
 
                 <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
                     <div className='flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full'>
-                        <PhoneCall className='w-8 h-8 text-blue-500' />
+                        <Navigation className='w-8 h-8 text-blue-500' />
                     </div>
                     <div className='ml-4'>
                         <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.demo == true).length}
@@ -322,7 +322,7 @@ export default function Lead() {
                 </div>
                 <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
                     <div className='flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full'>
-                        <PhoneCall className='w-8 h-8 text-blue-500' />
+                        <Locate className='w-8 h-8 text-blue-500' />
                     </div>
                     <div className='ml-4'>
                         <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.studentContact.city === "Jaipur").length}
@@ -332,8 +332,8 @@ export default function Lead() {
                 </div>
 
                 <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
-                    <div className='flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full'>
-                        <PhoneCall className='w-8 h-8 text-blue-500' />
+                    <div className='flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full'>
+                        <LocateOff className='w-8 h-8 text-gray-500' />
                     </div>
                     <div className='ml-4'>
                         <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.studentContact.city !== "Jaipur").length}
@@ -341,10 +341,10 @@ export default function Lead() {
                         <p className='text-gray-500'>Out Of Jaipur Queries</p>
                     </div>
                 </div>
-                
+
                 <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
-                    <div className='flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full'>
-                        <PhoneCall className='w-8 h-8 text-blue-500' />
+                    <div className='flex items-center justify-center w-16 h-16 bg-red-100 rounded-full'>
+                        <Trash className='w-8 h-8 text-red-500' />
                     </div>
                     <div className='ml-4'>
                         <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.autoclosed === "close" && item.addmission === false).length
