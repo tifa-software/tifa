@@ -53,8 +53,8 @@ export default function StaffReportdata({ staffid ,staffName}) {
 
     return (
         <>
-            <div className="text-2xl  font-extrabold text-center sticky top-0 w-[90%] py-4 px-6 backdrop-blur-md bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-br-full shadow-lg">
-                Staff Report {staffName}d
+            <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
+                Staff Report of {staffName}
             </div>
 
             <div className="px-6 py-4 flex gap-4 justify-center items-center bg-gray-50 shadow-md rounded-lg mt-4">
@@ -75,7 +75,7 @@ export default function StaffReportdata({ staffid ,staffName}) {
             </div>
 
             <div className="px-6 py-4 mt-6 bg-white shadow-md rounded-lg">
-                <h2 className="text-lg font-semibold mb-2 text-blue-600">Overview</h2>
+                <h2 className="text-lg font-semibold mb-2 text-blue-600">Created Query</h2>
                 <StaffReport data={filterByDate(allqueries)} />
             </div>
 

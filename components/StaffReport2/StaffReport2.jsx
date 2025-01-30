@@ -82,6 +82,17 @@ export default function StaffReport2({ data }) {
                     </div>
                 </div>
 
+                  <div className="flex items-center bg-white p-2 rounded-lg shadow-md">
+                                    <div className='flex items-center justify-center w-4 h-4 bg-blue-100 rounded-full'>
+                                        <Navigation className='w-4 h-4 text-blue-500' />
+                                    </div>
+                                    <div className='ml-4 flex gap-4'>
+                                        <p className='text-xl font-bold text-gray-800'>{data.filter(item => item.stage === 6).length}
+                                        </p>
+                                        <p className='text-gray-500'>Visited Queries</p>
+                                    </div>
+                                </div>
+
                 <div className="flex items-center bg-white p-2 rounded-lg shadow-md">
                     <div className='flex items-center justify-center w-4 h-4 bg-blue-100 rounded-full'>
                         <Locate className='w-4 h-4 text-blue-500' />

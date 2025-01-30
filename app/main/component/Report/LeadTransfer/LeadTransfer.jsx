@@ -53,10 +53,9 @@ export default function LeadTransfer() {
     }
     return (
         <div className="mt-12 container lg:w-[90%] mx-auto">
-            <div>
-                <h1 className="text-3xl font-bold text-gray-800">
+            <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
                     Lead Activity Reports
-                </h1>
+                
             </div>
 
 

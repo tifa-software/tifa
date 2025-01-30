@@ -19,6 +19,7 @@ export default function StaffReport() {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedEmail, setSelectedEmail] = useState("");
+    const [selectedName, setSelectedName] = useState("");
     useEffect(() => {
         const fetchuserData = async () => {
             try {
@@ -39,14 +40,16 @@ export default function StaffReport() {
     const toggleFilterPopup = () => {
         setIsFilterOpen(!isFilterOpen);
     };
-    const handleRowClick = (email) => {
+    const handleRowClick = (email,name) => {
         setSelectedEmail(email); // Set the selected email
+        setSelectedName(name);
         setIsModalOpen(true); // Open the modal
     };
 
     const closeModal = () => {
         setIsModalOpen(false); // Close the modal
         setSelectedEmail(""); // Clear the selected email
+        setSelectedName("");
     };
     // Sort user based on selected order
     const sortuser = (user) => {
@@ -214,7 +217,7 @@ export default function StaffReport() {
                                     .map((user, index) => (
                                         <tr
                                             key={user._id}
-                                            onClick={() => handleRowClick(user._id)}
+                                            onClick={() => handleRowClick(user._id, user.name)}
                                             className={`border-b cursor-pointer hover:bg-gray-100 odd:bg-gray-50 even:bg-gray-100 transition-colors duration-200`}
                                         >
                                             <td
@@ -267,7 +270,7 @@ export default function StaffReport() {
                             >
                                 &times;
                             </button>
-                            <div>  <StaffReportdata staffid={selectedEmail} onClose={closeModal} /></div>
+                            <div>  <StaffReportdata staffid={selectedEmail} staffName={selectedName} onClose={closeModal} /></div>
                         </div>
                     </div>
                 )}

@@ -126,7 +126,7 @@ export default function Visit() {
 
     return (
         <>
-            <div className="text-xl inline font-extrabold text-center sticky top-0 py-2 px-4 backdrop-blur-md bg-blue-100/80 rounded-br-full   text-blue-800 ">
+            <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
                 Admission Report
             </div>
             <div className="container mx-auto p-5">
