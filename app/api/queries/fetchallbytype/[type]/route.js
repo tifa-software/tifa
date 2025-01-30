@@ -5,7 +5,7 @@ export const GET = async (request,context) => {
     await dbConnect();
     const type = context.params.type;
     try {
-        const fetch = await QueryModel.find({ autoclosed: type, addmission: false,demo:false });
+        const fetch = await QueryModel.find({ autoclosed: type, addmission: false });
         return Response.json(
             {
                 message: "All data fetched!",

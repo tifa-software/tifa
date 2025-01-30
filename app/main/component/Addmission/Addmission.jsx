@@ -4,6 +4,7 @@ import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
+import { ChevronDownSquare } from "lucide-react"
 
 export default function Visit() {
     const [queries, setQueries] = useState([]);
@@ -21,7 +22,8 @@ export default function Visit() {
     const [coursesfee, setCoursesfee] = useState({});
     const [user, setUser] = useState({});
     const router = useRouter();
-
+    const [fromDate, setFromDate] = useState(""); 
+    const [toDate, setToDate] = useState(""); 
     useEffect(() => {
         const fetchQueryData = async () => {
             try {
@@ -91,22 +93,44 @@ export default function Visit() {
         const filtered = queries.filter((query) => {
             const courseFeeDetails = coursesfee[query.courseInterest] || {};
             const remainingFees = courseFeeDetails.totalFee - query.total;
-
+    
+           
+            const admissionDate = query.addmissiondate ? new Date(query.addmissiondate) : null;
+            const from = fromDate ? new Date(fromDate) : null;
+            const to = toDate ? new Date(toDate) : null;
+    
+           
+            const isWithinDateRange =
+                (!from || (admissionDate && admissionDate >= from)) &&
+                (!to || (admissionDate && admissionDate <= to));
+    
+            
+            const actualFinalFees =
+                query.finalfees && query.finalfees > 0
+                    ? parseFloat(query.finalfees)
+                    : parseFloat(courseFeeDetails.totalFee || 0);
+    
+            const finalFeesFilter = filters.finalfees ? parseFloat(filters.finalfees) : null;
+    
             return (
                 (!filters.branch || query.branch.toLowerCase().includes(filters.branch.toLowerCase())) &&
-                (filters.staffName
-                    ? query.staffName.toLowerCase().includes(filters.staffName.toLowerCase())
-                    : true) &&
+                (!filters.staffName || query.staffName.toLowerCase().includes(filters.staffName.toLowerCase())) &&
                 (!filters.studentName || query.studentName?.toLowerCase().includes(filters.studentName.toLowerCase())) &&
                 (!filters.contact || query.studentContact.phoneNumber.includes(filters.contact)) &&
                 (!filters.course || (courses[query.courseInterest] || "").toLowerCase().includes(filters.course.toLowerCase())) &&
                 (!filters.assignedTo || (user[query.assignedTo] || user[query.userid] || "").toLowerCase().includes(filters.assignedTo.toLowerCase())) &&
                 (!filters.city || query.studentContact.city.toLowerCase().includes(filters.city.toLowerCase())) &&
-                (!filters.fees || remainingFees.toString().includes(filters.fees))
+                (!filters.fees || remainingFees.toString().includes(filters.fees)) &&
+                (!finalFeesFilter || actualFinalFees === finalFeesFilter) && 
+                isWithinDateRange 
             );
         });
+    
         setFilteredQueries(filtered);
-    }, [filters, queries, courses, user, coursesfee]);
+    }, [filters, queries, courses, user, coursesfee, fromDate, toDate]);
+    
+    
+
 
 
     const handleFilterChange = (key, value) => {
@@ -212,9 +236,40 @@ export default function Visit() {
                                                         onChange={(e) => handleFilterChange("city", e.target.value)}
                                                     />
                                                 </th>
-                                                <th className="px-6 py-4">Admission Date</th>
+                                                <th className="px-4 py-3 text-[12px] relative group flex">Admission Date <ChevronDownSquare className=" ms-2" />
+                                                    <div className=" absolute bg-white p-2 hidden group-hover:block">
+
+                                                        <div>
+
+                                                            <input
+                                                                type="date"
+                                                                value={fromDate}
+                                                                onChange={(e) => setFromDate(e.target.value)}
+                                                                className=" text-gray-800  border focus:ring-0 focus:outline-none"
+                                                            />
+                                                        </div>
+                                                        <p className=" text-black text-center">To</p>
+                                                        <div>
+
+                                                            <input
+                                                                type="date"
+                                                                value={toDate}
+                                                                onChange={(e) => setToDate(e.target.value)}
+                                                                className=" text-gray-800  border focus:ring-0 focus:outline-none"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </th>
                                                 <th className="px-6 py-4">Total Fees</th>
-                                                <th className="px-6 py-4">Final Fees</th>
+                                                <th className="px-6 py-4">
+    <input
+        type="number"
+        placeholder="Final Fees"
+        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
+        onChange={(e) => handleFilterChange("finalfees", e.target.value)}
+    />
+</th>
+
                                                 <th className="px-6 py-4">
 
                                                     <input

@@ -27,7 +27,7 @@ export default function QueryReport() {
   const [selectedReference, setSelectedReference] = useState(null);
   const { data: session } = useSession();
   const [branch, setBranch] = useState("");
-
+  const [showClosed, setShowClosed] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -64,6 +64,7 @@ export default function QueryReport() {
           assignedName,
           assignedFrom,
           userName,
+          showClosed
         },
       });
       setAllquery(response.data.fetch);
@@ -77,7 +78,7 @@ export default function QueryReport() {
   // Fetch data whenever filters change
   useEffect(() => {
     fetchFilteredData();
-  }, [referenceId, suboption, fromDate, toDate, admission, grade, location, city, assignedName, assignedFrom, userName]);
+  }, [referenceId, suboption, fromDate, toDate, admission, grade, location, city, assignedName, assignedFrom, userName,showClosed]);
 
   const handleFilter = () => {
     fetchFilteredData();
@@ -114,6 +115,7 @@ export default function QueryReport() {
     if (assignedName) filters.push(`Assigned To: ${assignedName}`);
     if (assignedFrom) filters.push(`Assigned From: ${assignedFrom}`);
     if (userName) filters.push(`Creater Name: ${userName}`);
+    if (showClosed) filters.push(`Closed Queries`);
     return filters.length > 0 ? filters.join(" | ") : "No filters applied.";
   };
 
@@ -161,6 +163,17 @@ export default function QueryReport() {
               Remove Filters
             </button>
           </div>
+        </div>
+        <div className="flex items-center justify-between mb-4">
+          <label className="flex items-center text-sm font-medium text-gray-700">
+            <input
+              type="checkbox"
+              checked={showClosed === "close"}
+              onChange={() => setShowClosed(showClosed === "close" ? "" : "close")}
+              className="mr-2 w-4 h-4 text-blue-600 border-gray-300 rounded"
+            />
+            Show Only Closed Queries
+          </label>
         </div>
 
         <div className="overflow-x-auto  shadow-lg rounded-lg border border-gray-300">
