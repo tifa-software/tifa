@@ -21,7 +21,7 @@ export default function Visit() {
     const [user, setUser] = useState({});
     const [fromDate, setFromDate] = useState(""); // Added fromDate state
     const [toDate, setToDate] = useState(""); // Added toDate state
-
+    const [greaterThan0, setGreaterThan0] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -97,28 +97,24 @@ export default function Visit() {
         const filtered = queries.filter((query) => {
             const courseName = courses[query.courseInterest] || "Unknown Course";
             const UserName = user[query.assignedTo] || "Unknown User";
-
-            // Determine the relevant date for filtering
+    
             const relevantDate = query.fees.length > 0
                 ? new Date(query.fees[0].transactionDate)
                 : new Date(query.stage6Date);
-
-            // Filter based on date range
+    
             const isWithinDateRange =
                 (!fromDate || relevantDate >= new Date(fromDate)) &&
                 (!toDate || relevantDate <= new Date(toDate));
-
+    
+            // Apply the "greater than 10" filter if checkbox is checked
+            const isTotalValid = greaterThan0 ? query.total > 0 : true;
+    
             return (
                 isWithinDateRange &&
+                isTotalValid && // Apply the new filter condition
                 (filters.studentName
                     ? query.studentName?.toLowerCase().includes(filters.studentName.toLowerCase())
                     : true) &&
-                    (filters.total !== undefined
-                        ? filters.total === "0"
-                            ? query.total === 0
-                            : query.total.toString().includes(filters.total)
-                        : true)
-                    &&
                 (filters.phoneNumber
                     ? query.studentContact.phoneNumber.includes(filters.phoneNumber)
                     : true) &&
@@ -139,13 +135,17 @@ export default function Visit() {
                     : true) &&
                 (filters.enroll
                     ? (filters.enroll === "Enroll" && query.addmission) ||
-                    (filters.enroll === "Not Enroll" && !query.addmission)
+                      (filters.enroll === "Not Enroll" && !query.addmission)
                     : true)
             );
         });
+    
         setFilteredQueries(filtered);
-    }, [filters, queries, fromDate, toDate]);
+    }, [filters, queries, fromDate, toDate, greaterThan0]);
 
+    const handleCheckboxChange = () => {
+        setGreaterThan0((prev) => !prev);
+    };
 
     const handleRowClick = (id) => {
         router.push(`/main/page/allquery/${id}`);
@@ -165,7 +165,7 @@ export default function Visit() {
     return (
         <>
             <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
-            Demo Report
+                Demo Report
             </div>
             <div className="container mx-auto p-5">
                 <div className="flex flex-col lg:flex-row justify-between space-y-6 lg:space-y-0 lg:space-x-6">
@@ -180,6 +180,18 @@ export default function Visit() {
                                     >
                                         Export to Excel
                                     </button>
+                                </div>
+                                <div className=" flex justify-end">
+                                   <div className="flex items-center space-x-2">
+                                   <input
+                                        type="checkbox"
+                                        id="greter0"
+                                        checked={greaterThan0}
+                                        onChange={handleCheckboxChange}
+                                        className="cursor-pointer"
+                                    />
+                                    <label htmlFor="greter0" className="text-gray-700 text-lg">Fees Greatre Then &quot;0&quot;</label>
+                                   </div>
                                 </div>
                                 <div className="relative overflow-y-auto">
                                     <table className="min-w-full text-xs text-left text-gray-600 font-sans">
