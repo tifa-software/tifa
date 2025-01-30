@@ -122,6 +122,19 @@ export default function UpdateQuery2({ query, audit }) {
         } else {
           console.error('Error updating query for admission:', queryResponse.statusText);
         }
+        
+      }else if (selectedOption === 'demo') {
+        const queryUpdateData = {
+          id: queryid,
+          demo: true,
+        };
+        const queryResponse = await axios.patch('/api/queries/update', queryUpdateData);
+        if (queryResponse.status === 200) {
+          console.log('Query updated with admission successfully:', queryResponse.data);
+        } else {
+          console.error('Error updating query for admission:', queryResponse.statusText);
+        }
+        
       }
     } catch (error) {
       console.error('Network error:', error);
@@ -203,6 +216,7 @@ export default function UpdateQuery2({ query, audit }) {
           >
             <option value="" disabled>-- Select Interested Status --</option>
             <option value="admission">Enroll</option>
+            <option value="demo">Demo</option>
             <option value="interested_but_not_proper_response">Not Proper Response</option>
             <option value="response">Response</option>
             <option value="not_interested">Not Interested</option>
