@@ -78,7 +78,7 @@ export default function UpdateQuery3({ query, audit }) {
       connectionStatus: connectionOption,
       oflinesubStatus: selectedOption,
       message: message,
-      stage: selectedOption === 'ready_visit' ? 5 : undefined, // Update stage based on selection
+      stage: selectedOption === 'ready_visit' ? 5 : selectedOption === 'admission' ? 6 : undefined,
       deadline: deadline || undefined, // Include deadline if provided
       grade: grade,
 
