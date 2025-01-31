@@ -1,66 +1,70 @@
+"use client";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import { useRouter } from "next/navigation";
+import * as XLSX from "xlsx";
 import { ChevronDownSquare } from "lucide-react"
-import { useSession } from 'next-auth/react';
+import { useSession } from "next-auth/react";
 
 export default function Visit() {
     const [queries, setQueries] = useState([]);
-    const { data: session } = useSession();
-    const [adminbranch, setAdminbranch] = useState(null);
-
     const [filteredQueries, setFilteredQueries] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { data: session } = useSession();
+
     const [filters, setFilters] = useState({
-        studentName: "",
-        phoneNumber: "",
-        courseInterest: "",
         branch: "",
+        studentName: "",
+        contact: "",
+        course: "",
+        assignedTo: "",
         city: "",
-        enroll: "",
     });
     const [courses, setCourses] = useState({});
     const [coursesfee, setCoursesfee] = useState({});
     const [user, setUser] = useState({});
-    const [fromDate, setFromDate] = useState(""); // Added fromDate state
-    const [toDate, setToDate] = useState(""); // Added toDate state
-    const [greaterThan0, setGreaterThan0] = useState(false);
     const router = useRouter();
+    const [fromDate, setFromDate] = useState("");
+    const [toDate, setToDate] = useState("");
+    const [adminData, setAdminData] = useState(null);
 
     useEffect(() => {
         const fetchAdminData = async () => {
-            if (session?.user?.email) {
-                try {
-                    const { data } = await axios.get(`/api/admin/find-admin-byemail/${session.user.email}`);
-                    setAdminbranch(data.branch);
-                } catch (error) {
-                    console.error(error.message);
-                }
+            if (!session?.user?.email) return;
+
+            setLoading(true);
+            try {
+                const response = await axios.get(`/api/admin/find-admin-byemail/${session.user.email}`);
+                setAdminData(response.data.branch);
+            } catch (err) {
+                console.error("Error fetching admin data:", err.message);
+            } finally {
+                setLoading(false);
             }
         };
+
         fetchAdminData();
     }, [session]);
 
 
     useEffect(() => {
-        if (adminbranch) {
-            const fetchQueryData = async () => {
-                try {
-                    setLoading(true);
-                    const { data } = await axios.get(`/api/branchreport/demo/${adminbranch}`);
-                    setQueries(data.fetch);
-                    setFilteredQueries(data.fetch);
-                } catch (error) {
-                    console.error("Error fetching query data:", error);
-                } finally {
-                    setLoading(false);
-                }
-            };
+        const fetchQueryData = async () => {
+            if (!adminData) return;
+            try {
+                setLoading(true);
+                const response = await axios.get(`/api/branchreport/enroll/${adminData}`);
+                setQueries(response.data.fetch);
+                setFilteredQueries(response.data.fetch);
+            } catch (error) {
+                console.error("Error fetching query data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-            fetchQueryData();
-        }
-    }, [adminbranch]);
+        fetchQueryData();
+    }, [adminData]);
 
     useEffect(() => {
         const fetchCourses = async () => {
@@ -73,21 +77,18 @@ export default function Visit() {
                 setCourses(courseMapping);
 
                 const coursesfeeMapping = response.data.fetch.reduce((acc, coursesfee) => {
-                    // Parse enrollpercent as a number and calculate the enrollment fee
-                    const enrollPercent = parseFloat(coursesfee.enrollpercent) || 0; // Default to 0 if enrollpercent is invalid
-                    const enrollmentFee = coursesfee.fees * (enrollPercent / 100); // Calculate the enrollment fee
+                    const enrollPercent = parseFloat(coursesfee.enrollpercent) || 0;
+                    const enrollmentFee = coursesfee.fees * (enrollPercent / 100);
 
                     acc[coursesfee._id] = {
                         totalFee: coursesfee.fees,
                         enrollPercent: enrollPercent,
-                        enrollmentFee: enrollmentFee.toFixed() // Keep the fee to two decimal places
+                        enrollmentFee: enrollmentFee.toFixed(),
                     };
                     return acc;
                 }, {});
 
                 setCoursesfee(coursesfeeMapping);
-
-
             } catch (error) {
                 console.error("Error fetching courses:", error.message);
             }
@@ -97,7 +98,7 @@ export default function Visit() {
     }, []);
 
     useEffect(() => {
-        const fetchuserData = async () => {
+        const fetchUserData = async () => {
             try {
                 const response = await axios.get('/api/admin/fetchall/admin');
                 const userMapping = response.data.fetch.reduce((acc, user) => {
@@ -110,74 +111,50 @@ export default function Visit() {
             }
         };
 
-        fetchuserData();
+        fetchUserData();
     }, []);
-
 
     useEffect(() => {
         const filtered = queries.filter((query) => {
-            const courseName = courses[query.courseInterest] || "Unknown Course";
-            const UserName = user[query.assignedTo] || "Unknown User";
+            const courseFeeDetails = coursesfee[query.courseInterest] || {};
+            const remainingFees = courseFeeDetails.totalFee - query.total;
 
-            const relevantDate = query.fees.length > 0
-                ? new Date(query.fees[0].transactionDate)
-                : new Date(query.stage6Date);
+
+            const admissionDate = query.addmissiondate ? new Date(query.addmissiondate) : null;
+            const from = fromDate ? new Date(fromDate) : null;
+            const to = toDate ? new Date(toDate) : null;
+
 
             const isWithinDateRange =
-                (!fromDate || relevantDate >= new Date(fromDate)) &&
-                (!toDate || relevantDate <= new Date(toDate));
+                (!from || (admissionDate && admissionDate >= from)) &&
+                (!to || (admissionDate && admissionDate <= to));
 
-            // Convert query.total and filters.total to numbers for exact match comparison
-            const filterTotal = filters.total ? parseFloat(filters.total) : null;
-            const queryTotal = query.total ? parseFloat(query.total) : 0;
 
-            // Apply "greater than 0" filter only when the checkbox is checked
-            const isTotalValid = greaterThan0 ? queryTotal > 0 : true;
+            const actualFinalFees =
+                query.finalfees && query.finalfees > 0
+                    ? parseFloat(query.finalfees)
+                    : parseFloat(courseFeeDetails.totalFee || 0);
+
+            const finalFeesFilter = filters.finalfees ? parseFloat(filters.finalfees) : null;
 
             return (
-                isWithinDateRange &&
-                isTotalValid &&
-                (filters.studentName
-                    ? query.studentName?.toLowerCase().includes(filters.studentName.toLowerCase())
-                    : true) &&
-                (filters.phoneNumber
-                    ? query.studentContact.phoneNumber.includes(filters.phoneNumber)
-                    : true) &&
-                (filters.courseInterest
-                    ? courseName.toLowerCase().includes(filters.courseInterest.toLowerCase())
-                    : true) &&
-                (filters.assignedTo
-                    ? UserName.toLowerCase().includes(filters.assignedTo.toLowerCase())
-                    : true) &&
-                (filters.staffName
-                    ? query.staffName.toLowerCase().includes(filters.staffName.toLowerCase())
-                    : true) &&
-                (filters.branch
-                    ? query.branch.toLowerCase().includes(filters.branch.toLowerCase())
-                    : true) &&
-                (filters.city
-                    ? query.studentContact.city.toLowerCase().includes(filters.city.toLowerCase())
-                    : true) &&
-                (filters.enroll
-                    ? (filters.enroll === "Enroll" && query.addmission) ||
-                    (filters.enroll === "Not Enroll" && !query.addmission)
-                    : true) &&
-                (filterTotal !== null ? queryTotal === filterTotal : true) // Exact match for "total"
+                (!filters.branch || query.branch.toLowerCase().includes(filters.branch.toLowerCase())) &&
+                (!filters.staffName || query.staffName.toLowerCase().includes(filters.staffName.toLowerCase())) &&
+                (!filters.studentName || query.studentName?.toLowerCase().includes(filters.studentName.toLowerCase())) &&
+                (!filters.contact || query.studentContact.phoneNumber.includes(filters.contact)) &&
+                (!filters.course || (courses[query.courseInterest] || "").toLowerCase().includes(filters.course.toLowerCase())) &&
+                (!filters.assignedTo || (user[query.assignedTo] || user[query.userid] || "").toLowerCase().includes(filters.assignedTo.toLowerCase())) &&
+                (!filters.city || query.studentContact.city.toLowerCase().includes(filters.city.toLowerCase())) &&
+                (!filters.fees || remainingFees.toString().includes(filters.fees)) &&
+                (!finalFeesFilter || actualFinalFees === finalFeesFilter) &&
+                isWithinDateRange
             );
         });
 
         setFilteredQueries(filtered);
-    }, [filters, queries, fromDate, toDate, greaterThan0]);
+    }, [filters, queries, courses, user, coursesfee, fromDate, toDate]);
 
 
-
-    const handleCheckboxChange = () => {
-        setGreaterThan0((prev) => !prev);
-    };
-
-    const handleRowClick = (id) => {
-        router.push(`/branch/page/allquery/${id}`);
-    };
 
 
 
@@ -185,35 +162,40 @@ export default function Visit() {
         setFilters((prev) => ({ ...prev, [key]: value }));
     };
 
+    const handleRowClick = (id) => {
+        router.push(`/branch/page/allquery/${id}`);
+    };
+
+    const exportToExcel = () => {
+        const worksheet = XLSX.utils.json_to_sheet(filteredQueries);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Queries");
+        XLSX.writeFile(workbook, "queries.xlsx");
+    };
+
     return (
         <>
             <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
-                Demo Report
+                Admission Report
             </div>
             <div className="container mx-auto p-5">
                 <div className="flex flex-col lg:flex-row justify-between space-y-6 lg:space-y-0 lg:space-x-6">
                     <div className="w-full">
-                        Total Queries: {filteredQueries.length}
+                        <h1 className="text-lg font-semibold mb-4">Total Queries: {filteredQueries.length}</h1>
                         <div className="shadow-lg rounded-lg bg-white mb-6">
+                            <button
+                                onClick={exportToExcel}
+                                className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            >
+                                Export to Excel
+                            </button>
                             <div className="p-4">
-
-                                <div className=" flex justify-end">
-                                    <div className="flex items-center space-x-2">
-                                        <input
-                                            type="checkbox"
-                                            id="greter0"
-                                            checked={greaterThan0}
-                                            onChange={handleCheckboxChange}
-                                            className="cursor-pointer"
-                                        />
-                                        <label htmlFor="greter0" className="text-gray-700 text-lg">Fees Greatre Then &quot;0&quot;</label>
-                                    </div>
-                                </div>
                                 <div className="relative overflow-y-auto">
                                     <table className="min-w-full text-xs text-left text-gray-600 font-sans">
                                         <thead className="bg-[#29234b] text-white uppercase">
                                             <tr>
                                                 <th className="px-6 py-4">S/N</th>
+
                                                 <th className="px-6 py-4">
 
                                                     <input
@@ -229,72 +211,57 @@ export default function Visit() {
 
                                                     <input
                                                         type="text"
-                                                        className="w-full mt-1 text-black px-2 py-1 rounded"
-                                                        placeholder="Student Name"
-                                                        onChange={(e) =>
-                                                            handleFilterChange("studentName", e.target.value)
-                                                        }
+                                                        placeholder=" Student Name"
+                                                        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
+                                                        onChange={(e) => handleFilterChange("studentName", e.target.value)}
                                                     />
                                                 </th>
                                                 <th className="px-6 py-4">
 
                                                     <input
                                                         type="text"
-                                                        className="w-full mt-1 text-black px-2 py-1 rounded"
-                                                        placeholder=" Mobile No."
-                                                        onChange={(e) =>
-                                                            handleFilterChange("phoneNumber", e.target.value)
-                                                        }
+                                                        placeholder="Contact No"
+                                                        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
+                                                        onChange={(e) => handleFilterChange("contact", e.target.value)}
                                                     />
                                                 </th>
                                                 <th className="px-6 py-4">
 
                                                     <input
                                                         type="text"
-                                                        className="w-full mt-1 text-black px-2 py-1 rounded"
                                                         placeholder=" Interested Course"
-                                                        onChange={(e) =>
-                                                            handleFilterChange("courseInterest", e.target.value)
-                                                        }
+                                                        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
+                                                        onChange={(e) => handleFilterChange("course", e.target.value)}
                                                     />
                                                 </th>
-
                                                 <th className="px-6 py-4">
 
                                                     <input
                                                         type="text"
-                                                        className="w-full mt-1 text-black px-2 py-1 rounded"
                                                         placeholder="Assigned To"
-                                                        onChange={(e) =>
-                                                            handleFilterChange("assignedTo", e.target.value)
-                                                        }
+                                                        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
+                                                        onChange={(e) => handleFilterChange("assignedTo", e.target.value)}
                                                     />
                                                 </th>
                                                 <th className="px-6 py-4">
 
                                                     <input
                                                         type="text"
-                                                        className="w-full mt-1 text-black px-2 py-1 rounded"
                                                         placeholder="Branch"
-                                                        onChange={(e) =>
-                                                            handleFilterChange("branch", e.target.value)
-                                                        }
+                                                        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
+                                                        onChange={(e) => handleFilterChange("branch", e.target.value)}
                                                     />
                                                 </th>
-
                                                 <th className="px-6 py-4">
 
                                                     <input
                                                         type="text"
-                                                        className="w-full mt-1 text-black px-2 py-1 rounded"
                                                         placeholder="City"
-                                                        onChange={(e) =>
-                                                            handleFilterChange("city", e.target.value)
-                                                        }
+                                                        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
+                                                        onChange={(e) => handleFilterChange("city", e.target.value)}
                                                     />
                                                 </th>
-
-                                                <th className="px-4 py-3 text-[12px] relative group flex">Demo Date <ChevronDownSquare className=" ms-2" />
+                                                <th className="px-4 py-3 text-[12px] relative group flex">Admission Date <ChevronDownSquare className=" ms-2" />
                                                     <div className=" absolute bg-white p-2 hidden group-hover:block">
 
                                                         <div>
@@ -318,40 +285,31 @@ export default function Visit() {
                                                         </div>
                                                     </div>
                                                 </th>
-
+                                                <th className="px-6 py-4">Total Fees</th>
                                                 <th className="px-6 py-4">
-                                                    Enroll Fees
+                                                    <input
+                                                        type="number"
+                                                        placeholder="Final Fees"
+                                                        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
+                                                        onChange={(e) => handleFilterChange("finalfees", e.target.value)}
+                                                    />
                                                 </th>
+
                                                 <th className="px-6 py-4">
 
                                                     <input
                                                         type="text"
-                                                        className="w-full mt-1 text-black px-2 py-1 rounded"
-                                                        placeholder="R.Fees"
-                                                        onChange={(e) =>
-                                                            handleFilterChange("total", e.target.value)
-                                                        }
+                                                        placeholder="Remaining Fees"
+                                                        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
+                                                        onChange={(e) => handleFilterChange("fees", e.target.value)}
                                                     />
-                                                </th>
-                                                <th className="px-6 py-4">
-
-                                                    <select
-                                                        className="w-full mt-1 text-black px-2 py-1 rounded"
-                                                        onChange={(e) =>
-                                                            handleFilterChange("enroll", e.target.value)
-                                                        }
-                                                    >
-                                                        <option value="">All</option>
-                                                        <option value="Enroll">Enroll</option>
-                                                        <option value="Not Enroll">Not Enroll</option>
-                                                    </select>
                                                 </th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {loading ? (
                                                 <tr>
-                                                    <td colSpan="8" className="px-6 py-4 text-center">
+                                                    <td colSpan="9" className="px-6 py-4 text-center">
                                                         <div className="flex items-center justify-center h-full">
                                                             <Loader />
                                                         </div>
@@ -360,21 +318,25 @@ export default function Visit() {
                                             ) : filteredQueries.length > 0 ? (
                                                 filteredQueries
                                                     .sort((a, b) => {
-                                                        const dateA = a.fees.length > 0
-                                                            ? new Date(a.fees[0].transactionDate)
-                                                            : new Date(a.stage6Date);
-                                                        const dateB = b.fees.length > 0
-                                                            ? new Date(b.fees[0].transactionDate)
-                                                            : new Date(b.stage6Date);
+                                                        // Check if the dates exist and compare
+                                                        const dateA = a.addmissiondate ? new Date(a.addmissiondate) : null;
+                                                        const dateB = b.addmissiondate ? new Date(b.addmissiondate) : null;
 
-                                                        return dateB - dateA; // Sort in descending order
+                                                        if (dateA && dateB) {
+                                                            return dateB - dateA; // Sort by most recent date first
+                                                        }
+                                                        if (!dateA && dateB) {
+                                                            return 1; // Move N/A dates to the bottom
+                                                        }
+                                                        if (dateA && !dateB) {
+                                                            return -1; // Move rows with dates to the top
+                                                        }
+                                                        return 0; // Keep order if both are N/A
                                                     })
                                                     .map((query, index) => {
-                                                        const deadline = new Date(query.deadline);
                                                         const courseName = courses[query.courseInterest] || "Unknown Course";
                                                         const coursesfeen = coursesfee[query.courseInterest] || "N/A";
                                                         const UserName = user[query.assignedTo] || user[query.userid] || "Unknown User";
-
                                                         return (
                                                             <tr
                                                                 key={query._id}
@@ -389,25 +351,34 @@ export default function Visit() {
                                                                 <td className="px-6 py-1 font-semibold">{UserName}</td>
                                                                 <td className="px-6 py-1">{query.branch}</td>
                                                                 <td className="px-6 py-1">{query.studentContact.city}</td>
-
                                                                 <td className="px-6 py-1">
-                                                                    {query.fees.length > 0
-                                                                        ? new Date(query.fees[0].transactionDate).toLocaleDateString()
-                                                                        : new Date(query.stage6Date).toLocaleDateString()}
+                                                                    {query.addmissiondate
+                                                                        ? new Intl.DateTimeFormat('en-GB', {
+                                                                            day: 'numeric',
+                                                                            month: 'long',
+                                                                            year: 'numeric',
+                                                                        }).format(new Date(query.addmissiondate))
+                                                                        : 'N/A'}
                                                                 </td>
 
-                                                                <td className="px-6 py-1">{coursesfeen.enrollmentFee} ₹</td>
-                                                                <td className="px-6 py-1">{query.total} ₹</td>
-
+                                                                <td className="px-6 py-1">{coursesfeen.totalFee ? `${coursesfeen.totalFee} ₹` : "N/A"}</td>
                                                                 <td className="px-6 py-1">
-                                                                    {query.addmission ? "Enroll" : "Not Enroll"}
+                                                                    {query.finalfees > 0 ? (
+                                                                        query.finalfees
+                                                                    ) : (
+                                                                        <>
+                                                                            {coursesfeen.totalFee ? `${coursesfeen.totalFee} ₹` : "N/A"}
+                                                                        </>
+                                                                    )}
                                                                 </td>
+
+                                                                <td className="px-6 py-1">{coursesfeen.totalFee - query.total} ₹</td>
                                                             </tr>
                                                         );
                                                     })
                                             ) : (
                                                 <tr>
-                                                    <td colSpan="8" className="px-6 py-4 text-center text-gray-500">
+                                                    <td colSpan="9" className="px-6 py-4 text-center text-gray-500">
                                                         No queries available
                                                     </td>
                                                 </tr>
@@ -416,6 +387,7 @@ export default function Visit() {
 
                                     </table>
                                 </div>
+
                             </div>
                         </div>
                     </div>

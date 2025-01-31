@@ -4,6 +4,7 @@ import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import { useSession } from 'next-auth/react';
 import Link from "next/link";
+
 import { ChevronDownSquare } from "lucide-react";
 export default function QueryReport() {
   const [allquery, setAllquery] = useState([]);
@@ -15,25 +16,29 @@ export default function QueryReport() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [admission, setAdmission] = useState("");
+  const [reson, setReson] = useState("");
   const [grade, setGrade] = useState("");
+  const [reason, setReason] = useState("");
   const [location, setLocation] = useState("");
   const [city, setCity] = useState("");
   const [assignedName, setAssignedName] = useState("");
+  const [assignedFrom, setAssignedFrom] = useState("");
+  const [userName, setUserName] = useState("");
   const [referenceData, setReferenceData] = useState([]);
   const [branches, setBranches] = useState([]);
   const [user, setuser] = useState([]);
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedReference, setSelectedReference] = useState(null);
   const { data: session } = useSession();
   const [branch, setBranch] = useState("");
+  const [showClosed, setShowClosed] = useState(false);
+  const [adminData, setAdminData] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const userResponse = await axios.get("/api/admin/fetchall/admin");
-        const filteredData = userResponse.data.fetch.filter((item) => item.branch === branch);
-        setuser(filteredData);
+        setuser(userResponse.data.fetch);
         const branchesResponse = await axios.get("/api/branch/fetchall/branch");
         setBranches(branchesResponse.data.fetch);
         const referenceResponse = await axios.get("/api/reference/fetchall/reference");
@@ -46,15 +51,14 @@ export default function QueryReport() {
       }
     };
     fetchData();
-  }, [branch]);
-
+  }, []);
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
         const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
-        setBranch(response.data.branch);
+        setAdminData(response.data.branch); // Make sure response.data contains branch and _id
       } catch (err) {
-        console.log(err.message);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -63,11 +67,10 @@ export default function QueryReport() {
     if (session?.user?.email) fetchAdminData();
   }, [session]);
 
-
   const fetchFilteredData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/api/branchreport/fetchall/query", {
+      const response = await axios.get("/api/branchreport/fetchalloverview/query", {
         params: {
           referenceId,
           suboption,
@@ -75,20 +78,17 @@ export default function QueryReport() {
           toDate,
           admission,
           grade,
+          reason,
           location,
           city,
           assignedName,
+          assignedFrom,
+          userName,
+          showClosed,
+          adminData
         },
       });
-
-      // Ensure `branch` is available before filtering
-      if (branch) {
-        const filteredData = response.data.fetch.filter((item) => item.branch === branch);
-        setAllquery(filteredData);
-      } else {
-        console.warn("Branch is not defined, skipping data filtering.");
-        setAllquery([]);
-      }
+      setAllquery(response.data.fetch);
     } catch (error) {
       console.error("Error fetching filtered data:", error);
     } finally {
@@ -96,19 +96,33 @@ export default function QueryReport() {
     }
   };
 
+  // Fetch data whenever filters change
   useEffect(() => {
-    // Fetch data only when `branch` is defined
-    if (branch) {
+    if (adminData) {  // Ensure adminData is available before fetching
       fetchFilteredData();
     }
-  }, [branch]);
-
+  }, [referenceId, adminData, suboption, fromDate, toDate, admission, grade, reason, location, city, assignedName, assignedFrom, userName, showClosed]);
 
   const handleFilter = () => {
-    setIsFilterModalOpen(false); // Close modal
     fetchFilteredData();
   };
 
+  const removeFilter = () => {
+    // Reset all filter variables to their default values
+    setReferenceId("");
+    setSuboption("");
+    setFromDate("");
+    setToDate("");
+    setAdmission("");
+    setReson("");
+    setGrade("");
+    setReason("");
+    setLocation("");
+    setCity("");
+    setAssignedName("");
+    setAssignedFrom("");
+    setUserName("");
+  };
 
 
 
@@ -120,9 +134,13 @@ export default function QueryReport() {
     if (toDate) filters.push(`To Date: ${toDate}`);
     if (admission) filters.push(`Admission: ${admission === "true" ? "Enroll" : "Not Enroll"}`);
     if (grade) filters.push(`Grade: ${grade}`);
+    if (reason) filters.push(`Reason: ${reason}`);
     if (location) filters.push(`Branch: ${location}`);
     if (city) filters.push(`City: ${city}`);
-    if (assignedName) filters.push(`Assigned Name: ${assignedName}`);
+    if (assignedName) filters.push(`Assigned To: ${assignedName}`);
+    if (assignedFrom) filters.push(`Assigned From: ${assignedFrom}`);
+    if (userName) filters.push(`Creater Name: ${userName}`);
+    if (showClosed) filters.push(`Closed Queries`);
     return filters.length > 0 ? filters.join(" | ") : "No filters applied.";
   };
 
@@ -144,34 +162,69 @@ export default function QueryReport() {
   };
   return (
     <>
-      <div className="mt-12 container lg:w-[98%] mx-auto">
-        <div className="flex justify-between gap-5 items-center">
+      <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
+        Over-View
+      </div>
+      <div className="mt-8 container lg:w-[98%] mx-auto">
 
+        Total Queries: {allquery.length}
+        <div className="flex justify-between gap-5 items-center">
           <div className="py-3 px-4 flex-auto mb-4 bg-blue-100 text-blue-800 rounded-lg shadow-md flex justify-between items-center">
             <span className="text-sm font-medium">{getFilterSummary()}</span>
 
           </div>
           <div>
-
+            {/* 
             <button
               onClick={handleFilter}
               className="mb-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
             >
               Apply Filters
+            </button> */}
+            <button
+              onClick={removeFilter}
+              className="mb-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
+            >
+              Remove Filters
             </button>
-
           </div>
+         
+        </div>
+        <div className="flex items-center justify-between mb-4">
+          <label className="flex items-center text-sm font-medium text-gray-700">
+            <input
+              type="checkbox"
+              checked={showClosed === "close"}
+              onChange={() => setShowClosed(showClosed === "close" ? "" : "close")}
+              className="mr-2 w-4 h-4 text-blue-600 border-gray-300 rounded"
+            />
+            Show Only Closed Queries
+          </label>
         </div>
 
         <div className="overflow-x-auto  shadow-lg rounded-lg border border-gray-300">
           <table className="min-w-full text-left text-[12px] font-light border-collapse">
             <thead className="bg-gray-800 text-white">
               <tr className="divide-x divide-gray-700">
-                <th className="px-4 py-3 text-[12px]">Sr No.</th>
+                <th className="px-4 py-3 text-[12px]">S/N</th>
+                <th className="px-4 py-3 text-[12px]">Staff Name
+                  <select
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    className="w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
+                  >
+                    <option value="">All</option>
+                    {user.map((data) => (
+                      <option key={data._id} value={data.name}>
+                        {data.name}
+                      </option>
+                    ))}
+                  </select>
+                </th>
                 <th className="px-4 py-3 text-[12px]">Student Name</th>
-                <th className="px-4 py-3 text-[12px]">Phone Number</th>
-                <th className="px-4 py-3 text-[12px]">No Of Contact</th>
-                <th className="px-4 py-3 text-[12px] flex items-center justify-center">Reference
+                <th className="px-4 py-3 text-[12px]">Phone No.</th>
+                <th className="px-4 py-3 text-[12px]">Contacts</th>
+                <th className="px-4 py-3 text-[12px] ">Reference
                   <select
                     value={referenceId}
                     onChange={handleReferenceChange}
@@ -228,14 +281,14 @@ export default function QueryReport() {
                     <option value="C">C</option>
                   </select>
                 </th>
-                <th className="px-4 py-3 text-[12px]">Assigned From</th>
-                <th className="px-4 py-3 text-[12px]">Assigned To
+                <th className="px-4 py-3 text-[12px]">Assigned From
                   <select
-                    value={assignedName}
-                    onChange={(e) => setAssignedName(e.target.value)}
+                    value={assignedFrom}
+                    onChange={(e) => setAssignedFrom(e.target.value)}
                     className="w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
                   >
                     <option value="">All</option>
+                    <option value="Not-Assigned">Not Assigned</option>
                     {user.map((data) => (
                       <option key={data._id} value={data.name}>
                         {data.name}
@@ -243,6 +296,22 @@ export default function QueryReport() {
                     ))}
                   </select>
                 </th>
+                <th className="px-4 py-3 text-[12px]">Assigned To
+                  <select
+                    value={assignedName}
+                    onChange={(e) => setAssignedName(e.target.value)}
+                    className="w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
+                  >
+                    <option value="">All</option>
+                    <option value="Not-Assigned">Not Assigned</option>
+                    {user.map((data) => (
+                      <option key={data._id} value={data.name}>
+                        {data.name}
+                      </option>
+                    ))}
+                  </select>
+                </th>
+
                 <th className="px-4 py-3 text-[12px] relative group flex">Created Date <ChevronDownSquare className=" ms-2" />
                   <div className=" absolute bg-white p-2 hidden group-hover:block">
 
@@ -267,8 +336,33 @@ export default function QueryReport() {
                     </div>
                   </div>
                 </th>
-                <th className="px-4 py-3 text-[12px]">Status</th>
-                <th className="px-4 py-3 text-[12px] flex">Enroll
+
+                {showClosed === "close" ? (
+                  <>
+                    <th className="px-4 py-3 text-[12px]">Reson
+                      <select
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        className="w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
+                      >
+                        <option value="">All</option>
+                        <option value="interested_but_not_proper_response">interested_but_not_proper_response</option>
+                        <option value="no_connected">no_connected</option>
+                        <option value="not_lifting">not_lifting</option>
+                        <option value="busy">busy</option>
+                        <option value="not_interested">not_interested</option>
+                        <option value="wrong_no">wrong_no</option>
+                        <option value="no_visit_branch_yet">no_visit_branch_yet</option>
+                      </select>
+                    </th>
+                  </>
+                ) : (
+                  <>
+                    <th className="px-4 py-3 text-[12px]">Stage</th>
+                  </>
+                )}
+
+                <th className="px-4 py-3 text-[12px]">Enroll
                   <select
                     value={admission}
                     onChange={(e) => setAdmission(e.target.value)}
@@ -283,212 +377,84 @@ export default function QueryReport() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {allquery.map((data, index) => (
+              {allquery.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .map((data, index) => (
 
-                <tr
-                  key={index}
-                  className="odd:bg-gray-50 even:bg-gray-100 hover:bg-gray-200 transition-all"
-                >
-                  <td className="px-4 py-3 text-[12px]">{index + 1}</td>
-                  <Link href={`/branch/page/allquery/${data._id}`}><td className="px-4 py-3 text-[12px]">{data.studentName}</td></Link>
-                  <td className="px-4 py-3 text-[12px]">{data.studentContact.phoneNumber}</td>
-                  <td className="px-4 py-3 text-[12px]"> {data.historyCount}</td>
-                  <td className="px-4 py-3 text-[12px]">{data.referenceid} {data.suboption}</td>
-                  <td className="px-4 py-3 text-[12px] relative">
-                    <span className="overflow-hidden whitespace-nowrap text-ellipsis">{data.lastmessage?.slice(0, 12)}...</span>
-                    <div className="absolute cursor-pointer left-0 bottom-0 bg-gray-800 text-white p-2 rounded-md opacity-0 transition-opacity hover:opacity-100 max-w-xs w-48">
-                      {data.lastmessage}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-[12px]">{data.studentContact.city}</td>
-                  <td className="px-4 py-3 text-[12px]">{data.lastgrade}</td>
-                  <td className="px-4 py-3 text-[12px]">{data.assignedsenthistory}</td>
-                  <td className="px-4 py-3 text-[12px]">{data.assignedreceivedhistory}</td>
-                  <td className="px-4 py-3 text-[12px]">
-                    {(() => {
-                      const date = new Date(data.createdAt);
-                      const monthNames = [
-                        'January', 'February', 'March', 'April', 'May', 'June',
-                        'July', 'August', 'September', 'October', 'November', 'December'
-                      ];
-                      const day = date.getDate().toString().padStart(2, '0');
-                      const month = monthNames[date.getMonth()];
-                      const year = date.getFullYear();
-                      return ` ${day} ${month}, ${year}`;
-                    })()}
-                  </td>
+                  <tr
+                    key={index}
+                    className="odd:bg-gray-50 even:bg-gray-100 hover:bg-gray-200 transition-all"
+                  >
+                    <td className="px-4 py-3 text-[12px]">{index + 1}</td>
+                    <td className="px-4 py-3 text-[12px]">{data.userid}</td>
+                    <td className="px-4 py-3 text-[12px] text-blue-500"> <Link href={`/branch/page/allquery/${data._id}`}>{data.studentName}</Link></td>
+                    <td className="px-4 py-3 text-[12px]">{data.studentContact.phoneNumber}</td>
+                    <td className="px-4 py-3 text-[12px]"> {data.historyCount}</td>
+                    <td className="px-4 py-3 text-[12px]">{data.referenceid} {data.suboption}</td>
+                    <td className="px-4 py-3 text-[12px] relative">
+                      <span className="overflow-hidden whitespace-nowrap text-ellipsis">{data.lastmessage?.slice(0, 12)}...</span>
+                      <div className="absolute cursor-pointer left-0 bottom-0 bg-gray-800 text-white p-2 rounded-md opacity-0 transition-opacity hover:opacity-100 max-w-xs w-48">
+                        {data.lastmessage}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-[12px]">{data.studentContact.city}</td>
+                    <td className="px-4 py-3 text-[12px]">{data.lastgrade}</td>
+                    <td className="px-4 py-3 text-[12px]">{data.assignedsenthistory}</td>
+                    <td className="px-4 py-3 text-[12px]">{data.assignedreceivedhistory}</td>
+                    <td className="px-4 py-3 text-[12px]">
+                      {(() => {
+                        const date = new Date(data.createdAt);
+                        const monthNames = [
+                          'January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'
+                        ];
+                        const day = date.getDate().toString().padStart(2, '0');
+                        const month = monthNames[date.getMonth()];
+                        const year = date.getFullYear();
+                        return ` ${day} ${month}, ${year}`;
+                      })()}
+                    </td>
 
-                  <td className="px-4 py-3 text-[12px]">{data.stage === 1
-                    ? "1st Stage"
-                    : data.stage === 2
-                      ? "2nd Stage"
-                      : data.stage === 3
-                        ? "3rd Stage"
-                        : data.stage === 4
-                          ? "4th Stage"
-                          : data.stage === 5
-                            ? "5th Stage"
-                            : data.stage === 6
-                              ? "6th Stage"
-                              : "Initial Stage"}
-                  </td>
-                  <td className="px-4 py-3 text-[12px]">{data.addmission ? "Enrolled" : "Not Enrolled"}</td>
+                    {showClosed === "close" ? (
+                      <>
+                        <td className="px-4 py-3 text-[12px] relative">
+                          <span className="overflow-hidden whitespace-nowrap text-ellipsis">{data.reason?.slice(0, 12) || "N/A"}</span>
+                          <div className="absolute cursor-pointer left-0 bottom-0 bg-gray-800 text-white p-2 rounded-md opacity-0 transition-opacity hover:opacity-100 max-w-xs w-48">
+                            {data.reason || "N/A"}
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
 
-                </tr>
+                        <td className="px-4 py-3 text-[12px]">
+                          {data.stage === 1
+                            ? "1st Stage"
+                            : data.stage === 2
+                              ? "2nd Stage"
+                              : data.stage === 3
+                                ? "3rd Stage"
+                                : data.stage === 4
+                                  ? "4th Stage"
+                                  : data.stage === 5
+                                    ? "5th Stage"
+                                    : data.stage === 6
+                                      ? "6th Stage"
+                                      : "Initial Stage"}
+                        </td>
+                      </>
+                    )}
 
-              ))}
+                    <td className="px-4 py-3 text-[12px]">{data.addmission ? "Enrolled" : "Not Enrolled"}</td>
+
+                  </tr>
+
+                ))}
             </tbody>
           </table>
         </div >
       </div>
 
-      {/* Filter Modal */}
-      {isFilterModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 transition-opacity duration-300">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-[90%] md:w-[60%] lg:w-[40%] animate-fadeIn">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
-              Filter Options
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                {/* <div>
-                  <label className="block text-sm font-medium text-gray-700">Reference</label>
-                  <select
-                    value={referenceId}
-                    onChange={handleReferenceChange}
-                    className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                  >
-                    <option value="">All</option>
-                    {referenceData.map((data) => (
-                      <option key={data._id} value={data.referencename}>
-                        {data.referencename}
-                      </option>
-                    ))}
-                  </select>
-                </div>
 
-                {selectedReference?.referencename === "Online" && selectedReference.suboptions?.length > 0 && (
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700">Suboptions</label>
-                    <select
-                      value={suboption}
-                      onChange={(e) => setSuboption(e.target.value)}
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                    >
-                      <option value="">All</option>
-                      {selectedReference.suboptions.map((suboption, index) => (
-                        <option key={index} value={suboption.name}>
-                          {suboption.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )} */}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">From Date</label>
-                <input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">To Date</label>
-                <input
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                />
-              </div>
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700">Admission</label>
-                <select
-                  value={admission}
-                  onChange={(e) => setAdmission(e.target.value)}
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                >
-                  <option value="">All</option>
-                  <option value="true">Enroll</option>
-                  <option value="false">Not Enroll</option>
-                </select>
-              </div> */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Grade</label>
-                {/* <select
-                  value={grade}
-                  onChange={(e) => setGrade(e.target.value)}
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                >
-                  <option value="">All</option>
-                  <option value="A">A</option>
-                  <option value="B">B</option>
-                  <option value="C">C</option>
-                </select> */}
-              </div>
-              {/* <div>
-                <label className="block text-sm font-medium text-gray-700">Branch</label>
-                <select
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                >
-                  <option value="">All</option>
-                  {branches.map((data) => (
-                    <option key={data._id} value={data.branch_name}>
-                      {data.branch_name}
-                    </option>
-                  ))}
-                </select>
-              </div> */}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">City</label>
-                {/* <select
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                >
-                  <option value="">All</option>
-                  <option value="Jaipur">Jaipur</option>
-                  <option value="out">Out Of Jaipur</option>
-                </select> */}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Assigned Name</label>
-                {/* <select
-                  value={assignedName}
-                  onChange={(e) => setAssignedName(e.target.value)}
-                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                >
-                  <option value="">All</option>
-                  {user.map((data) => (
-                    <option key={data._id} value={data.name}>
-                      {data.name}
-                    </option>
-                  ))}
-                </select> */}
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end gap-4">
-              <button
-                onClick={() => setIsFilterModalOpen(false)}
-                className="bg-gray-400 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-500 transition duration-200"
-              >
-                Close
-              </button>
-              <button
-                onClick={handleFilter}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition duration-200"
-              >
-                Apply Filters
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
