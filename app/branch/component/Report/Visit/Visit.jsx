@@ -1,25 +1,31 @@
-"use client";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Loader from "@/components/Loader/Loader";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
+import { ChevronDownSquare } from "lucide-react"
 
-export default function UnderVisit() {
+export default function Visit() {
   const [queries, setQueries] = useState([]);
+  const [filteredQueries, setFilteredQueries] = useState([]);
   const [loading, setLoading] = useState(true);
   const { data: session } = useSession();
   const [adminData, setAdminData] = useState(null);
-  const [courses, setCourses] = useState({});
   const [filters, setFilters] = useState({
     studentName: "",
-    mobileNumber: "",
-    course: "",
-    qualification: "",
-    address: "",
-    reference: "",
-    status: "",
+    phoneNumber: "",
+    courseInterest: "",
+    branch: "",
+    city: "",
+    enroll: "",
   });
+  const [courses, setCourses] = useState({});
+  const [coursesfee, setCoursesfee] = useState({});
+  const [user, setUser] = useState({});
+  const [fromDate, setFromDate] = useState(""); // Added fromDate state
+  const [toDate, setToDate] = useState(""); // Added toDate state
+
+  const router = useRouter();
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -56,7 +62,6 @@ export default function UnderVisit() {
 
     fetchQueryData();
   }, [adminData]);
-
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -66,6 +71,23 @@ export default function UnderVisit() {
           return acc;
         }, {});
         setCourses(courseMapping);
+
+        const coursesfeeMapping = response.data.fetch.reduce((acc, coursesfee) => {
+          // Parse enrollpercent as a number and calculate the enrollment fee
+          const enrollPercent = parseFloat(coursesfee.enrollpercent) || 0; // Default to 0 if enrollpercent is invalid
+          const enrollmentFee = coursesfee.fees * (enrollPercent / 100); // Calculate the enrollment fee
+
+          acc[coursesfee._id] = {
+            totalFee: coursesfee.fees,
+            enrollPercent: enrollPercent,
+            enrollmentFee: enrollmentFee.toFixed() // Keep the fee to two decimal places
+          };
+          return acc;
+        }, {});
+
+        setCoursesfee(coursesfeeMapping);
+
+
       } catch (error) {
         console.error("Error fetching courses:", error.message);
       }
@@ -74,127 +96,273 @@ export default function UnderVisit() {
     fetchCourses();
   }, []);
 
-  const handleFilterChange = (e, key) => {
-    setFilters({ ...filters, [key]: e.target.value });
+  useEffect(() => {
+    const fetchuserData = async () => {
+      try {
+        const response = await axios.get('/api/admin/fetchall/admin');
+        const userMapping = response.data.fetch.reduce((acc, user) => {
+          acc[user._id] = user.name;
+          return acc;
+        }, {});
+        setUser(userMapping);
+      } catch (error) {
+        console.error("Error fetching user:", error.message);
+      }
+    };
+
+    fetchuserData();
+  }, []);
+
+
+  useEffect(() => {
+    const filtered = queries.filter((query) => {
+      const courseName = courses[query.courseInterest] || "Unknown Course";
+      const UserName = user[query.assignedTo] || "Unknown User";
+
+      // Convert transitionDate ('DD-MM-YYYY' ➝ 'YYYY-MM-DD' ➝ Date object)
+      const visitedDate = query.transitionDate
+        ? new Date(query.transitionDate.split('-').reverse().join('-'))
+        : null;
+
+      // Convert fromDate and toDate to Date objects (YYYY-MM-DD)
+      const fromDateObj = fromDate ? new Date(fromDate) : null;
+      const toDateObj = toDate ? new Date(toDate) : null;
+
+      // Filter based on date range
+      const isWithinDateRange =
+        (!fromDateObj || visitedDate >= fromDateObj) &&
+        (!toDateObj || visitedDate <= toDateObj);
+
+      return (
+        isWithinDateRange &&
+        (filters.studentName
+          ? query.studentName?.toLowerCase().includes(filters.studentName.toLowerCase())
+          : true) &&
+        (filters.phoneNumber
+          ? query.studentContact.phoneNumber.includes(filters.phoneNumber)
+          : true) &&
+        (filters.courseInterest
+          ? courseName.toLowerCase().includes(filters.courseInterest.toLowerCase())
+          : true) &&
+        (filters.assignedTo
+          ? UserName.toLowerCase().includes(filters.assignedTo.toLowerCase())
+          : true) &&
+        (filters.adminName
+          ? query.adminName.toLowerCase().includes(filters.adminName.toLowerCase())
+          : true) &&
+        (filters.branch
+          ? query.branch.toLowerCase().includes(filters.branch.toLowerCase())
+          : true) &&
+        (filters.city
+          ? query.studentContact.city.toLowerCase().includes(filters.city.toLowerCase())
+          : true) &&
+        (filters.enroll
+          ? (filters.enroll === "Enroll" && query.addmission) ||
+          (filters.enroll === "Not Enroll" && !query.addmission)
+          : true)
+      );
+    });
+
+    // Sort by transitionDate (latest first)
+    const sortedQueries = filtered.sort((a, b) => {
+      const dateA = a.transitionDate
+        ? new Date(a.transitionDate.split('-').reverse().join('-'))
+        : new Date(0);
+      const dateB = b.transitionDate
+        ? new Date(b.transitionDate.split('-').reverse().join('-'))
+        : new Date(0);
+      return dateB - dateA; // Latest dates first
+    });
+
+    setFilteredQueries(sortedQueries);
+  }, [filters, queries, fromDate, toDate]);
+
+
+  const handleRowClick = (id) => {
+    router.push(`/branch/page/allquery/${id}`);
   };
 
-  const filteredQueries = queries.filter((query) => {
-    const courseName = courses[query.courseInterest] || "Unknown Course";
-    return (
-      query.studentName?.toLowerCase().includes(filters.studentName.toLowerCase()) &&
-      query.studentContact.phoneNumber.includes(filters.mobileNumber) &&
-      courseName.toLowerCase().includes(filters.course.toLowerCase()) &&
-      query.qualification.toLowerCase().includes(filters.qualification.toLowerCase()) &&
-      query.studentContact.address.toLowerCase().includes(filters.address.toLowerCase()) &&
-      query.referenceid.toLowerCase().includes(filters.reference.toLowerCase()) &&
-      (filters.status === "" ||
-        (filters.status === "Enroll" && query.addmission) ||
-        (filters.status === "Pending" && !query.addmission))
-    );
-  });
+  
+  const handleFilterChange = (key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
 
   return (
-    <div className="container mx-auto p-5">
-      <div className="flex flex-col lg:flex-row justify-between space-y-6 lg:space-y-0 lg:space-x-6">
-        <div className="w-full">
-          <div className="mb-6">
-            <div className="p-4">
-              <div className="relative">
-                {loading ? (
-                  <div className="flex items-center justify-center h-64">
-                    <Loader />
-                  </div>
-                ) : (
+    <>
+      <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
+        Visit Report
+      </div>
+      <div className="container mx-auto p-5">
+        <div className="flex flex-col lg:flex-row justify-between space-y-6 lg:space-y-0 lg:space-x-6">
+          <div className="w-full">
+            Total Queries: {filteredQueries.length}
+            <div className="shadow-lg rounded-lg bg-white mb-6">
+              <div className="p-4">
+               
+                <div className="relative overflow-y-auto">
                   <table className="min-w-full text-xs text-left text-gray-600 font-sans">
                     <thead className="bg-[#29234b] text-white uppercase">
                       <tr>
-                        <th className="px-6 py-4">#</th>
+                        <th className="px-6 py-4">S/N</th>
                         <th className="px-6 py-4">
+
                           <input
                             type="text"
+                            className="w-full mt-1 text-black px-2 py-1 rounded"
+                            placeholder="Staff Name"
+                            onChange={(e) =>
+                              handleFilterChange("adminName", e.target.value)
+                            }
+                          />
+                        </th>
+                        <th className="px-6 py-4">
+
+                          <input
+                            type="text"
+                            className="w-full mt-1 text-black px-2 py-1 rounded"
                             placeholder="Student Name"
-                            className="w-full p-1 text-black"
-                            value={filters.studentName}
-                            onChange={(e) => handleFilterChange(e, "studentName")}
+                            onChange={(e) =>
+                              handleFilterChange("studentName", e.target.value)
+                            }
                           />
                         </th>
                         <th className="px-6 py-4">
+
                           <input
                             type="text"
-                            placeholder="Mobile Number"
-                            className="w-full p-1 text-black"
-                            value={filters.mobileNumber}
-                            onChange={(e) => handleFilterChange(e, "mobileNumber")}
+                            className="w-full mt-1 text-black px-2 py-1 rounded"
+                            placeholder=" Mobile No."
+                            onChange={(e) =>
+                              handleFilterChange("phoneNumber", e.target.value)
+                            }
                           />
                         </th>
                         <th className="px-6 py-4">
+
                           <input
                             type="text"
-                            placeholder="Course"
-                            className="w-full p-1 text-black"
-                            value={filters.course}
-                            onChange={(e) => handleFilterChange(e, "course")}
+                            className="w-full mt-1 text-black px-2 py-1 rounded"
+                            placeholder=" Interested Course"
+                            onChange={(e) =>
+                              handleFilterChange("courseInterest", e.target.value)
+                            }
                           />
                         </th>
+
                         <th className="px-6 py-4">
+
                           <input
                             type="text"
-                            placeholder="Qualification"
-                            className="w-full p-1 text-black"
-                            value={filters.qualification}
-                            onChange={(e) => handleFilterChange(e, "qualification")}
+                            className="w-full mt-1 text-black px-2 py-1 rounded"
+                            placeholder="Assigned To"
+                            onChange={(e) =>
+                              handleFilterChange("assignedTo", e.target.value)
+                            }
                           />
                         </th>
                         <th className="px-6 py-4">
+
                           <input
                             type="text"
-                            placeholder="Address"
-                            className="w-full p-1 text-black"
-                            value={filters.address}
-                            onChange={(e) => handleFilterChange(e, "address")}
+                            className="w-full mt-1 text-black px-2 py-1 rounded"
+                            placeholder="Branch"
+                            onChange={(e) =>
+                              handleFilterChange("branch", e.target.value)
+                            }
                           />
                         </th>
+
                         <th className="px-6 py-4">
+
                           <input
                             type="text"
-                            placeholder="Reference"
-                            className="w-full p-1 text-black"
-                            value={filters.reference}
-                            onChange={(e) => handleFilterChange(e, "reference")}
+                            className="w-full mt-1 text-black px-2 py-1 rounded"
+                            placeholder="City"
+                            onChange={(e) =>
+                              handleFilterChange("city", e.target.value)
+                            }
                           />
                         </th>
+
+                        <th className="px-4 py-3 text-[12px] relative group flex">Visited Date <ChevronDownSquare className=" ms-2" />
+                          <div className=" absolute bg-white p-2 hidden group-hover:block">
+
+                            <div>
+
+                              <input
+                                type="date"
+                                value={fromDate}
+                                onChange={(e) => setFromDate(e.target.value)}
+                                className=" text-gray-800  border focus:ring-0 focus:outline-none"
+                              />
+                            </div>
+                            <p className=" text-black text-center">To</p>
+                            <div>
+
+                              <input
+                                type="date"
+                                value={toDate}
+                                onChange={(e) => setToDate(e.target.value)}
+                                className=" text-gray-800  border focus:ring-0 focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                        </th>
+
+
                         <th className="px-6 py-4">
+
                           <select
-                            className="w-full p-1 text-black"
-                            value={filters.status}
-                            onChange={(e) => handleFilterChange(e, "status")}
+                            className="w-full mt-1 text-black px-2 py-1 rounded"
+                            onChange={(e) =>
+                              handleFilterChange("enroll", e.target.value)
+                            }
                           >
                             <option value="">All</option>
                             <option value="Enroll">Enroll</option>
-                            <option value="Pending">Pending</option>
+                            <option value="Not Enroll">Not Enroll</option>
                           </select>
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredQueries.length > 0 ? (
+                      {loading ? (
+                        <tr>
+                          <td colSpan="8" className="px-6 py-4 text-center">
+                            <div className="flex items-center justify-center h-full">
+                              <Loader />
+                            </div>
+                          </td>
+                        </tr>
+                      ) : filteredQueries.length > 0 ? (
                         filteredQueries.map((query, index) => {
+                          const deadline = new Date(query.deadline);
                           const courseName = courses[query.courseInterest] || "Unknown Course";
+                          const coursesfeen = coursesfee[query.courseInterest] || "N/A";
+
+                          const UserName = user[query.assignedTo] || user[query.userid] || "Unknown User";
+
                           return (
                             <tr
                               key={query._id}
                               className="border-b cursor-pointer transition-colors duration-200 hover:opacity-90"
+                              onClick={() => handleRowClick(query._id)}
                             >
                               <td className="px-6 py-1 font-semibold">{index + 1}</td>
-                              <td className="px-6 py-1 font-semibold">
-                                <Link href={`/branch/page/allquery/${query._id}`}>{query.studentName}</Link>
+                              <td className="px-6 py-1 font-semibold">{query.adminName}</td>
+                              <td className="px-6 py-1 font-semibold">{query.studentName}</td>
+                              <td className="px-6 py-1 font-semibold">{query.studentContact.phoneNumber}</td>
+                              <td className="px-6 py-1 font-semibold">{courseName}</td>
+                              <td className="px-6 py-1 font-semibold">{UserName}</td>
+                              <td className="px-6 py-1">{query.branch}</td>
+                              <td className="px-6 py-1">{query.studentContact.city}</td>
+                              <td className="px-6 py-1">
+                                {query.transitionDate}
                               </td>
-                              <td className="px-6 py-1">{query.studentContact.phoneNumber}</td>
-                              <td className="px-6 py-1">{courseName}</td>
-                              <td className="px-6 py-1">{query.qualification}</td>
-                              <td className="px-6 py-1">{query.studentContact.address}</td>
-                              <td className="px-6 py-1">{query.referenceid}</td>
-                              <td className="px-6 py-1">{query.addmission ? "Enroll" : "Pending"}</td>
+
+                              <td className="px-6 py-1">
+                                {query.addmission ? "Enroll" : "Not Enroll"}
+                              </td>
                             </tr>
                           );
                         })
@@ -207,12 +375,12 @@ export default function UnderVisit() {
                       )}
                     </tbody>
                   </table>
-                )}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

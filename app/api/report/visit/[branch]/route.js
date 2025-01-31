@@ -1,6 +1,8 @@
+
 import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
 import AuditModel from "@/model/AuditLog";
+import AdminModel from "@/model/Admin";
 
 export const GET = async (request, context) => {
     await dbConnect();
@@ -16,29 +18,46 @@ export const GET = async (request, context) => {
                 { status: 400 }
             );
         }
-       
-        // Step 1: Fetch all unique queryIds from the AuditLog where stage is 5
-        const auditLogs = await AuditModel.find({ stage: 6 }).select('queryId grade');
+        // Step 1: Fetch all unique queryIds from the AuditLog where stage is 6
+        const auditLogs = await AuditModel.find({ stage: 6 }).select('queryId grade stage history');
 
-        // Step 2: Create a map of queryIds to their corresponding grades
+        // Step 2: Create a map of queryIds to their corresponding grades and transition dates
         const queryIdMap = {};
+        const stageTransitionDates = {}; // Map to store the transition dates
         auditLogs.forEach(log => {
             queryIdMap[log.queryId] = log.grade;
+
+            // Find the previous log where stage was 5 (if any)
+            const prevAuditLog = log.history.find(entry => entry.stage === "5");
+            if (prevAuditLog) {
+                const transitionDate = new Date(prevAuditLog.actionDate);
+                // Format the date as '1-10-2024'
+                stageTransitionDates[log.queryId] = `${transitionDate.getDate()}-${transitionDate.getMonth() + 1}-${transitionDate.getFullYear()}`;
+            }
         });
 
         // Step 3: Extract the queryIds from the audit logs
         const queryIds = auditLogs.map(log => log.queryId);
 
-        // Step 4: Fetch the queries from QueryModel where _id is in the list of queryIds and branch matches
-        const queries = await QueryModel.find({
-            _id: { $in: queryIds },
-            branch: branch, // Match the branch parameter
+        // Step 4: Fetch the queries from QueryModel where _id is in the list of queryIds
+        const queries = await QueryModel.find({ _id: { $in: queryIds }, branch: branch, defaultdata: "query" });
+
+        // Step 5: Fetch admin names for all userIds in the queries
+        const userIds = queries.map(query => query.userid);
+        const admins = await AdminModel.find({ _id: { $in: userIds } }).select('name');
+
+        // Step 6: Create a map of userId to admin name
+        const adminMap = {};
+        admins.forEach(admin => {
+            adminMap[admin._id] = admin.name;
         });
 
-        // Step 5: Map the queries to include the grade from AuditLog
+        // Step 7: Map the queries to include the grade from AuditLog and admin name
         const result = queries.map(query => ({
             ...query.toObject(),
             grade: queryIdMap[query._id], // Add grade from audit log
+            adminName: adminMap[query.userid] || null, // Add admin name
+            transitionDate: stageTransitionDates[query._id] || null, // Add formatted transition date (if any)
         }));
 
         return Response.json(

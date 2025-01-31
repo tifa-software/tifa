@@ -308,7 +308,7 @@ export default function QueryReport() {
                   </select>
                 </th>
 
-                <th className="px-4 py-3 text-[12px]">Created Date <ChevronDownSquare className=" ms-2" />
+                <th className="px-4 py-3 text-[12px] relative group flex">Created Date <ChevronDownSquare className=" ms-2" />
                   <div className=" absolute bg-white p-2 hidden group-hover:block">
 
                     <div>
