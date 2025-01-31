@@ -99,20 +99,22 @@ export default function BranchReportPage() {
                         </button>
                     </div>
 
-                    {/* <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
-                        <button
-                            className="text-[#29234b] "
-                            onClick={() => handleOpenModal(<Staff />)}
-                        >
-                            Staff Register
-                        </button>
-                    </div> */}
+                  
                     <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
                         <button
                             className="text-[#29234b] "
                             onClick={() => handleOpenModal(<Addmission />)}
                         >
                             AddMission Register
+                        </button>
+                    </div>
+
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<Staff />)}
+                        >
+                            Staff Daily Activity Report
                         </button>
                     </div>
 

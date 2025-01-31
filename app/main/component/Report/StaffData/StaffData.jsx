@@ -95,8 +95,8 @@ export default function StaffData({ staffid }) {
 
     return (
         <>
-            <div className="font-semibold inline text-center sticky top-0 py-2 px-4 backdrop-blur-md bg-blue-100 rounded-br-full text-gray-800">
-                Staff Report for {data.userName} from {data.branch}
+             <div className="text-xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
+                Staff Report of <span className=" text-yellow-400"> {data.userName}</span> from <span className=" text-yellow-400">{data.branch}</span>
             </div>
             <div className="container lg:w-[95%] mx-auto py-5">
                 {/* Dropdowns for year and month */}

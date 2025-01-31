@@ -75,7 +75,7 @@ export default function User() {
     return (
         <>
             <div className="text-xl inline font-extrabold text-center sticky top-0 py-2 px-4 backdrop-blur-md bg-blue-100/80 rounded-br-full   text-blue-800 ">
-                Staff Register
+                Staff Daily Activity Register
             </div>
             <div className='container lg:w-[95%] mx-auto py-5'>
                 {/* Search, Sort, Filter, and Bulk Actions */}
