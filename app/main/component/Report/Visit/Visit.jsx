@@ -97,15 +97,21 @@ export default function Visit() {
         const filtered = queries.filter((query) => {
             const courseName = courses[query.courseInterest] || "Unknown Course";
             const UserName = user[query.assignedTo] || "Unknown User";
-
-            // Convert the transitionDate from the '1-10-2024' format to a Date object
-            const visitedDate = query.transitionDate ? new Date(query.transitionDate.split('-').reverse().join('-')) : null;
-
+    
+            // Convert transitionDate ('DD-MM-YYYY' ➝ 'YYYY-MM-DD' ➝ Date object)
+            const visitedDate = query.transitionDate 
+                ? new Date(query.transitionDate.split('-').reverse().join('-')) 
+                : null;
+    
+            // Convert fromDate and toDate to Date objects (YYYY-MM-DD)
+            const fromDateObj = fromDate ? new Date(fromDate) : null;
+            const toDateObj = toDate ? new Date(toDate) : null;
+    
             // Filter based on date range
             const isWithinDateRange =
-                (!fromDate || visitedDate >= new Date(fromDate)) &&
-                (!toDate || visitedDate <= new Date(toDate));
-
+                (!fromDateObj || visitedDate >= fromDateObj) &&
+                (!toDateObj || visitedDate <= toDateObj);
+    
             return (
                 isWithinDateRange &&
                 (filters.studentName
@@ -131,12 +137,25 @@ export default function Visit() {
                     : true) &&
                 (filters.enroll
                     ? (filters.enroll === "Enroll" && query.addmission) ||
-                    (filters.enroll === "Not Enroll" && !query.addmission)
+                      (filters.enroll === "Not Enroll" && !query.addmission)
                     : true)
             );
         });
-        setFilteredQueries(filtered);
+    
+        // Sort by transitionDate (latest first)
+        const sortedQueries = filtered.sort((a, b) => {
+            const dateA = a.transitionDate 
+                ? new Date(a.transitionDate.split('-').reverse().join('-')) 
+                : new Date(0);
+            const dateB = b.transitionDate 
+                ? new Date(b.transitionDate.split('-').reverse().join('-')) 
+                : new Date(0);
+            return dateB - dateA; // Latest dates first
+        });
+    
+        setFilteredQueries(sortedQueries);
     }, [filters, queries, fromDate, toDate]);
+    
 
     const handleRowClick = (id) => {
         router.push(`/main/page/allquery/${id}`);

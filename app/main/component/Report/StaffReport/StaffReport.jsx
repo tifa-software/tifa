@@ -20,6 +20,7 @@ export default function StaffReport() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedEmail, setSelectedEmail] = useState("");
     const [selectedName, setSelectedName] = useState("");
+    const [selectedBranch, setSelectedBranch] = useState("");
     useEffect(() => {
         const fetchuserData = async () => {
             try {
@@ -40,9 +41,10 @@ export default function StaffReport() {
     const toggleFilterPopup = () => {
         setIsFilterOpen(!isFilterOpen);
     };
-    const handleRowClick = (email,name) => {
+    const handleRowClick = (email, name, branch) => {
         setSelectedEmail(email); // Set the selected email
         setSelectedName(name);
+        setSelectedBranch(branch)
         setIsModalOpen(true); // Open the modal
     };
 
@@ -50,6 +52,7 @@ export default function StaffReport() {
         setIsModalOpen(false); // Close the modal
         setSelectedEmail(""); // Clear the selected email
         setSelectedName("");
+        setSelectedBranch("")
     };
     // Sort user based on selected order
     const sortuser = (user) => {
@@ -217,7 +220,7 @@ export default function StaffReport() {
                                     .map((user, index) => (
                                         <tr
                                             key={user._id}
-                                            onClick={() => handleRowClick(user._id, user.name)}
+                                            onClick={() => handleRowClick(user._id, user.name, user.branch)}
                                             className={`border-b cursor-pointer hover:bg-gray-100 odd:bg-gray-50 even:bg-gray-100 transition-colors duration-200`}
                                         >
                                             <td
@@ -270,7 +273,7 @@ export default function StaffReport() {
                             >
                                 &times;
                             </button>
-                            <div>  <StaffReportdata staffid={selectedEmail} staffName={selectedName} onClose={closeModal} /></div>
+                            <div>  <StaffReportdata staffid={selectedEmail} staffName={selectedName} staffBranch={selectedBranch} onClose={closeModal} /></div>
                         </div>
                     </div>
                 )}

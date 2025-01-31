@@ -6,7 +6,7 @@ import StaffReport from '@/components/StaffReport/StaffReport';
 import StaffReport2 from '@/components/StaffReport2/StaffReport2';
 import StaffReport3 from '@/components/StaffReport3/StaffReport3';
 
-export default function StaffReportdata({ staffid, staffName }) {
+export default function StaffReportdata({ staffid, staffName,staffBranch }) {
     const [allqueries, setAllqueries] = useState([]);
     const [sentqueries, setSentqueries] = useState([]);
     const [receivedqueries, setReceivedqueries] = useState([]);
@@ -130,10 +130,16 @@ export default function StaffReportdata({ staffid, staffName }) {
 
     return (
         <>
-            <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
-                Staff Report of {staffName}
+            <div className="text-xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
+                Staff Report of <span className=' text-yellow-400'> {staffName}</span> at <span className=' text-yellow-400'> {staffBranch}</span> Branch
             </div>
-            <div className=' flex gap-5 justify-around'>
+            <button
+                onClick={() => window.print()}
+                className="mt-4 bg-green-500 text-white px-4 py-2 rounded shadow-md hover:bg-green-600"
+            >
+                Print Page
+            </button>
+            <div className=' flex flex-wrap gap-5 justify-around'>
                 <div className="px-6 py-4 flex gap-4 justify-center items-center bg-gray-50 shadow-md rounded-lg mt-4">
                     <label className="font-semibold">Reference Filter</label>
                     <select

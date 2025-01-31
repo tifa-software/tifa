@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { PhoneCall, CheckCircle, CircleDashed, Navigation, Locate, LocateOff, Trash } from "lucide-react";
-import {XCircle}from "lucide-react"
+import { XCircle } from "lucide-react"
 import Link from 'next/link';
 export default function StaffReport2({ data }) {
     const [branches, setBranches] = useState([]);
@@ -56,14 +56,14 @@ export default function StaffReport2({ data }) {
 
                 <div className=" flex justify-between items-center bg-white p-2 rounded-lg shadow-md">
                     <div className='flex items-center'>
-                    <div className='flex items-center justify-center w-4 h-4 bg-green-100 rounded-full'>
-                        <CheckCircle className='w-4 h-4 text-green-500' />
-                    </div>
-                    <div className='ml-4 flex gap-4'>
-                        <p className='text-xl font-bold text-gray-800'>{data.filter(item => item.addmission == true).length}
-                        </p>
-                        <p className='text-gray-500'>Enrolled Queries</p>
-                    </div>
+                        <div className='flex items-center justify-center w-4 h-4 bg-green-100 rounded-full'>
+                            <CheckCircle className='w-4 h-4 text-green-500' />
+                        </div>
+                        <div className='ml-4 flex gap-4'>
+                            <p className='text-xl font-bold text-gray-800'>{data.filter(item => item.addmission == true).length}
+                            </p>
+                            <p className='text-gray-500'>Enrolled Queries</p>
+                        </div>
                     </div>
                     <button onClick={() => setOpen(true)} className=' text-sm bg-blue-400 rounded hover:bg-blue-500 text-white px-2'>View</button>
                 </div>
@@ -72,14 +72,14 @@ export default function StaffReport2({ data }) {
                         <div className='bg-white p-6 rounded-lg shadow-lg w-2/3'>
                             <div className='flex justify-between items-center mb-4'>
                                 <h2 className='text-xl font-bold'>Enrolled Queries</h2>
-                                <button className='text-red-500' onClick={() => setOpen(false)}><XCircle/></button>
+                                <button className='text-red-500' onClick={() => setOpen(false)}><XCircle /></button>
                             </div>
                             <div className='overflow-x-auto'>
                                 {enrolledQueries.length > 0 ? (
                                     <table className='min-w-full bg-white border border-gray-200'>
                                         <thead>
                                             <tr className='bg-gray-100'>
-                                               
+
                                                 <th className='border px-4 py-2 text-left'>Student Name</th>
                                                 <th className='border px-4 py-2 text-left'>Branch Name</th>
                                                 <th className='border px-4 py-2 text-left'>Received Fees</th>

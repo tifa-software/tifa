@@ -282,68 +282,84 @@ export default function Visit() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {loading ? (
-                                                <tr>
-                                                    <td colSpan="9" className="px-6 py-4 text-center">
-                                                        <div className="flex items-center justify-center h-full">
-                                                            <Loader />
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ) : filteredQueries.length > 0 ? (
-                                                filteredQueries.map((query, index) => {
-                                                    const courseName = courses[query.courseInterest] || "Unknown Course";
-                                                    const coursesfeen = coursesfee[query.courseInterest] || "N/A";
-                                                    const UserName = user[query.assignedTo] || user[query.userid] || "Unknown User";
-                                                    return (
-                                                        <tr
-                                                            key={query._id}
-                                                            className="border-b cursor-pointer transition-colors duration-200 hover:opacity-90"
-                                                            onClick={() => handleRowClick(query._id)}
-                                                        >
-                                                            <td className="px-6 py-1 font-semibold">{index + 1}</td>
-                                                            <td className="px-6 py-1 font-semibold">{query.staffName}</td>
-                                                            <td className="px-6 py-1 font-semibold">{query.studentName}</td>
-                                                            <td className="px-6 py-1 font-semibold">{query.studentContact.phoneNumber}</td>
-                                                            <td className="px-6 py-1 font-semibold">{courseName}</td>
-                                                            <td className="px-6 py-1 font-semibold">{UserName}</td>
-                                                            <td className="px-6 py-1">{query.branch}</td>
-                                                            <td className="px-6 py-1">{query.studentContact.city}</td>
-                                                            <td className="px-6 py-1">
-                                                                {query.addmissiondate
-                                                                    ? new Intl.DateTimeFormat('en-GB', {
-                                                                        day: 'numeric',
-                                                                        month: 'long',
-                                                                        year: 'numeric',
-                                                                    }).format(new Date(query.addmissiondate))
-                                                                    : 'N/A'}
-                                                            </td>
+    {loading ? (
+        <tr>
+            <td colSpan="9" className="px-6 py-4 text-center">
+                <div className="flex items-center justify-center h-full">
+                    <Loader />
+                </div>
+            </td>
+        </tr>
+    ) : filteredQueries.length > 0 ? (
+        filteredQueries
+            .sort((a, b) => {
+                // Check if the dates exist and compare
+                const dateA = a.addmissiondate ? new Date(a.addmissiondate) : null;
+                const dateB = b.addmissiondate ? new Date(b.addmissiondate) : null;
+                
+                if (dateA && dateB) {
+                    return dateB - dateA; // Sort by most recent date first
+                }
+                if (!dateA && dateB) {
+                    return 1; // Move N/A dates to the bottom
+                }
+                if (dateA && !dateB) {
+                    return -1; // Move rows with dates to the top
+                }
+                return 0; // Keep order if both are N/A
+            })
+            .map((query, index) => {
+                const courseName = courses[query.courseInterest] || "Unknown Course";
+                const coursesfeen = coursesfee[query.courseInterest] || "N/A";
+                const UserName = user[query.assignedTo] || user[query.userid] || "Unknown User";
+                return (
+                    <tr
+                        key={query._id}
+                        className="border-b cursor-pointer transition-colors duration-200 hover:opacity-90"
+                        onClick={() => handleRowClick(query._id)}
+                    >
+                        <td className="px-6 py-1 font-semibold">{index + 1}</td>
+                        <td className="px-6 py-1 font-semibold">{query.staffName}</td>
+                        <td className="px-6 py-1 font-semibold">{query.studentName}</td>
+                        <td className="px-6 py-1 font-semibold">{query.studentContact.phoneNumber}</td>
+                        <td className="px-6 py-1 font-semibold">{courseName}</td>
+                        <td className="px-6 py-1 font-semibold">{UserName}</td>
+                        <td className="px-6 py-1">{query.branch}</td>
+                        <td className="px-6 py-1">{query.studentContact.city}</td>
+                        <td className="px-6 py-1">
+                            {query.addmissiondate
+                                ? new Intl.DateTimeFormat('en-GB', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                }).format(new Date(query.addmissiondate))
+                                : 'N/A'}
+                        </td>
 
+                        <td className="px-6 py-1">{coursesfeen.totalFee ? `${coursesfeen.totalFee} ₹` : "N/A"}</td>
+                        <td className="px-6 py-1">
+                            {query.finalfees > 0 ? (
+                                query.finalfees
+                            ) : (
+                                <>
+                                    {coursesfeen.totalFee ? `${coursesfeen.totalFee} ₹` : "N/A"}
+                                </>
+                            )}
+                        </td>
 
-                                                            <td className="px-6 py-1">{coursesfeen.totalFee ? `${coursesfeen.totalFee} ₹` : "N/A"}</td>
-                                                            <td className="px-6 py-1">
-                                                                {query.finalfees > 0 ? (
-                                                                    query.finalfees
-                                                                ) : (
-                                                                    <>
-                                                                        {coursesfeen.totalFee ? `${coursesfeen.totalFee} ₹` : "N/A"}
-                                                                    </>
-                                                                )}
-                                                            </td>
+                        <td className="px-6 py-1">{coursesfeen.totalFee - query.total} ₹</td>
+                    </tr>
+                );
+            })
+    ) : (
+        <tr>
+            <td colSpan="9" className="px-6 py-4 text-center text-gray-500">
+                No queries available
+            </td>
+        </tr>
+    )}
+</tbody>
 
-
-                                                            <td className="px-6 py-1">{coursesfeen.totalFee - query.total} ₹</td>
-                                                        </tr>
-                                                    );
-                                                })
-                                            ) : (
-                                                <tr>
-                                                    <td colSpan="9" className="px-6 py-4 text-center text-gray-500">
-                                                        No queries available
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
                                     </table>
                                 </div>
 

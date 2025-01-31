@@ -278,6 +278,12 @@ export default function Lead() {
             <button onClick={fetchFilteredData} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600">
                 Apply Filters
             </button>
+            <button
+                onClick={() => window.print()}
+                className="mt-4 bg-green-500 text-white px-4 py-2 rounded shadow-md hover:bg-green-600"
+            >
+                Print Page
+            </button>
             {gridLoading ? (
                 <div className="flex items-center justify-center w-full col-span-4">
                     <Loader />  {/* Show loader while grid data is loading */}
