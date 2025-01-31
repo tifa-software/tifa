@@ -4,6 +4,8 @@ import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import { useSession } from 'next-auth/react';
 import Link from "next/link";
+import * as XLSX from "xlsx";
+
 import { ChevronDownSquare } from "lucide-react";
 export default function QueryReport() {
   const [allquery, setAllquery] = useState([]);
@@ -15,7 +17,9 @@ export default function QueryReport() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [admission, setAdmission] = useState("");
+  const [reson, setReson] = useState("");
   const [grade, setGrade] = useState("");
+  const [reason, setReason] = useState("");
   const [location, setLocation] = useState("");
   const [city, setCity] = useState("");
   const [assignedName, setAssignedName] = useState("");
@@ -28,6 +32,7 @@ export default function QueryReport() {
   const { data: session } = useSession();
   const [branch, setBranch] = useState("");
   const [showClosed, setShowClosed] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -51,7 +56,7 @@ export default function QueryReport() {
   const fetchFilteredData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/api/report/fetchall/query", {
+      const response = await axios.get("/api/report/fetchalloverview/query", {
         params: {
           referenceId,
           suboption,
@@ -59,6 +64,7 @@ export default function QueryReport() {
           toDate,
           admission,
           grade,
+          reason,
           location,
           city,
           assignedName,
@@ -78,7 +84,7 @@ export default function QueryReport() {
   // Fetch data whenever filters change
   useEffect(() => {
     fetchFilteredData();
-  }, [referenceId, suboption, fromDate, toDate, admission, grade, location, city, assignedName, assignedFrom, userName,showClosed]);
+  }, [referenceId, suboption, fromDate, toDate, admission, grade, reason, location, city, assignedName, assignedFrom, userName, showClosed]);
 
   const handleFilter = () => {
     fetchFilteredData();
@@ -91,7 +97,9 @@ export default function QueryReport() {
     setFromDate("");
     setToDate("");
     setAdmission("");
+    setReson("");
     setGrade("");
+    setReason("");
     setLocation("");
     setCity("");
     setAssignedName("");
@@ -100,7 +108,12 @@ export default function QueryReport() {
   };
 
 
-
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(allquery);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Queries");
+    XLSX.writeFile(workbook, "queries.xlsx");
+  };
 
   const getFilterSummary = () => {
     const filters = [];
@@ -110,6 +123,7 @@ export default function QueryReport() {
     if (toDate) filters.push(`To Date: ${toDate}`);
     if (admission) filters.push(`Admission: ${admission === "true" ? "Enroll" : "Not Enroll"}`);
     if (grade) filters.push(`Grade: ${grade}`);
+    if (reason) filters.push(`Reason: ${reason}`);
     if (location) filters.push(`Branch: ${location}`);
     if (city) filters.push(`City: ${city}`);
     if (assignedName) filters.push(`Assigned To: ${assignedName}`);
@@ -161,6 +175,14 @@ export default function QueryReport() {
               className="mb-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
             >
               Remove Filters
+            </button>
+          </div>
+          <div className="flex justify-between items-center gap-5 mb-4">
+            <button
+              onClick={exportToExcel}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Export to Excel
             </button>
           </div>
         </div>
@@ -285,7 +307,8 @@ export default function QueryReport() {
                     ))}
                   </select>
                 </th>
-                <th className="px-4 py-3 text-[12px] relative group flex">Created Date <ChevronDownSquare className=" ms-2" />
+
+                <th className="px-4 py-3 text-[12px]">Created Date <ChevronDownSquare className=" ms-2" />
                   <div className=" absolute bg-white p-2 hidden group-hover:block">
 
                     <div>
@@ -309,8 +332,33 @@ export default function QueryReport() {
                     </div>
                   </div>
                 </th>
-                <th className="px-4 py-3 text-[12px]">Stage</th>
-                <th className="px-4 py-3 text-[12px] flex">Enroll
+
+                {showClosed === "close" ? (
+                  <>
+                    <th className="px-4 py-3 text-[12px]">Reson
+                      <select
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        className="w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
+                      >
+                        <option value="">All</option>
+                        <option value="interested_but_not_proper_response">interested_but_not_proper_response</option>
+                        <option value="no_connected">no_connected</option>
+                        <option value="not_lifting">not_lifting</option>
+                        <option value="busy">busy</option>
+                        <option value="not_interested">not_interested</option>
+                        <option value="wrong_no">wrong_no</option>
+                        <option value="no_visit_branch_yet">no_visit_branch_yet</option>
+                      </select>
+                    </th>
+                  </>
+                ) : (
+                  <>
+                    <th className="px-4 py-3 text-[12px]">Stage</th>
+                  </>
+                )}
+
+                <th className="px-4 py-3 text-[12px]">Enroll
                   <select
                     value={admission}
                     onChange={(e) => setAdmission(e.target.value)}
@@ -362,20 +410,36 @@ export default function QueryReport() {
                       })()}
                     </td>
 
-                    <td className="px-4 py-3 text-[12px]">{data.stage === 1
-                      ? "1st Stage"
-                      : data.stage === 2
-                        ? "2nd Stage"
-                        : data.stage === 3
-                          ? "3rd Stage"
-                          : data.stage === 4
-                            ? "4th Stage"
-                            : data.stage === 5
-                              ? "5th Stage"
-                              : data.stage === 6
-                                ? "6th Stage"
-                                : "Initial Stage"}
-                    </td>
+                    {showClosed === "close" ? (
+                      <>
+                        <td className="px-4 py-3 text-[12px] relative">
+                          <span className="overflow-hidden whitespace-nowrap text-ellipsis">{data.reason?.slice(0, 12) || "N/A"}</span>
+                          <div className="absolute cursor-pointer left-0 bottom-0 bg-gray-800 text-white p-2 rounded-md opacity-0 transition-opacity hover:opacity-100 max-w-xs w-48">
+                            {data.reason || "N/A"}
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+
+                        <td className="px-4 py-3 text-[12px]">
+                          {data.stage === 1
+                            ? "1st Stage"
+                            : data.stage === 2
+                              ? "2nd Stage"
+                              : data.stage === 3
+                                ? "3rd Stage"
+                                : data.stage === 4
+                                  ? "4th Stage"
+                                  : data.stage === 5
+                                    ? "5th Stage"
+                                    : data.stage === 6
+                                      ? "6th Stage"
+                                      : "Initial Stage"}
+                        </td>
+                      </>
+                    )}
+
                     <td className="px-4 py-3 text-[12px]">{data.addmission ? "Enrolled" : "Not Enrolled"}</td>
 
                   </tr>
