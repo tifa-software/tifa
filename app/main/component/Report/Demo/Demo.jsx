@@ -106,12 +106,16 @@ export default function Visit() {
                 (!fromDate || relevantDate >= new Date(fromDate)) &&
                 (!toDate || relevantDate <= new Date(toDate));
     
-            // Apply the "greater than 10" filter if checkbox is checked
-            const isTotalValid = greaterThan0 ? query.total > 0 : true;
+            // Convert query.total and filters.total to numbers for exact match comparison
+            const filterTotal = filters.total ? parseFloat(filters.total) : null;
+            const queryTotal = query.total ? parseFloat(query.total) : 0;
+    
+            // Apply "greater than 0" filter only when the checkbox is checked
+            const isTotalValid = greaterThan0 ? queryTotal > 0 : true;
     
             return (
                 isWithinDateRange &&
-                isTotalValid && // Apply the new filter condition
+                isTotalValid &&
                 (filters.studentName
                     ? query.studentName?.toLowerCase().includes(filters.studentName.toLowerCase())
                     : true) &&
@@ -136,12 +140,15 @@ export default function Visit() {
                 (filters.enroll
                     ? (filters.enroll === "Enroll" && query.addmission) ||
                       (filters.enroll === "Not Enroll" && !query.addmission)
-                    : true)
+                    : true) &&
+                (filterTotal !== null ? queryTotal === filterTotal : true) // Exact match for "total"
             );
         });
     
         setFilteredQueries(filtered);
     }, [filters, queries, fromDate, toDate, greaterThan0]);
+    
+    
 
     const handleCheckboxChange = () => {
         setGreaterThan0((prev) => !prev);
