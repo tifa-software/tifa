@@ -4,6 +4,7 @@ import axios from 'axios';
 import Loader from '@/components/Loader/Loader';
 import { useRouter } from 'next/navigation';
 import StaffData from '../StaffData/StaffData';
+import StaffDatanew from '../StaffDatanew/StaffDatanew';
 import { ArrowLeft, ArrowRight, Search, Trash2, CirclePlus, Filter, X } from "lucide-react";
 import Link from 'next/link';
 
@@ -214,7 +215,7 @@ export default function User() {
                                     .map((user, index) => (
                                         <tr
                                             key={user._id}
-                                            onClick={() => handleRowClick(user._id)}
+                                            onClick={() => handleRowClick(user.email)}
                                             className={`border-b cursor-pointer hover:bg-gray-100 odd:bg-gray-50 even:bg-gray-100 transition-colors duration-200`}
                                         >
                                             <td
@@ -267,7 +268,7 @@ export default function User() {
                             >
                                 &times;
                             </button>
-                            <div>  <StaffData staffid={selectedEmail} onClose={closeModal} /></div>
+                            <div>  <StaffDatanew staffid={selectedEmail} onClose={closeModal} /></div>
                         </div>
                     </div>
                 )}

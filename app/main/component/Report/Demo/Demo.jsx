@@ -97,22 +97,22 @@ export default function Visit() {
         const filtered = queries.filter((query) => {
             const courseName = courses[query.courseInterest] || "Unknown Course";
             const UserName = user[query.assignedTo] || "Unknown User";
-    
+
             const relevantDate = query.fees.length > 0
                 ? new Date(query.fees[0].transactionDate)
                 : new Date(query.stage6Date);
-    
+
             const isWithinDateRange =
                 (!fromDate || relevantDate >= new Date(fromDate)) &&
                 (!toDate || relevantDate <= new Date(toDate));
-    
+
             // Convert query.total and filters.total to numbers for exact match comparison
             const filterTotal = filters.total ? parseFloat(filters.total) : null;
             const queryTotal = query.total ? parseFloat(query.total) : 0;
-    
+
             // Apply "greater than 0" filter only when the checkbox is checked
             const isTotalValid = greaterThan0 ? queryTotal > 0 : true;
-    
+
             return (
                 isWithinDateRange &&
                 isTotalValid &&
@@ -139,16 +139,16 @@ export default function Visit() {
                     : true) &&
                 (filters.enroll
                     ? (filters.enroll === "Enroll" && query.addmission) ||
-                      (filters.enroll === "Not Enroll" && !query.addmission)
+                    (filters.enroll === "Not Enroll" && !query.addmission)
                     : true) &&
                 (filterTotal !== null ? queryTotal === filterTotal : true) // Exact match for "total"
             );
         });
-    
+
         setFilteredQueries(filtered);
     }, [filters, queries, fromDate, toDate, greaterThan0]);
-    
-    
+
+
 
     const handleCheckboxChange = () => {
         setGreaterThan0((prev) => !prev);
@@ -189,16 +189,16 @@ export default function Visit() {
                                     </button>
                                 </div>
                                 <div className=" flex justify-end">
-                                   <div className="flex items-center space-x-2">
-                                   <input
-                                        type="checkbox"
-                                        id="greter0"
-                                        checked={greaterThan0}
-                                        onChange={handleCheckboxChange}
-                                        className="cursor-pointer"
-                                    />
-                                    <label htmlFor="greter0" className="text-gray-700 text-lg">Fees Greatre Then &quot;0&quot;</label>
-                                   </div>
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="checkbox"
+                                            id="greter0"
+                                            checked={greaterThan0}
+                                            onChange={handleCheckboxChange}
+                                            className="cursor-pointer"
+                                        />
+                                        <label htmlFor="greter0" className="text-gray-700 text-lg">Fees Greatre Then &quot;0&quot;</label>
+                                    </div>
                                 </div>
                                 <div className="relative overflow-y-auto">
                                     <table className="min-w-full text-xs text-left text-gray-600 font-sans">
@@ -349,43 +349,53 @@ export default function Visit() {
                                                     </td>
                                                 </tr>
                                             ) : filteredQueries.length > 0 ? (
-                                                filteredQueries.map((query, index) => {
-                                                    const deadline = new Date(query.deadline);
-                                                    const courseName = courses[query.courseInterest] || "Unknown Course";
-                                                    const coursesfeen = coursesfee[query.courseInterest] || "N/A";
+                                                filteredQueries
+                                                    .sort((a, b) => {
+                                                        const dateA = a.fees.length > 0
+                                                            ? new Date(a.fees[0].transactionDate)
+                                                            : new Date(a.stage6Date);
+                                                        const dateB = b.fees.length > 0
+                                                            ? new Date(b.fees[0].transactionDate)
+                                                            : new Date(b.stage6Date);
 
-                                                    const UserName = user[query.assignedTo] || user[query.userid] || "Unknown User";
+                                                        return dateB - dateA; // Sort in descending order
+                                                    })
+                                                    .map((query, index) => {
+                                                        const deadline = new Date(query.deadline);
+                                                        const courseName = courses[query.courseInterest] || "Unknown Course";
+                                                        const coursesfeen = coursesfee[query.courseInterest] || "N/A";
+                                                        const UserName = user[query.assignedTo] || user[query.userid] || "Unknown User";
 
-                                                    return (
-                                                        <tr
-                                                            key={query._id}
-                                                            className="border-b cursor-pointer transition-colors duration-200 hover:opacity-90"
-                                                            onClick={() => handleRowClick(query._id)}
-                                                        >
-                                                            <td className="px-6 py-1 font-semibold">{index + 1}</td>
-                                                            <td className="px-6 py-1 font-semibold">{query.staffName}</td>
-                                                            <td className="px-6 py-1 font-semibold">{query.studentName}</td>
-                                                            <td className="px-6 py-1 font-semibold">{query.studentContact.phoneNumber}</td>
-                                                            <td className="px-6 py-1 font-semibold">{courseName}</td>
-                                                            <td className="px-6 py-1 font-semibold">{UserName}</td>
-                                                            <td className="px-6 py-1">{query.branch}</td>
-                                                            <td className="px-6 py-1">{query.studentContact.city}</td>
+                                                        return (
+                                                            <tr
+                                                                key={query._id}
+                                                                className="border-b cursor-pointer transition-colors duration-200 hover:opacity-90"
+                                                                onClick={() => handleRowClick(query._id)}
+                                                            >
+                                                                <td className="px-6 py-1 font-semibold">{index + 1}</td>
+                                                                <td className="px-6 py-1 font-semibold">{query.staffName}</td>
+                                                                <td className="px-6 py-1 font-semibold">{query.studentName}</td>
+                                                                <td className="px-6 py-1 font-semibold">{query.studentContact.phoneNumber}</td>
+                                                                <td className="px-6 py-1 font-semibold">{courseName}</td>
+                                                                <td className="px-6 py-1 font-semibold">{UserName}</td>
+                                                                <td className="px-6 py-1">{query.branch}</td>
+                                                                <td className="px-6 py-1">{query.studentContact.city}</td>
 
-                                                            <td className="px-6 py-1">
-                                                                {query.fees.length > 0
-                                                                    ? new Date(query.fees[0].transactionDate).toLocaleDateString()
-                                                                    : new Date(query.stage6Date).toLocaleDateString()}
-                                                            </td>
+                                                                <td className="px-6 py-1">
+                                                                    {query.fees.length > 0
+                                                                        ? new Date(query.fees[0].transactionDate).toLocaleDateString()
+                                                                        : new Date(query.stage6Date).toLocaleDateString()}
+                                                                </td>
 
-                                                            <td className="px-6 py-1">{coursesfeen.enrollmentFee} ₹</td>
-                                                            <td className="px-6 py-1">{query.total} ₹</td>
+                                                                <td className="px-6 py-1">{coursesfeen.enrollmentFee} ₹</td>
+                                                                <td className="px-6 py-1">{query.total} ₹</td>
 
-                                                            <td className="px-6 py-1">
-                                                                {query.addmission ? "Enroll" : "Not Enroll"}
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })
+                                                                <td className="px-6 py-1">
+                                                                    {query.addmission ? "Enroll" : "Not Enroll"}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })
                                             ) : (
                                                 <tr>
                                                     <td colSpan="8" className="px-6 py-4 text-center text-gray-500">
@@ -394,6 +404,7 @@ export default function Visit() {
                                                 </tr>
                                             )}
                                         </tbody>
+
                                     </table>
                                 </div>
                             </div>
