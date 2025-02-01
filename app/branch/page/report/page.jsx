@@ -7,6 +7,8 @@ import LeadTransfer from '../../component/Report/LeadTransfer/LeadTransfer';
 import Demo from '../../component/Report/Demo/Demo';
 import Visit from '../../component/Report/Visit/Visit';
 import Admission from '../../component/Admission/Admission';
+import Staff from "../../component/Report/Staff/Staff"
+import Lead from '../../component/Report/LeadCount/LeadCount';
 export default function BranchReportPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -69,22 +71,23 @@ export default function BranchReportPage() {
                         </button>
                     </div>
 
-                    {/* <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
-                        <button
-                            className="text-[#29234b] "
-                            onClick={() => handleOpenModal(<MBSWise />)}
-                        >
-                            Lead Update Report
-                        </button>
-                    </div>
                     <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
                         <button
                             className="text-[#29234b] "
-                            onClick={() => handleOpenModal(<LeadTransfer />)}
+                            onClick={() => handleOpenModal(<Lead />)}
                         >
-                            Lead Transfer Report
+                            Lead Report
                         </button>
-                    </div> */}
+                    </div>
+
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<Staff />)}
+                        >
+                            Staff Daily Activity Report
+                        </button>
+                    </div>
 
                 </div>
             </div>
