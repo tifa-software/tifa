@@ -28,6 +28,11 @@ export default function Visit() {
     const [greaterThan0, setGreaterThan0] = useState(false);
     const router = useRouter();
 
+    const [suboption, setSuboption] = useState("");
+    const [referenceId, setReferenceId] = useState("");
+    const [referenceData, setReferenceData] = useState([]);
+    const [selectedReference, setSelectedReference] = useState(null);
+
     useEffect(() => {
         const fetchAdminData = async () => {
             if (session?.user?.email) {
@@ -61,6 +66,23 @@ export default function Visit() {
             fetchQueryData();
         }
     }, [adminbranch]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+
+                const referenceResponse = await axios.get("/api/reference/fetchall/reference");
+                setReferenceData(referenceResponse.data.fetch);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                toast.error("Error fetching data");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
 
     useEffect(() => {
         const fetchCourses = async () => {
@@ -118,7 +140,8 @@ export default function Visit() {
         const filtered = queries.filter((query) => {
             const courseName = courses[query.courseInterest] || "Unknown Course";
             const UserName = user[query.assignedTo] || "Unknown User";
-
+            const referenceName = query.referenceid || "Unknown Reference";
+            const referenceSuboption = query.suboption || "";
             const relevantDate = query.fees.length > 0
                 ? new Date(query.fees[0].transactionDate)
                 : new Date(query.stage6Date);
@@ -162,12 +185,14 @@ export default function Visit() {
                     ? (filters.enroll === "Enroll" && query.addmission) ||
                     (filters.enroll === "Not Enroll" && !query.addmission)
                     : true) &&
-                (filterTotal !== null ? queryTotal === filterTotal : true) // Exact match for "total"
+                (filterTotal !== null ? queryTotal === filterTotal : true) && // Exact match for "total"
+                (referenceId ? referenceName === referenceId : true) &&
+                (suboption ? referenceSuboption === suboption : true)
             );
         });
 
         setFilteredQueries(filtered);
-    }, [filters, queries, fromDate, toDate, greaterThan0]);
+    }, [filters, queries, fromDate, toDate, greaterThan0, referenceId, suboption]);
 
 
 
@@ -179,7 +204,12 @@ export default function Visit() {
         router.push(`/branch/page/allquery/${id}`);
     };
 
-
+    const handleReferenceChange = (e) => {
+        const selectedName = e.target.value;
+        setReferenceId(selectedName);
+        const reference = referenceData.find((data) => data.referencename === selectedName);
+        setSelectedReference(reference || null);
+    };
 
     const handleFilterChange = (key, value) => {
         setFilters((prev) => ({ ...prev, [key]: value }));
@@ -258,7 +288,39 @@ export default function Visit() {
                                                         }
                                                     />
                                                 </th>
+                                                <th className="px-4 py-3 text-[12px]">Reference
+                                                    <select
+                                                        value={referenceId}
+                                                        onChange={handleReferenceChange}
+                                                        className=" w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
+                                                    >
+                                                        <option value="">All</option>
+                                                        {referenceData.map((data) => (
+                                                            <option key={data._id} value={data.referencename}>
+                                                                {data.referencename}
+                                                            </option>
+                                                        ))}
+                                                    </select>
 
+
+                                                    {selectedReference?.referencename === "Online" && selectedReference.suboptions?.length > 0 && (
+
+
+                                                        <select
+                                                            value={suboption}
+                                                            onChange={(e) => setSuboption(e.target.value)}
+                                                            className=" w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
+                                                        >
+                                                            <option value="">All</option>
+                                                            {selectedReference.suboptions.map((suboption, index) => (
+                                                                <option key={index} value={suboption.name}>
+                                                                    {suboption.name}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+
+                                                    )}
+                                                </th>
                                                 <th className="px-6 py-4">
 
                                                     <input
@@ -386,6 +448,7 @@ export default function Visit() {
                                                                 <td className="px-6 py-1 font-semibold">{query.studentName}</td>
                                                                 <td className="px-6 py-1 font-semibold">{query.studentContact.phoneNumber}</td>
                                                                 <td className="px-6 py-1 font-semibold">{courseName}</td>
+                                                                <td className="px-6 py-1">{query.referenceid} {query.suboption !== "null" && <>{query.suboption}</>}</td>
                                                                 <td className="px-6 py-1 font-semibold">{UserName}</td>
                                                                 <td className="px-6 py-1">{query.branch}</td>
                                                                 <td className="px-6 py-1">{query.studentContact.city}</td>
