@@ -51,27 +51,31 @@ export const GET = async (request) => {
         "wrong_no",
         "no_visit_branch_yet"
       ];
-
-      if (validReasons.includes(reason)) {
-        // Get all queryIds matching the reason in the audit logs
+    
+      const reasonArray = reason.split(",").filter((r) => validReasons.includes(r));
+    
+      if (reasonArray.length > 0) {
+        // Fetch all queryIds matching any of the selected reasons
         const matchingAuditLogs = await AuditLog.find({
           $or: [
-            { connectedsubStatus: reason },
-            { connectionStatus: reason },
-            { onlinesubStatus: reason },
-            { oflinesubStatus: reason },
-            { ready_visit: reason },
-            { not_liftingsubStatus: reason }
+            { connectedsubStatus: { $in: reasonArray } },
+            { connectionStatus: { $in: reasonArray } },
+            { onlinesubStatus: { $in: reasonArray } },
+            { oflinesubStatus: { $in: reasonArray } },
+            { ready_visit: { $in: reasonArray } },
+            { not_liftingsubStatus: { $in: reasonArray } }
           ]
         });
-
-        // Extract the query IDs and filter the main query
+    
+        // Extract matching query IDs
         const matchingQueryIds = matchingAuditLogs.map((log) => log.queryId.toString());
-        queryFilter._id = { $in: matchingQueryIds };
-      } else {
-        throw new Error("Invalid reason filter value");
+    
+        if (matchingQueryIds.length > 0) {
+          queryFilter._id = { $in: matchingQueryIds };
+        }
       }
     }
+    
 
     if (fromDate && toDate) {
       const from = new Date(fromDate);

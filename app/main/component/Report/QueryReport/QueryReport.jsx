@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import { useSession } from 'next-auth/react';
@@ -19,7 +19,6 @@ export default function QueryReport() {
   const [admission, setAdmission] = useState("");
   const [reson, setReson] = useState("");
   const [grade, setGrade] = useState("");
-  const [reason, setReason] = useState("");
   const [location, setLocation] = useState("");
   const [city, setCity] = useState("");
   const [assignedName, setAssignedName] = useState("");
@@ -32,6 +31,45 @@ export default function QueryReport() {
   const { data: session } = useSession();
   const [branch, setBranch] = useState("");
   const [showClosed, setShowClosed] = useState(false);
+  const options = [
+    { value: "interested_but_not_proper_response", label: "Interested but not proper response" },
+    { value: "Wrong Lead Looking For Job", label: "Wrong Lead Looking For Job" },
+    { value: "no_connected", label: "No Connected" },
+    { value: "not_lifting", label: "Not Lifting" },
+    { value: "busy", label: "Busy" },
+    { value: "not_interested", label: "Not Interested" },
+    { value: "wrong_no", label: "Wrong No" },
+    { value: "no_visit_branch_yet", label: "No Visit Branch Yet" }
+  ];
+
+  // ✅ State to store selected reasons
+  const [reason, setReason] = useState([]);
+
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // ✅ Toggle selection of an option
+  const toggleOption = (value) => {
+    setReason((prevSelected) =>
+      prevSelected.includes(value)
+        ? prevSelected.filter((option) => option !== value)
+        : [...prevSelected, value]
+    );
+  };
+
+  // ✅ Handles click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,7 +102,7 @@ export default function QueryReport() {
           toDate,
           admission,
           grade,
-          reason,
+          reason: reason.length > 0 ? reason.join(",") : "",
           location,
           branch,
           city,
@@ -352,22 +390,36 @@ export default function QueryReport() {
 
                 {showClosed === "close" ? (
                   <>
-                    <th className="px-4 py-3 text-[12px]">Reson
-                      <select
-                        value={reason}
-                        onChange={(e) => setReason(e.target.value)}
-                        className="w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
-                      >
-                        <option value="">All</option>
-                        <option value="interested_but_not_proper_response">interested_but_not_proper_response</option>
-                        <option value="Wrong Lead Looking For Job">Wrong Lead Looking For Job</option>
-                        <option value="no_connected">no_connected</option>
-                        <option value="not_lifting">not_lifting</option>
-                        <option value="busy">busy</option>
-                        <option value="not_interested">not_interested</option>
-                        <option value="wrong_no">wrong_no</option>
-                        <option value="no_visit_branch_yet">no_visit_branch_yet</option>
-                      </select>
+                    <th className="px-4 py-3 text-[12px] relative">
+
+                      <div ref={dropdownRef} className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setDropdownOpen(!dropdownOpen)}
+                          className="ms-2 px-2 py-1 text-white border rounded-md text-left focus:ring-0 focus:outline-none"
+                        >
+                          <span>Reason</span> 
+                        </button>
+
+                        {dropdownOpen && (
+                          <div className="absolute left-0 mt-2 w-52 bg-white border rounded-md shadow-md z-10">
+                            <div className="p-2 max-h-48 overflow-y-auto">
+                              {options.map((option) => (
+                                <label key={option.value} className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    value={option.value}
+                                    checked={reason.includes(option.value)}
+                                    onChange={(e) => toggleOption(e.target.value)}
+                                    className="w-4 h-4"
+                                  />
+                                  <span className="text-sm text-gray-800">{option.label}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </th>
                   </>
                 ) : (
