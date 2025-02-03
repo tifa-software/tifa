@@ -27,6 +27,7 @@ export const GET = async (request) => {
     const assignedFrom = searchParams.get("assignedFrom");
     const userName = searchParams.get("userName");
     const showClosed = searchParams.get("showClosed");
+    const branch = searchParams.get("branch");
 
     // Build MongoDB query
     const queryFilter = { defaultdata: "query" };
@@ -134,6 +135,9 @@ export const GET = async (request) => {
       queryFilter.autoclosed = "close";
     }
 
+    if (branch) {
+      queryFilter.branch = branch;
+    }
 
     // Fetch queries based on the filter
     const queries = await QueryModel.find(queryFilter);

@@ -66,6 +66,7 @@ export default function QueryReport() {
           grade,
           reason,
           location,
+          branch,
           city,
           assignedName,
           assignedFrom,
@@ -84,7 +85,7 @@ export default function QueryReport() {
   // Fetch data whenever filters change
   useEffect(() => {
     fetchFilteredData();
-  }, [referenceId, suboption, fromDate, toDate, admission, grade, reason, location, city, assignedName, assignedFrom, userName, showClosed]);
+  }, [referenceId, suboption, fromDate, branch, toDate, admission, grade, reason, location, city, assignedName, assignedFrom, userName, showClosed]);
 
   const handleFilter = () => {
     fetchFilteredData();
@@ -100,6 +101,7 @@ export default function QueryReport() {
     setReson("");
     setGrade("");
     setReason("");
+    setBranch("");
     setLocation("");
     setCity("");
     setAssignedName("");
@@ -130,6 +132,7 @@ export default function QueryReport() {
     if (assignedFrom) filters.push(`Assigned From: ${assignedFrom}`);
     if (userName) filters.push(`Creater Name: ${userName}`);
     if (showClosed) filters.push(`Closed Queries`);
+    if (branch) filters.push(`Branch: ${branch}`);
     return filters.length > 0 ? filters.join(" | ") : "No filters applied.";
   };
 
@@ -254,6 +257,20 @@ export default function QueryReport() {
                   )}
                 </th>
                 <th className="px-4 py-3 text-[12px]">Message</th>
+                <th className="px-4 py-3 text-[12px] ">Branch
+                  <select
+                    value={branch}
+                    onChange={(e) => setBranch(e.target.value)}
+                    className="w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
+                  >
+                    <option value="">All</option>
+                    {branches.map((data, index) => (
+                      <option key={index} value={data.branch_name}>
+                        {data.branch_name}
+                      </option>
+                    ))}
+                  </select>
+                </th>
                 <th className="px-4 py-3 text-[12px]">City
                   <select
                     value={city}
@@ -343,6 +360,7 @@ export default function QueryReport() {
                       >
                         <option value="">All</option>
                         <option value="interested_but_not_proper_response">interested_but_not_proper_response</option>
+                        <option value="Wrong Lead Looking For Job">Wrong Lead Looking For Job</option>
                         <option value="no_connected">no_connected</option>
                         <option value="not_lifting">not_lifting</option>
                         <option value="busy">busy</option>
@@ -392,6 +410,7 @@ export default function QueryReport() {
                         {data.lastmessage}
                       </div>
                     </td>
+                    <td className="px-4 py-3 text-[12px]">{data.branch}</td>
                     <td className="px-4 py-3 text-[12px]">{data.studentContact.city}</td>
                     <td className="px-4 py-3 text-[12px]">{data.lastgrade}</td>
                     <td className="px-4 py-3 text-[12px]">{data.assignedsenthistory}</td>

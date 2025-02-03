@@ -20,6 +20,8 @@ export default function StaffDatanew({ staffid }) {
     const [selectedYear, setSelectedYear] = useState("");
     const [selectedMonth, setSelectedMonth] = useState("");
     const [filteredDates, setFilteredDates] = useState([]);
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
     const [monthlyActivity, setMonthlyActivity] = useState(null);
 
 
@@ -109,28 +111,28 @@ export default function StaffDatanew({ staffid }) {
     }, []);
 
     useEffect(() => {
-        if (selectedYear && selectedMonth && data.dailyActivity) {
-            const filtered = Object.entries(data.dailyActivity).filter(([day]) => {
-                const date = new Date(day);
-                return (
-                    date.getFullYear().toString() === selectedYear &&
-                    (date.getMonth() + 1).toString() === selectedMonth
-                );
-            });
-            setFilteredDates(filtered);
+        if (data.dailyActivity) {
+            let filtered = Object.entries(data.dailyActivity);
 
-            // Extract monthly activity
-            const monthKey = `${selectedYear}-${selectedMonth.padStart(2, "0")}`;
-            if (data.monthlyActivity && data.monthlyActivity[monthKey]) {
-                setMonthlyActivity(data.monthlyActivity[monthKey]);
+            if (selectedYear || selectedMonth || startDate || endDate) {
+                if (selectedYear) {
+                    filtered = filtered.filter(([day]) => new Date(day).getFullYear().toString() === selectedYear);
+                }
+                if (selectedMonth) {
+                    filtered = filtered.filter(([day]) => (new Date(day).getMonth() + 1).toString() === selectedMonth);
+                }
+                if (startDate) {
+                    filtered = filtered.filter(([day]) => new Date(day) >= new Date(startDate));
+                }
+                if (endDate) {
+                    filtered = filtered.filter(([day]) => new Date(day) <= new Date(endDate));
+                }
+                setFilteredDates(filtered);
             } else {
-                setMonthlyActivity(null);
+                setFilteredDates([]);
             }
-        } else {
-            setFilteredDates([]);
-            setMonthlyActivity(null);
         }
-    }, [selectedYear, selectedMonth, data.dailyActivity, data.monthlyActivity]);
+    }, [selectedYear, selectedMonth, startDate, endDate, data.dailyActivity]);
 
     const getUserName = (id) => {
         const matchedUser = user.find((u) => u._id === id);
@@ -168,41 +170,60 @@ export default function StaffDatanew({ staffid }) {
                 </div>
 
                 {/* Filter Section */}
-                <div className="flex gap-4 justify-center items-center mt-6 bg-gray-50 shadow-md p-4 rounded-lg">
-                    <label className="font-semibold">Select Year:</label>
-                    <select
-                        value={selectedYear}
-                        onChange={(e) => {
-                            setSelectedYear(e.target.value);
-                            setSelectedMonth(""); // Reset month when year changes
-                        }}
-                        className="bg-gray-100 border border-gray-300 p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
-                    >
-                        <option value="">Select Year</option>
-                        {years.map((year) => (
-                            <option key={year} value={year}>
-                                {year}
-                            </option>
-                        ))}
-                    </select>
+                <div className="flex justify-around gap-4 items-center mt-6 bg-gray-50 shadow-md p-4 rounded-lg">
+                    <div className=" flex gap-2 items-center">
+                        <label className="font-semibold">Select Year:</label>
+                        <select
+                            value={selectedYear}
+                            onChange={(e) => {
+                                setSelectedYear(e.target.value);
+                                setSelectedMonth(""); // Reset month when year changes
+                            }}
+                            className="bg-gray-100 border border-gray-300 p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
+                        >
+                            <option value="">Select Year</option>
+                            {years.map((year) => (
+                                <option key={year} value={year}>
+                                    {year}
+                                </option>
+                            ))}
+                        </select>
 
-                    <label className="font-semibold">Select Month:</label>
-                    <select
-                        value={selectedMonth}
-                        onChange={(e) => setSelectedMonth(e.target.value)}
-                        disabled={!selectedYear}
-                        className="bg-gray-100 border border-gray-300 p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
-                    >
-                        <option value="">Select Month</option>
-                        {months.map((month) => (
-                            <option key={month} value={month}>
-                                {new Date(0, month - 1).toLocaleString("en", { month: "long" })}
-                            </option>
-                        ))}
-                    </select>
+                        <label className="font-semibold">Select Month:</label>
+                        <select
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            disabled={!selectedYear}
+                            className="bg-gray-100 border border-gray-300 p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
+                        >
+                            <option value="">Select Month</option>
+                            {months.map((month) => (
+                                <option key={month} value={month}>
+                                    {new Date(0, month - 1).toLocaleString("en", { month: "long" })}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
+                    <div className=" flex gap-2 items-center">
+
+                        <label className="font-semibold">Start Date:</label>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="bg-gray-100 border border-gray-300 p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
+                        />
+
+                        <label className="font-semibold">End Date:</label>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="bg-gray-100 border border-gray-300 p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
+                        />
+                    </div>
                 </div>
-
 
                 {/* Data Section */}
                 <div className="mt-6">
@@ -317,17 +338,19 @@ export default function StaffDatanew({ staffid }) {
                 {/* Dropdowns for year and month */}
 
                 <div className="mt-4 space-y-4">
-                    {/* Display Monthly Activity */}
-                    {monthlyActivity && (
-                        <div className="bg-blue-50 border border-blue-200 rounded p-4">
-                            <h3 className="text-lg font-semibold mb-2 text-blue-800">Monthly Activity</h3>
-                            <p className="text-gray-700">
-                                Total Actions: <span className="font-bold">{monthlyActivity[0]}</span>
-                            </p>
-                            <p className="text-gray-700">
-                                Total Other Metrics: <span className="font-bold">{monthlyActivity[1]}</span>
-                            </p>
-                        </div>
+
+                    {filteredDates.length === 0 ? (
+                        <div></div>
+                    ) : (
+                        (() => {
+                            const grandTotal = filteredDates.reduce((total, [_, activity]) => total + activity.count[0], 0);
+                            return (
+
+                                <div className="text-lg font-bold border  border-[#29234b] p-3 rounded">
+                                    Total Actions: {grandTotal}
+                                </div>
+                            );
+                        })()
                     )}
 
                     {/* Display Daily Activity */}
@@ -337,108 +360,116 @@ export default function StaffDatanew({ staffid }) {
                         filteredDates
                             .sort(([dayA], [dayB]) => new Date(dayB) - new Date(dayA))
                             .map(([day, activity]) => (
-                                <div key={day}>
-                                    <button
-                                        onClick={() => setActiveDay(activeDay === day ? null : day)}
-                                        className="bg-[#29234b] hover:bg-[#29234b]/80 text-white font-semibold py-2 px-4 rounded w-full text-left"
-                                    >
-                                        Date: {day} {activeDay === day ? "▼" : "▶"}
-                                    </button>
+                                <>
+                                    <div key={day}>
+                                        <button
+                                            onClick={() => setActiveDay(activeDay === day ? null : day)}
+                                            className="bg-[#29234b] hover:bg-[#29234b]/80 text-white font-semibold py-2 px-4 rounded w-full text-left"
+                                        >
+                                            Date: {day} {activeDay === day ? "▼" : "▶"}
+                                        </button>
 
-                                    {activeDay === day && (
-                                        <div className="mt-2">
-                                            <p className="font-medium text-sm border px-2 bg-gray-50">
-                                                Actions Taken: {activity.count[0]}
-                                            </p>
-                                            <table className="w-full text-sm text-left rtl:text-right text-gray-600 font-sans mt-2">
-                                                <thead className="bg-[#29234b] text-white uppercase">
-                                                    <tr>
-                                                        <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                            Student Name
-                                                        </th>
-                                                        <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                            Phone Number
-                                                        </th>
-                                                        <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                            Reference
-                                                        </th>
-                                                        <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                            City
-                                                        </th>
-                                                        <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                            Address
-                                                        </th>
-                                                        <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                            Assigned from
-                                                        </th>
-                                                        <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                            Assigned To
-                                                        </th>
-                                                        <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                            Created Date
-                                                        </th>
-                                                        <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                            Status
-                                                        </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {activity.queries.map((query, index) => (
-                                                        <tr key={index}>
-                                                            <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                {query.studentName}
-                                                            </td>
-                                                            <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                {query.studentContact.phoneNumber}
-                                                            </td>
-                                                            <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                {query.referenceid !== "null" &&
-                                                                    query.referenceid !== null
-                                                                    ? query.referenceid
-                                                                    : "Not Provided"}
-                                                                {query.suboption !== "null" && <>{query.suboption}</>}
-                                                            </td>
-                                                            <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                {query.studentContact.city}
-                                                            </td>
-                                                            <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                {query.studentContact.address}
-                                                            </td>
-                                                            <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                {query.assignedsenthistory &&
-                                                                    query.assignedsenthistory.length > 0
-                                                                    ? query.assignedsenthistory
-                                                                        .map((id) => getUserName(id))
-                                                                        .join(", ")
-                                                                    : "Not Assigned"}
-                                                            </td>
-                                                            <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                {query.assignedreceivedhistory &&
-                                                                    query.assignedreceivedhistory.length > 0
-                                                                    ? query.assignedreceivedhistory
-                                                                        .map((id) => getUserName(id))
-                                                                        .join(", ")
-                                                                    : "Not Assigned"}
-                                                            </td>
-                                                            <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                {new Date(query.createdAt).toLocaleDateString("en-GB", {
-                                                                    day: "2-digit",
-                                                                    month: "2-digit",
-                                                                    year: "numeric",
-                                                                })}
-                                                            </td>
-                                                            <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                    {query.addmission ? "Enroll" : "Not Enroll"}
-                                                                </td>
-                                                            </td>
+                                        {activeDay === day && (
+                                            <div className="mt-2">
+                                                <p className="font-medium text-sm border px-2 bg-gray-50">
+                                                    Actions Taken: {activity.count[0]}
+                                                </p>
+                                                <table className="w-full text-sm text-left rtl:text-right text-gray-600 font-sans mt-2">
+                                                    <thead className="bg-[#29234b] text-white uppercase">
+                                                        <tr>
+                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
+                                                                S/N
+                                                            </th>
+                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
+                                                                Student Name
+                                                            </th>
+                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
+                                                                Phone Number
+                                                            </th>
+                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
+                                                                Reference
+                                                            </th>
+                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
+                                                                City
+                                                            </th>
+                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
+                                                                Address
+                                                            </th>
+                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
+                                                                Assigned from
+                                                            </th>
+                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
+                                                                Assigned To
+                                                            </th>
+                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
+                                                                Created Date
+                                                            </th>
+                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
+                                                                Status
+                                                            </th>
                                                         </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )}
-                                </div>
+                                                    </thead>
+                                                    <tbody>
+                                                        {activity.queries.map((query, index) => (
+                                                            <tr key={index}>
+                                                                <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                    {index + 1}
+                                                                </td>
+                                                                <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                    {query.studentName}
+                                                                </td>
+                                                                <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                    {query.studentContact.phoneNumber}
+                                                                </td>
+                                                                <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                    {query.referenceid !== "null" &&
+                                                                        query.referenceid !== null
+                                                                        ? query.referenceid
+                                                                        : "Not Provided"}
+                                                                    {query.suboption !== "null" && <>{query.suboption}</>}
+                                                                </td>
+                                                                <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                    {query.studentContact.city}
+                                                                </td>
+                                                                <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                    {query.studentContact.address}
+                                                                </td>
+                                                                <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                    {query.assignedsenthistory &&
+                                                                        query.assignedsenthistory.length > 0
+                                                                        ? query.assignedsenthistory
+                                                                            .map((id) => getUserName(id))
+                                                                            .join(", ")
+                                                                        : "Not Assigned"}
+                                                                </td>
+                                                                <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                    {query.assignedreceivedhistory &&
+                                                                        query.assignedreceivedhistory.length > 0
+                                                                        ? query.assignedreceivedhistory
+                                                                            .map((id) => getUserName(id))
+                                                                            .join(", ")
+                                                                        : "Not Assigned"}
+                                                                </td>
+                                                                <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                    {new Date(query.createdAt).toLocaleDateString("en-GB", {
+                                                                        day: "2-digit",
+                                                                        month: "2-digit",
+                                                                        year: "numeric",
+                                                                    })}
+                                                                </td>
+                                                                <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                        {query.addmission ? "Enroll" : "Not Enroll"}
+                                                                    </td>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
                             ))
                     )}
                 </div>
