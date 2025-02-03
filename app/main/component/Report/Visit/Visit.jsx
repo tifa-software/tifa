@@ -21,8 +21,28 @@ export default function Visit() {
     const [user, setUser] = useState({});
     const [fromDate, setFromDate] = useState(""); // Added fromDate state
     const [toDate, setToDate] = useState(""); // Added toDate state
-
     const router = useRouter();
+
+    const [suboption, setSuboption] = useState("");
+    const [referenceId, setReferenceId] = useState("");
+    const [referenceData, setReferenceData] = useState([]);
+    const [selectedReference, setSelectedReference] = useState(null);
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+
+                const referenceResponse = await axios.get("/api/reference/fetchall/reference");
+                setReferenceData(referenceResponse.data.fetch);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                toast.error("Error fetching data");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
 
     useEffect(() => {
         const fetchQueryData = async () => {
@@ -97,21 +117,22 @@ export default function Visit() {
         const filtered = queries.filter((query) => {
             const courseName = courses[query.courseInterest] || "Unknown Course";
             const UserName = user[query.assignedTo] || "Unknown User";
-    
+            const referenceName = query.referenceid || "Unknown Reference";
+            const referenceSuboption = query.suboption || "";
             // Convert transitionDate ('DD-MM-YYYY' ➝ 'YYYY-MM-DD' ➝ Date object)
-            const visitedDate = query.transitionDate 
-                ? new Date(query.transitionDate.split('-').reverse().join('-')) 
+            const visitedDate = query.transitionDate
+                ? new Date(query.transitionDate.split('-').reverse().join('-'))
                 : null;
-    
+
             // Convert fromDate and toDate to Date objects (YYYY-MM-DD)
             const fromDateObj = fromDate ? new Date(fromDate) : null;
             const toDateObj = toDate ? new Date(toDate) : null;
-    
+
             // Filter based on date range
             const isWithinDateRange =
                 (!fromDateObj || visitedDate >= fromDateObj) &&
                 (!toDateObj || visitedDate <= toDateObj);
-    
+
             return (
                 isWithinDateRange &&
                 (filters.studentName
@@ -137,25 +158,27 @@ export default function Visit() {
                     : true) &&
                 (filters.enroll
                     ? (filters.enroll === "Enroll" && query.addmission) ||
-                      (filters.enroll === "Not Enroll" && !query.addmission)
-                    : true)
+                    (filters.enroll === "Not Enroll" && !query.addmission)
+                    : true) &&
+                (referenceId ? referenceName === referenceId : true) &&
+                (suboption ? referenceSuboption === suboption : true)
             );
         });
-    
+
         // Sort by transitionDate (latest first)
         const sortedQueries = filtered.sort((a, b) => {
-            const dateA = a.transitionDate 
-                ? new Date(a.transitionDate.split('-').reverse().join('-')) 
+            const dateA = a.transitionDate
+                ? new Date(a.transitionDate.split('-').reverse().join('-'))
                 : new Date(0);
-            const dateB = b.transitionDate 
-                ? new Date(b.transitionDate.split('-').reverse().join('-')) 
+            const dateB = b.transitionDate
+                ? new Date(b.transitionDate.split('-').reverse().join('-'))
                 : new Date(0);
             return dateB - dateA; // Latest dates first
         });
-    
+
         setFilteredQueries(sortedQueries);
-    }, [filters, queries, fromDate, toDate]);
-    
+    }, [filters, queries, fromDate, toDate, referenceId, suboption]);
+
 
     const handleRowClick = (id) => {
         router.push(`/main/page/allquery/${id}`);
@@ -171,7 +194,12 @@ export default function Visit() {
     const handleFilterChange = (key, value) => {
         setFilters((prev) => ({ ...prev, [key]: value }));
     };
-
+    const handleReferenceChange = (e) => {
+        const selectedName = e.target.value;
+        setReferenceId(selectedName);
+        const reference = referenceData.find((data) => data.referencename === selectedName);
+        setSelectedReference(reference || null);
+    };
     return (
         <>
             <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
@@ -240,7 +268,39 @@ export default function Visit() {
                                                         }
                                                     />
                                                 </th>
+                                                <th className="px-4 py-3 text-[12px]">Reference
+                                                    <select
+                                                        value={referenceId}
+                                                        onChange={handleReferenceChange}
+                                                        className=" w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
+                                                    >
+                                                        <option value="">All</option>
+                                                        {referenceData.map((data) => (
+                                                            <option key={data._id} value={data.referencename}>
+                                                                {data.referencename}
+                                                            </option>
+                                                        ))}
+                                                    </select>
 
+
+                                                    {selectedReference?.referencename === "Online" && selectedReference.suboptions?.length > 0 && (
+
+
+                                                        <select
+                                                            value={suboption}
+                                                            onChange={(e) => setSuboption(e.target.value)}
+                                                            className=" w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
+                                                        >
+                                                            <option value="">All</option>
+                                                            {selectedReference.suboptions.map((suboption, index) => (
+                                                                <option key={index} value={suboption.name}>
+                                                                    {suboption.name}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+
+                                                    )}
+                                                </th>
                                                 <th className="px-6 py-4">
 
                                                     <input
@@ -345,6 +405,7 @@ export default function Visit() {
                                                             <td className="px-6 py-1 font-semibold">{query.studentName}</td>
                                                             <td className="px-6 py-1 font-semibold">{query.studentContact.phoneNumber}</td>
                                                             <td className="px-6 py-1 font-semibold">{courseName}</td>
+                                                            <td className="px-6 py-1 font-semibold">{query.referenceid} {query.suboption !== "null" && <>{query.suboption}</>}</td>
                                                             <td className="px-6 py-1 font-semibold">{UserName}</td>
                                                             <td className="px-6 py-1">{query.branch}</td>
                                                             <td className="px-6 py-1">{query.studentContact.city}</td>
