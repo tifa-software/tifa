@@ -27,10 +27,9 @@ export const GET = async (request, context) => {
         // Fetch queries assigned to the admin
         const queries = await QueryModel.find({
             $or: [
-                { userid: admin._id, assignedTo: "Not-Assigned" },                // Matches documents with the specified userid
-                { assignedTo: admin._id }             // Matches documents assigned to the specified userid
+                { userid: admin._id, assignedTo: "Not-Assigned" },
+                { assignedTo: admin._id }
             ],
-
         });
         const queryIds = queries.map(q => q._id.toString());
 
@@ -43,38 +42,33 @@ export const GET = async (request, context) => {
         const startOfLastWeek = new Date(startOfWeek);
         startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
 
-        let todayConnectionStatus = {
-            no_connected: 0,
-            not_lifting: 0,
-            connected: 0,
-        };
-
-        console.log("Today's Date:", todayDate);
+        let dailyConnectionStatus = {}; // Object to store daily connection status
 
         const analytics = auditLogs.reduce((acc, log) => {
             const queryId = log.queryId.toString();
-
-            // Check main connection status in log
             const logDate = new Date(log.createdAt).toISOString().split("T")[0];
 
-            if (logDate === todayDate) {
-                if (log.connectionStatus === "no_connected") {
-                    todayConnectionStatus.no_connected++;
-                } else if (log.connectionStatus === "not_lifting") {
-                    todayConnectionStatus.not_lifting++;
-                } else if (log.connectionStatus === "connected") {
-                    todayConnectionStatus.connected++;
-                }
+            // Initialize the date entry if it doesn't exist
+            if (!dailyConnectionStatus[logDate]) {
+                dailyConnectionStatus[logDate] = { no_connected: 0, not_lifting: 0, connected: 0 };
+            }
+
+            // Count connection statuses for each day
+            if (log.connectionStatus === "no_connected") {
+                dailyConnectionStatus[logDate].no_connected++;
+            } else if (log.connectionStatus === "not_lifting") {
+                dailyConnectionStatus[logDate].not_lifting++;
+            } else if (log.connectionStatus === "connected") {
+                dailyConnectionStatus[logDate].connected++;
             }
 
             log.history.forEach(entry => {
                 const actionDate = new Date(entry.actionDate).toISOString().split("T")[0];
-                const actionDay = actionDate;
                 const actionMonth = actionDate.slice(0, 7);
                 const actionType = entry.action || "UNKNOWN";
 
-                acc.dailyActivity[actionDay] = acc.dailyActivity[actionDay] || { count: [0, 0], queries: [] };
-                acc.dailyActivity[actionDay].count[0]++;
+                acc.dailyActivity[actionDate] = acc.dailyActivity[actionDate] || { count: [0, 0], queries: [] };
+                acc.dailyActivity[actionDate].count[0]++;
                 let admissionsCount = 0;
 
                 if (
@@ -82,13 +76,12 @@ export const GET = async (request, context) => {
                     entry.changes.onlinesubStatus?.newValue === "admission"
                 ) {
                     admissionsCount = 1;
-                    acc.dailyActivity[actionDay].count[1]++;
+                    acc.dailyActivity[actionDate].count[1]++;
                 }
 
-                // Fetch the full query data and add it to the daily activity
                 const queryData = queries.find(q => q._id.toString() === queryId);
-                if (queryData && !acc.dailyActivity[actionDay].queries.some(q => q._id.toString() === queryId)) {
-                    acc.dailyActivity[actionDay].queries.push(queryData);
+                if (queryData && !acc.dailyActivity[actionDate].queries.some(q => q._id.toString() === queryId)) {
+                    acc.dailyActivity[actionDate].queries.push(queryData);
                 }
 
                 acc.monthlyActivity[actionMonth] = acc.monthlyActivity[actionMonth] || [0, 0];
@@ -107,17 +100,18 @@ export const GET = async (request, context) => {
 
                 acc.actionBreakdown[actionType] = (acc.actionBreakdown[actionType] || 0) + 1;
 
-                // Count connectionStatus changes for today
-                if (actionDate === todayDate) {
-                    const status = entry.changes?.connectionStatus?.newValue || log.connectionStatus;
+                // Store connection status for each day
+                if (!dailyConnectionStatus[actionDate]) {
+                    dailyConnectionStatus[actionDate] = { no_connected: 0, not_lifting: 0, connected: 0 };
+                }
 
-                    if (status === "no_connected") {
-                        todayConnectionStatus.no_connected++;
-                    } else if (status === "not_lifting") {
-                        todayConnectionStatus.not_lifting++;
-                    } else if (status === "connected") {
-                        todayConnectionStatus.connected++;
-                    }
+                const status = entry.changes?.connectionStatus?.newValue || log.connectionStatus;
+                if (status === "no_connected") {
+                    dailyConnectionStatus[actionDate].no_connected++;
+                } else if (status === "not_lifting") {
+                    dailyConnectionStatus[actionDate].not_lifting++;
+                } else if (status === "connected") {
+                    dailyConnectionStatus[actionDate].connected++;
                 }
             });
 
@@ -142,7 +136,7 @@ export const GET = async (request, context) => {
                 lastWeek: analytics.trendAnalysis.lastWeek,
                 change: analytics.trendAnalysis.currentWeek - analytics.trendAnalysis.lastWeek,
             },
-            todayConnectionStatus, // Added today's connection status count
+            dailyConnectionStatus, // Send connection status for each day
         };
 
         return Response.json({
