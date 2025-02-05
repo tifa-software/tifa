@@ -204,7 +204,23 @@ export default function Visit() {
   const handleRowClick = (id) => {
     router.push(`/branch/page/allquery/${id}`);
   };
-
+  
+  const removeFilter = () => {
+    setFilters({
+      studentName: "",
+      phoneNumber: "",
+      courseInterest: "",
+      assignedTo: "",
+      staffName: "",
+      branch: "",
+      city: "",
+      enroll: "", 
+    });
+    setFromDate(null);
+    setToDate(null);
+    setReferenceId(null);
+    setSuboption(null);
+  };
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -228,7 +244,12 @@ export default function Visit() {
             Total Queries: {filteredQueries.length}
             <div className="shadow-lg rounded-lg bg-white mb-6">
               <div className="p-4">
-
+                <button
+                  onClick={removeFilter}
+                  className="mb-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
+                >
+                  Remove Filters
+                </button>
                 <div className="relative overflow-y-auto">
                   <table className="min-w-full text-xs text-left text-gray-600 font-sans">
                     <thead className="bg-[#29234b] text-white uppercase">

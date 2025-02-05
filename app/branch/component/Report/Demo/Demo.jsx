@@ -214,7 +214,25 @@ export default function Visit() {
     const handleFilterChange = (key, value) => {
         setFilters((prev) => ({ ...prev, [key]: value }));
     };
-
+    const removeFilter = () => {
+        setFilters({
+            studentName: "",
+            phoneNumber: "",
+            courseInterest: "",
+            assignedTo: "",
+            staffName: "",
+            branch: "",
+            city: "",
+            enroll: "",
+            total: "",
+        });
+        setFromDate(null);
+        setToDate(null);
+        setGreaterThan0(false);
+        setReferenceId(null);
+        setSuboption(null);
+    };
+    
     return (
         <>
             <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
@@ -226,6 +244,12 @@ export default function Visit() {
                         Total Queries: {filteredQueries.length}
                         <div className="shadow-lg rounded-lg bg-white mb-6">
                             <div className="p-4">
+                        <button
+                            onClick={removeFilter}
+                            className="mb-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
+                        >
+                            Remove Filters
+                        </button>
 
                                 <div className=" flex justify-end">
                                     <div className="flex items-center space-x-2">

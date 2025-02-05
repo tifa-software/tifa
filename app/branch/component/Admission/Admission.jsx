@@ -171,7 +171,7 @@ export default function Visit() {
                 (!filters.fees || remainingFees.toString().includes(filters.fees)) &&
                 (!finalFeesFilter || actualFinalFees === finalFeesFilter) &&
                 (referenceId ? referenceName === referenceId : true) &&
-                (suboption ? referenceSuboption === suboption : true)&&
+                (suboption ? referenceSuboption === suboption : true) &&
                 isWithinDateRange
             );
         });
@@ -203,6 +203,23 @@ export default function Visit() {
         const reference = referenceData.find((data) => data.referencename === selectedName);
         setSelectedReference(reference || null);
     };
+    
+    const removeFilter = () => {
+        setFilters({
+            studentName: "",
+            phoneNumber: "",
+            courseInterest: "",
+            assignedTo: "",
+            staffName: "",
+            branch: "",
+            city: "",
+            enroll: "",
+        });
+        setFromDate(null);
+        setToDate(null);
+        setReferenceId(null);
+        setSuboption(null);
+    };
 
     return (
         <>
@@ -214,8 +231,14 @@ export default function Visit() {
                     <div className="w-full">
                         <h1 className="text-lg font-semibold mb-4">Total Queries: {filteredQueries.length}</h1>
                         <div className="shadow-lg rounded-lg bg-white mb-6">
-                           
+
                             <div className="p-4">
+                                <button
+                                    onClick={removeFilter}
+                                    className="mb-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
+                                >
+                                    Remove Filters
+                                </button>
                                 <div className="relative overflow-y-auto">
                                     <table className="min-w-full text-xs text-left text-gray-600 font-sans">
                                         <thead className="bg-[#29234b] text-white uppercase">

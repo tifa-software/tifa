@@ -90,6 +90,24 @@ export default function Lead() {
         fetchData();
     }, [adminData]);
 
+    const removeFilter = () => {
+        setReferenceId(""); // Reset ReferenceId filter
+        setSuboption("");   // Reset Suboption filter
+        setFromDate("");    // Reset FromDate filter
+        setToDate("");      // Reset ToDate filter
+        setAdmission("");   // Reset Admission filter
+        setGrade("");       // Reset Grade filter
+        setLocation("");    // Reset Location filter
+        setCity("");        // Reset City filter
+        setAssignedName(""); // Reset Assigned Name filter
+        setUserName("");    // Reset UserName filter
+        setBranch("");      // Reset Branch filter
+        setCours("");       // Reset Course filter
+        setTimeout(() => {
+            fetchFilteredData("");
+        }, 0);
+    };
+
     const fetchFilteredData = async () => {
         setGridLoading(true);
         try {
@@ -121,7 +139,7 @@ export default function Lead() {
     useEffect(() => {
         if (adminData) {  // Ensure adminData is available before fetching
             fetchFilteredData();
-          }
+        }
     }, [adminData]);
 
 
@@ -133,22 +151,6 @@ export default function Lead() {
 
 
 
-    const getFilterSummary = () => {
-        const filters = [];
-        if (referenceId) filters.push(`Reference: ${referenceId}`);
-        if (suboption) filters.push(`Suboption: ${suboption}`);
-        if (fromDate) filters.push(`From Date: ${fromDate}`);
-        if (toDate) filters.push(`To Date: ${toDate}`);
-        if (admission) filters.push(`Admission: ${admission === "true" ? "Enroll" : "Not Enroll"}`);
-        if (grade) filters.push(`Grade: ${grade}`);
-        if (location) filters.push(`Branch: ${location}`);
-        if (city) filters.push(`City: ${city}`);
-        if (assignedName) filters.push(`Assigned Name: ${assignedName}`);
-        if (userName) filters.push(`Creater Name: ${userName}`);
-        if (branch) filters.push(`Branch Name: ${branch}`);
-        if (cours) filters.push(`Courses `);
-        return filters.length > 0 ? filters.join(" | ") : "No filters applied.";
-    };
 
 
     const handleReferenceChange = (e) => {
@@ -302,7 +304,12 @@ export default function Lead() {
             <button onClick={fetchFilteredData} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600">
                 Apply Filters
             </button>
-
+            <button
+                onClick={removeFilter}
+                className="ml-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
+            >
+                Remove Filters
+            </button>
             {gridLoading ? (
                 <div className="flex items-center justify-center w-full col-span-4">
                     <Loader />  {/* Show loader while grid data is loading */}
