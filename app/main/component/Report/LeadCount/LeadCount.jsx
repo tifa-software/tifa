@@ -69,6 +69,23 @@ export default function Lead() {
         fetchData();
     }, []);
 
+    const removeFilter = () => {
+        setReferenceId(""); // Reset ReferenceId filter
+        setSuboption("");   // Reset Suboption filter
+        setFromDate("");    // Reset FromDate filter
+        setToDate("");      // Reset ToDate filter
+        setAdmission("");   // Reset Admission filter
+        setGrade("");       // Reset Grade filter
+        setLocation("");    // Reset Location filter
+        setCity("");        // Reset City filter
+        setAssignedName(""); // Reset Assigned Name filter
+        setUserName("");    // Reset UserName filter
+        setBranch("");      // Reset Branch filter
+        setCours("");       // Reset Course filter
+        setTimeout(() => {
+            fetchFilteredData("");
+        }, 0);
+    };
     const fetchFilteredData = async () => {
         setGridLoading(true);
         try {
@@ -274,13 +291,18 @@ export default function Lead() {
                 </div>
 
             </div>
-
-            <button onClick={fetchFilteredData} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600">
+            <button
+                onClick={removeFilter}
+                className="ml-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
+            >
+                Remove Filters
+            </button>
+            <button onClick={fetchFilteredData} className="mt-4 ml-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600">
                 Apply Filters
             </button>
             <button
                 onClick={() => window.print()}
-                className="mt-4 bg-green-500 text-white px-4 py-2 rounded shadow-md hover:bg-green-600"
+                className="mt-4 ml-4 bg-green-500 text-white px-4 py-2 rounded shadow-md hover:bg-green-600"
             >
                 Print Page
             </button>

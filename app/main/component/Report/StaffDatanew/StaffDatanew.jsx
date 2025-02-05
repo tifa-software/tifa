@@ -92,7 +92,16 @@ export default function StaffDatanew({ staffid }) {
         setSelectedQueries(queries);
         setIsModalOpen(true);
     };
+    const removeFilter = () => {
+        // Reset the filter states
+        setSelectedYear(null);
+        setSelectedMonth(null);
+        setStartDate(null);
+        setEndDate(null);
 
+        // Reset the filtered dates to the original data
+        setFilteredDates(Object.entries(data.dailyActivity)); // Assuming you want to reset to the full data
+    };
     const closeModal = () => {
         setIsModalOpen(false);
     };
@@ -224,7 +233,12 @@ export default function StaffDatanew({ staffid }) {
                         />
                     </div>
                 </div>
-
+                <button
+                    onClick={removeFilter}
+                    className="ml-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
+                >
+                    Remove Filters
+                </button>
                 {/* Data Section */}
                 <div className="mt-6">
                     <h1 className="text-xl px-4 font-semibold">Today’s Data</h1>

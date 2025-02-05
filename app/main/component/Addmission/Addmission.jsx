@@ -179,6 +179,24 @@ export default function Visit() {
         const reference = referenceData.find((data) => data.referencename === selectedName);
         setSelectedReference(reference || null);
     };
+    const removeFilter = () => {
+        setFilters({
+            studentName: "",
+            phoneNumber: "",
+            courseInterest: "",
+            assignedTo: "",
+            staffName: "",
+            branch: "",
+            city: "",
+            enroll: "",
+        });
+        setFromDate(null);
+        setToDate(null);
+        setReferenceId(null);
+        setSuboption(null);
+    };
+
+
     return (
         <>
             <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
@@ -195,6 +213,12 @@ export default function Visit() {
                             >
                                 Export to Excel
                             </button>
+                            <button
+                                    onClick={removeFilter}
+                                    className="mb-4 ml-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
+                                >
+                                    Remove Filters
+                                </button>
                             <div className="p-4">
                                 <div className="relative overflow-y-auto">
                                     <table className="min-w-full text-xs text-left text-gray-600 font-sans">

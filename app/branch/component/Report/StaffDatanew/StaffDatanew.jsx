@@ -133,6 +133,7 @@ export default function StaffDatanew({ staffid }) {
             }
         }
     }, [selectedYear, selectedMonth, startDate, endDate, data.dailyActivity]);
+
     const removeFilter = () => {
         // Reset the filter states
         setSelectedYear(null);
@@ -143,6 +144,7 @@ export default function StaffDatanew({ staffid }) {
         // Reset the filtered dates to the original data
         setFilteredDates(Object.entries(data.dailyActivity)); // Assuming you want to reset to the full data
     };
+
     const getUserName = (id) => {
         const matchedUser = user.find((u) => u._id === id);
         return matchedUser ? matchedUser.name : "Unknown User";

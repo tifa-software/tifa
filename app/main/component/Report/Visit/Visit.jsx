@@ -183,6 +183,22 @@ export default function Visit() {
     const handleRowClick = (id) => {
         router.push(`/main/page/allquery/${id}`);
     };
+    const removeFilter = () => {
+        setFilters({
+            studentName: "",
+            phoneNumber: "",
+            courseInterest: "",
+            assignedTo: "",
+            staffName: "",
+            branch: "",
+            city: "",
+            enroll: "",
+        });
+        setFromDate(null);
+        setToDate(null);
+        setReferenceId(null);
+        setSuboption(null);
+    };
 
     const exportToExcel = () => {
         const worksheet = XLSX.utils.json_to_sheet(filteredQueries);
@@ -211,7 +227,13 @@ export default function Visit() {
                         Total Queries: {filteredQueries.length}
                         <div className="shadow-lg rounded-lg bg-white mb-6">
                             <div className="p-4">
-                                <div className="flex justify-between items-center gap-5 mb-4">
+                                <div className="flex  items-center gap-5 mb-4">
+                                    <button
+                                        onClick={removeFilter}
+                                        className=" bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
+                                    >
+                                        Remove Filters
+                                    </button>
                                     <button
                                         onClick={exportToExcel}
                                         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"

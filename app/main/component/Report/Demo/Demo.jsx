@@ -23,7 +23,7 @@ export default function Visit() {
     const [toDate, setToDate] = useState(""); // Added toDate state
     const [greaterThan0, setGreaterThan0] = useState(false);
     const router = useRouter();
-    
+
     const [suboption, setSuboption] = useState("");
     const [referenceId, setReferenceId] = useState("");
     const [referenceData, setReferenceData] = useState([]);
@@ -198,7 +198,24 @@ export default function Visit() {
         const reference = referenceData.find((data) => data.referencename === selectedName);
         setSelectedReference(reference || null);
     };
-
+    const removeFilter = () => {
+        setFilters({
+            studentName: "",
+            phoneNumber: "",
+            courseInterest: "",
+            assignedTo: "",
+            staffName: "",
+            branch: "",
+            city: "",
+            enroll: "",
+            total: "",
+        });
+        setFromDate(null);
+        setToDate(null);
+        setGreaterThan0(false);
+        setReferenceId(null);
+        setSuboption(null);
+    };
     return (
         <>
             <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
@@ -210,13 +227,21 @@ export default function Visit() {
                         Total Queries: {filteredQueries.length}
                         <div className="shadow-lg rounded-lg bg-white mb-6">
                             <div className="p-4">
-                                <div className="flex justify-between items-center gap-5 mb-4">
+                                <div className="flex items-center gap-5 mb-4">
+                                    <button
+                                        onClick={removeFilter}
+                                        className=" bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
+                                    >
+                                        Remove Filters
+                                    </button>
                                     <button
                                         onClick={exportToExcel}
                                         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                                     >
                                         Export to Excel
                                     </button>
+
+
                                 </div>
                                 <div className=" flex justify-end">
                                     <div className="flex items-center space-x-2">
