@@ -23,7 +23,8 @@ export default function QueryReport() {
   const [city, setCity] = useState("");
   const [assignedName, setAssignedName] = useState("");
   const [assignedFrom, setAssignedFrom] = useState("");
-  const [userName, setUserName] = useState("");
+  const [userName, setUserName] = useState(false);
+  const [studentName, setStudentName] = useState("");
   const [referenceData, setReferenceData] = useState([]);
   const [branches, setBranches] = useState([]);
   const [user, setuser] = useState([]);
@@ -85,7 +86,8 @@ export default function QueryReport() {
           assignedFrom,
           userName,
           showClosed,
-          adminData
+          adminData,
+          studentName
         },
       });
       setAllquery(response.data.fetch);
@@ -101,7 +103,7 @@ export default function QueryReport() {
     if (adminData) {  // Ensure adminData is available before fetching
       fetchFilteredData();
     }
-  }, [referenceId, adminData, suboption, fromDate, toDate, admission, grade, reason, location, city, assignedName, assignedFrom, userName, showClosed]);
+  }, [referenceId, studentName, adminData, suboption, fromDate, toDate, admission, grade, reason, location, city, assignedName, assignedFrom, userName, showClosed]);
 
   const handleFilter = () => {
     fetchFilteredData();
@@ -122,6 +124,7 @@ export default function QueryReport() {
     setAssignedName("");
     setAssignedFrom("");
     setUserName("");
+    setStudentName("");
   };
 
 
@@ -139,6 +142,7 @@ export default function QueryReport() {
     if (city) filters.push(`City: ${city}`);
     if (assignedName) filters.push(`Assigned To: ${assignedName}`);
     if (assignedFrom) filters.push(`Assigned From: ${assignedFrom}`);
+    if (studentName) filters.push(`StudentName : ${studentName}`);
     if (userName) filters.push(`Creater Name: ${userName}`);
     if (showClosed) filters.push(`Closed Queries`);
     return filters.length > 0 ? filters.join(" | ") : "No filters applied.";
@@ -188,7 +192,7 @@ export default function QueryReport() {
               Remove Filters
             </button>
           </div>
-         
+
         </div>
         <div className="flex items-center justify-between mb-4">
           <label className="flex items-center text-sm font-medium text-gray-700">
@@ -202,7 +206,7 @@ export default function QueryReport() {
           </label>
         </div>
 
-        <div className="overflow-x-auto  shadow-lg rounded-lg border border-gray-300">
+        <div className="  shadow-lg rounded-lg border border-gray-300">
           <table className="min-w-full text-left text-[12px] font-light border-collapse">
             <thead className="bg-gray-800 text-white">
               <tr className="divide-x divide-gray-700">
@@ -221,7 +225,18 @@ export default function QueryReport() {
                     ))}
                   </select>
                 </th>
-                <th className="px-4 py-3 text-[12px]">Student Name</th>
+                <th className="px-4 py-3 text-[12px]">
+                Student Name
+                  <div className="flex items-center mt-2">
+                    <input
+                      type="checkbox"
+                      id="nullCheck"
+                      className="mr-2"
+                      onChange={(e) => setStudentName("Null")}
+                    />
+                    <label htmlFor="nullCheck" className="text-[12px]">Null</label>
+                  </div>
+                </th>
                 <th className="px-4 py-3 text-[12px]">Phone No.</th>
                 <th className="px-4 py-3 text-[12px]">Contacts</th>
                 <th className="px-4 py-3 text-[12px] ">Reference
@@ -267,6 +282,8 @@ export default function QueryReport() {
                     <option value="">All</option>
                     <option value="Jaipur">Jaipur</option>
                     <option value="out">Out Of Jaipur</option>
+                    <option value="Not_Provided">Not Provided</option>
+
                   </select>
                 </th>
                 <th className="px-4 py-3 text-[12px]">Grade

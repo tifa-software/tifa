@@ -39,17 +39,6 @@
   }
 }
 
-::-webkit-scrollbar {
-    width: 2px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: #bababa; 
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: #6cb049; 
-  }
   .react-tel-input .form-control {
     position: relative;
     font-size: 14px;

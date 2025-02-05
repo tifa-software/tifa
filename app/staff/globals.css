@@ -9,18 +9,6 @@
     background-color: var(--blue);
 }
 
-::-webkit-scrollbar {
-    width: 2px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: #bababa; 
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: #6cb049; 
-  }
-
 
   @keyframes blink {
     0% {

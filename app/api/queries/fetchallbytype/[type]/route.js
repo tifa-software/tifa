@@ -1,11 +1,11 @@
 import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
 
-export const GET = async (request,context) => {
+export const GET = async (request, context) => {
     await dbConnect();
     const type = context.params.type;
     try {
-        const fetch = await QueryModel.find({ autoclosed: type, addmission: false });
+        const fetch = await QueryModel.find({ autoclosed: type, addmission: false, demo: false });
         return Response.json(
             {
                 message: "All data fetched!",

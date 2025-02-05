@@ -28,6 +28,7 @@ export const GET = async (request) => {
     const userName = searchParams.get("userName");
     const showClosed = searchParams.get("showClosed");
     const branch = searchParams.get("branch");
+    const studentName = searchParams.get("studentName");
 
     // Build MongoDB query
     const queryFilter = { defaultdata: "query" };
@@ -97,13 +98,20 @@ export const GET = async (request) => {
     if (location) {
       queryFilter.branch = { $regex: location, $options: "i" };
     }
+    if (studentName) {
+      queryFilter.studentName = { $exists: false }; // Finds documents where studentName does not exist
+  }
+  
     if (city) {
-      if (city.toLowerCase() === "jaipur") {
+      if (city === "Not_Provided") {
+        queryFilter["studentContact.city"] = "Not_Provided";
+      } else if (city.toLowerCase() === "jaipur") {
         queryFilter["studentContact.city"] = { $regex: "^Jaipur$", $options: "i" };
       } else {
         queryFilter["studentContact.city"] = { $ne: "Jaipur" };
       }
     }
+    
     if (assignedName) {
       if (assignedName === "Not-Assigned") {
         // Filter for documents where `assignedTo` is exactly "Not-Assigned"

@@ -239,7 +239,7 @@ export default function Visit() {
                                         <label htmlFor="greter0" className="text-gray-700 text-lg">Fees Greatre Then &quot;0&quot;</label>
                                     </div>
                                 </div>
-                                <div className="relative overflow-y-auto">
+                                <div className="relative ">
                                     <table className="min-w-full text-xs text-left text-gray-600 font-sans">
                                         <thead className="bg-[#29234b] text-white uppercase">
                                             <tr>

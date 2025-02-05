@@ -167,7 +167,7 @@ export default function Lead() {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto  shadow-lg rounded-lg border border-gray-300">
+                <div className=" shadow-lg rounded-lg border border-gray-300">
                     <table className="min-w-full text-left text-[12px] font-light border-collapse">
                         <thead className="bg-gray-800 text-white">
                             <tr className="divide-x divide-gray-700">
