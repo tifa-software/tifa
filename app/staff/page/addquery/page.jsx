@@ -350,7 +350,9 @@ export default function Page() {
                 if (interestStatus === "ready_visit") {
                     await axios.patch("/api/audit/update", { queryId, stage: 5 });
                 }
-
+                if (interestStatus === "Visited") {
+                    await axios.patch("/api/audit/update", { queryId, stage: 6 });
+                }
                 if (gradeStatus) {
                     await axios.patch("/api/audit/update", { queryId, grade: gradeStatus });
                 }
@@ -940,6 +942,7 @@ export default function Page() {
                                         <option value="" disabled>Select Interest Status</option>
 
                                         <option value="interested">Interested</option>
+                                        <option value="Visited">Visited</option>
                                         <option value="not_interested">Not Interested</option>
 
                                         <option value="not_connected">Not Connected</option>
@@ -987,7 +990,7 @@ export default function Page() {
                                 >
                                     <option value="" disabled>Select Interest Status</option>
                                     <option value="Interested">Interested</option>
-
+                                    <option value="Visited">Visited</option>
                                     <option value="not_interested">Not Interested</option>
 
                                     <option value="not_connected">Not Connected</option>

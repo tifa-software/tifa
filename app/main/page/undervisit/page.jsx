@@ -59,7 +59,7 @@ export default function UnderVisit() {
     
         // Check if any of the student-related fields match the searchTerm
         const matchesSearchTerm =
-            query.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            query.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             query.studentContact.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
             query.studentContact.city.toLowerCase().includes(searchTerm.toLowerCase());
     
