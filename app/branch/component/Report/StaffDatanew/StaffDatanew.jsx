@@ -48,7 +48,7 @@ export default function StaffDatanew({ staffid }) {
                     setLoading(true);
                     const response = await axios.get(`/api/report/dailyreport/${adminData}`);
                     setData(response.data.data.userActivityReport);
-                    setData1(response.data.data.userActivityReport.todayConnectionStatus);
+                    setData1(response.data.data.userActivityReport.dailyConnectionStatus);
                 } catch (error) {
                     console.error("Error fetching query data:", error);
                 } finally {
@@ -92,7 +92,16 @@ export default function StaffDatanew({ staffid }) {
         setSelectedQueries(queries);
         setIsModalOpen(true);
     };
+    const removeFilter = () => {
+        // Reset the filter states
+        setSelectedYear(null);
+        setSelectedMonth(null);
+        setStartDate(null);
+        setEndDate(null);
 
+        // Reset the filtered dates to the original data
+        setFilteredDates(Object.entries(data.dailyActivity)); // Assuming you want to reset to the full data
+    };
     const closeModal = () => {
         setIsModalOpen(false);
     };
@@ -134,17 +143,6 @@ export default function StaffDatanew({ staffid }) {
         }
     }, [selectedYear, selectedMonth, startDate, endDate, data.dailyActivity]);
 
-    const removeFilter = () => {
-        // Reset the filter states
-        setSelectedYear(null);
-        setSelectedMonth(null);
-        setStartDate(null);
-        setEndDate(null);
-
-        // Reset the filtered dates to the original data
-        setFilteredDates(Object.entries(data.dailyActivity)); // Assuming you want to reset to the full data
-    };
-
     const getUserName = (id) => {
         const matchedUser = user.find((u) => u._id === id);
         return matchedUser ? matchedUser.name : "Unknown User";
@@ -163,7 +161,6 @@ export default function StaffDatanew({ staffid }) {
         )
         : [];
 
-
     if (loading) {
         return (
             <div className="h-screen w-full flex items-center justify-center bg-gray-100">
@@ -171,7 +168,65 @@ export default function StaffDatanew({ staffid }) {
             </div>
         );
     }
+    const calculateFilteredTotals = () => {
+        let filteredEntries = Object.entries(data1 || {});
 
+        const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+
+        // Show only today's data by default
+        if (!selectedYear && !selectedMonth && !startDate && !endDate) {
+            filteredEntries = filteredEntries.filter(([date]) => date === today);
+        }
+
+        // Filter based on selected Year
+        if (selectedYear) {
+            filteredEntries = filteredEntries.filter(([date]) =>
+                new Date(date).getFullYear().toString() === selectedYear
+            );
+        }
+
+        // Filter based on selected Month
+        if (selectedMonth) {
+            filteredEntries = filteredEntries.filter(([date]) =>
+                (new Date(date).getMonth() + 1).toString() === selectedMonth
+            );
+        }
+
+        // Filter based on Date Range
+        if (startDate) {
+            filteredEntries = filteredEntries.filter(([date]) =>
+                new Date(date) >= new Date(startDate)
+            );
+        }
+        if (endDate) {
+            filteredEntries = filteredEntries.filter(([date]) =>
+                new Date(date) <= new Date(endDate)
+            );
+        }
+
+        // Calculate total values
+        let totalConnected = 0;
+        let totalNoConnected = 0;
+        let totalNotLifting = 0;
+        let totalActions = 0;
+
+        filteredEntries.forEach(([_, value]) => {
+            totalConnected += value?.connected || 0;
+            totalNoConnected += value?.no_connected || 0;
+            totalNotLifting += value?.not_lifting || 0;
+        });
+
+        // Calculate Total Actions
+        totalActions = totalConnected + totalNoConnected + totalNotLifting;
+
+        return { totalConnected, totalNoConnected, totalNotLifting, totalActions, filteredEntries };
+    };
+
+    // Get calculated totals
+    const { totalConnected, totalNoConnected, totalNotLifting, totalActions, filteredEntries } = calculateFilteredTotals();
+
+
+    const todayData = data1[today] || {};
     return (
         <>
             <div className=" mx-auto my-6">
@@ -244,36 +299,27 @@ export default function StaffDatanew({ staffid }) {
                 </button>
                 {/* Data Section */}
                 <div className="mt-6">
-                    <h1 className="text-xl px-4 font-semibold">Today’s Data</h1>
-                    <div className="grid grid-cols-4 gap-6 p-6 bg-gray-50 rounded-lg shadow-lg">
-                        {/* Today Query */}
-                        <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
-                            <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full">
-                                <Navigation className="w-8 h-8 text-blue-500" />
-                            </div>
-                            <div className="ml-4">
-                                <p className="text-xl font-bold text-gray-800">{queries.length}</p>
-                                <p className="text-gray-500">Today Queries</p>
-                            </div>
-                        </div>
+                    {/* Dynamic Heading */}
+                    <h1 className="text-xl px-4 font-semibold">
+                        {selectedYear || selectedMonth || startDate || endDate
+                            ? `Data from ${startDate || "start"} to ${endDate || "end"}`
+                            : "Today's Data"}
+                    </h1>
 
-                        {/* Total Action */}
-                        <div className="flex items-center bg-white p-4 rounded-lg shadow-md justify-between">
+                    {/* Data Cards */}
+                    <div className="grid grid-cols-4 gap-6 p-6 bg-gray-50 rounded-lg shadow-lg">
+
+                        {/* Total Actions */}
+                        <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
                             <div className="flex items-center">
                                 <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full">
                                     <CheckCircle className="w-8 h-8 text-green-500" />
                                 </div>
                                 <div className="ml-4">
-                                    <p className="text-xl font-bold text-gray-800">{data.dailyActivity?.[today]?.count?.[0] || 0}</p>
-                                    <p className="text-gray-500">Total Actions Today</p>
+                                    <p className="text-xl font-bold text-gray-800">{totalActions}</p>
+                                    <p className="text-gray-500">Total Actions</p>
                                 </div>
                             </div>
-                            <button
-                                className="text-sm bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded transition"
-                                onClick={handleButtonClick}
-                            >
-                                View
-                            </button>
                         </div>
 
                         {/* Connected */}
@@ -282,7 +328,7 @@ export default function StaffDatanew({ staffid }) {
                                 <PhoneCall className="w-8 h-8 text-green-500" />
                             </div>
                             <div className="ml-4">
-                                <p className="text-xl font-bold text-gray-800">{data1.connected}</p>
+                                <p className="text-xl font-bold text-gray-800">{totalConnected}</p>
                                 <p className="text-gray-500">Connected</p>
                             </div>
                         </div>
@@ -293,22 +339,26 @@ export default function StaffDatanew({ staffid }) {
                                 <XCircle className="w-8 h-8 text-red-500" />
                             </div>
                             <div className="ml-4">
-                                <p className="text-xl font-bold text-gray-800">{data1.no_connected}</p>
+                                <p className="text-xl font-bold text-gray-800">{totalNoConnected}</p>
                                 <p className="text-gray-500">Not Connected</p>
                             </div>
                         </div>
 
+                        {/* Not Lifting */}
                         <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
                             <div className="flex items-center justify-center w-16 h-16 bg-red-100 rounded-full">
                                 <PhoneCall className="w-8 h-8 text-red-500" />
                             </div>
                             <div className="ml-4">
-                                <p className="text-xl font-bold text-gray-800">{data1.not_lifting}</p>
+                                <p className="text-xl font-bold text-gray-800">{totalNotLifting}</p>
                                 <p className="text-gray-500">Not Lifting</p>
                             </div>
                         </div>
                     </div>
                 </div>
+
+
+
 
                 {/* Modal */}
                 {isModalOpen && (

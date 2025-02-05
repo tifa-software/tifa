@@ -211,9 +211,9 @@ export default function StaffDatanew({ staffid }) {
         let totalActions = 0;
 
         filteredEntries.forEach(([_, value]) => {
-            totalConnected += value.connected || 0;
-            totalNoConnected += value.no_connected || 0;
-            totalNotLifting += value.not_lifting || 0;
+            totalConnected += value?.connected || 0;
+            totalNoConnected += value?.no_connected || 0;
+            totalNotLifting += value?.not_lifting || 0;
         });
 
         // Calculate Total Actions
