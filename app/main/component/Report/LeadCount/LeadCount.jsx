@@ -5,7 +5,12 @@ import Loader from "@/components/Loader/Loader";
 import { useSession } from 'next-auth/react';
 import Link from "next/link";
 import { PhoneCall, CheckCircle, CircleDashed, Navigation, Locate, LocateOff, Trash } from "lucide-react";
+import { useReactToPrint } from "react-to-print";
+import { useRef } from "react";
 export default function Lead() {
+    const contentRef = useRef(null);
+    const reactToPrintFn = useReactToPrint({ contentRef });
+
     const [allquery, setAllquery] = useState([]);
     const [loading, setLoading] = useState(true);
     const [gridLoading, setGridLoading] = useState(true);
@@ -301,7 +306,7 @@ export default function Lead() {
                 Apply Filters
             </button>
             <button
-                onClick={() => window.print()}
+                onClick={() => reactToPrintFn()}
                 className="mt-4 ml-4 bg-green-500 text-white px-4 py-2 rounded shadow-md hover:bg-green-600"
             >
                 Print Page
@@ -312,7 +317,7 @@ export default function Lead() {
                 </div>
             ) : (
                 <>
-                    <div className='grid lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 gap-6 p-6 mt-6 bg-gray-50 rounded-xl'>
+                    <div ref={contentRef} className='grid lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 gap-6 p-6 mt-6 bg-gray-50 rounded-xl'>
                         <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
                             <div className='flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full'>
                                 <PhoneCall className='w-8 h-8 text-blue-500' />

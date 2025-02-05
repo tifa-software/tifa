@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { PhoneCall, CheckCircle, Navigation, XCircle, Loader } from "lucide-react";
-
+import { useReactToPrint } from "react-to-print";
+import { useRef } from "react";
 export default function StaffDatanew({ staffid }) {
     const [userData, setUserData] = useState(null);
     const [adminData, setAdminData] = useState(null);
@@ -13,7 +14,9 @@ export default function StaffDatanew({ staffid }) {
     const [selectedQueries, setSelectedQueries] = useState([]);
     const [loading, setLoading] = useState(true);
     const today = new Date().toISOString().split("T")[0];
-
+    const contentRef = useRef(null);
+    const reactToPrintFn = useReactToPrint({ contentRef });
+    
 
     const [user, setUser] = useState([]);
     const [activeDay, setActiveDay] = useState(null);
@@ -297,8 +300,10 @@ export default function StaffDatanew({ staffid }) {
                 >
                     Remove Filters
                 </button>
+
+                <button  className="mt-4 ml-4 bg-green-500 text-white px-4 py-2 rounded shadow-md hover:bg-green-600" onClick={() => reactToPrintFn()}>Print</button>
                 {/* Data Section */}
-                <div className="mt-6">
+                <div ref={contentRef} className="mt-6">
                     {/* Dynamic Heading */}
                     <h1 className="text-xl px-4 font-semibold">
                         {selectedYear || selectedMonth || startDate || endDate
@@ -307,7 +312,7 @@ export default function StaffDatanew({ staffid }) {
                     </h1>
 
                     {/* Data Cards */}
-                    <div className="grid grid-cols-4 gap-6 p-6 bg-gray-50 rounded-lg shadow-lg">
+                    <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-6 p-6 bg-gray-50 rounded-lg shadow-lg">
 
                         {/* Total Actions */}
                         <div className="flex items-center bg-white p-4 rounded-lg shadow-md">

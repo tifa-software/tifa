@@ -5,8 +5,10 @@ import Loader from '@/components/Loader/Loader';
 import StaffReport from '@/components/StaffReport/StaffReport';
 import StaffReport2 from '@/components/StaffReport2/StaffReport2';
 import StaffReport3 from '@/components/StaffReport3/StaffReport3';
+import { useReactToPrint } from "react-to-print";
+import { useRef } from "react";
 
-export default function StaffReportdata({ staffid, staffName,staffBranch }) {
+export default function StaffReportdata({ staffid, staffName, staffBranch }) {
     const [allqueries, setAllqueries] = useState([]);
     const [sentqueries, setSentqueries] = useState([]);
     const [receivedqueries, setReceivedqueries] = useState([]);
@@ -17,6 +19,8 @@ export default function StaffReportdata({ staffid, staffName,staffBranch }) {
     const [suboption, setSuboption] = useState("");
     const [referenceData, setReferenceData] = useState([]);
     const [selectedReference, setSelectedReference] = useState(null);
+    const contentRef = useRef(null);
+    const reactToPrintFn = useReactToPrint({ contentRef });
 
     useEffect(() => {
         const fetchQueryData = async () => {
@@ -47,23 +51,23 @@ export default function StaffReportdata({ staffid, staffName,staffBranch }) {
         normalizedDate.setHours(0, 0, 0, 0); // Set time to 00:00:00.000 to ignore time part
         return normalizedDate;
     };
-    
+
     const normalizeEndDate = (date) => {
         const normalizedDate = new Date(date);
         normalizedDate.setHours(23, 59, 59, 999); // Set time to 23:59:59.999 to include the whole end day
         return normalizedDate;
     };
-    
+
     const filterByDateAndReference = (data) => {
         let filteredData = data;
-    
+
         // Apply date filter if startDate or endDate is provided
         if (startDate || endDate) {
             filteredData = filteredData.filter(item => {
                 const createdAt = new Date(item.createdAt); // The timestamp from MongoDB
                 const start = normalizeDate(startDate);  // The normalized start date
                 const end = normalizeEndDate(endDate);  // The normalized end date (to include the whole day)
-    
+
                 // Include the item if the createdAt date is between startDate and endDate (inclusive)
                 return (
                     (startDate ? createdAt >= start : true) && // Include if after startDate (or no startDate)
@@ -71,21 +75,21 @@ export default function StaffReportdata({ staffid, staffName,staffBranch }) {
                 );
             });
         }
-    
+
         // Apply reference filter if referenceId is provided
         if (referenceId) {
             filteredData = filteredData.filter(item => item.referenceid === referenceId);
         }
-    
+
         // Apply suboption filter if "Online" reference and suboption is selected
         if (selectedReference?.referencename === "Online" && suboption) {
             filteredData = filteredData.filter(item => item.suboption === suboption);
         }
-    
+
         return filteredData;
     };
-    
-    
+
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -134,7 +138,7 @@ export default function StaffReportdata({ staffid, staffName,staffBranch }) {
                 Staff Report of <span className=' text-yellow-400'> {staffName}</span> at <span className=' text-yellow-400'> {staffBranch}</span> Branch
             </div>
             <button
-                onClick={() => window.print()}
+                onClick={() => reactToPrintFn()}
                 className="mt-4 bg-green-500 text-white px-4 py-2 rounded shadow-md hover:bg-green-600"
             >
                 Print Page
@@ -199,19 +203,22 @@ export default function StaffReportdata({ staffid, staffName,staffBranch }) {
                 </div>
             </div>
 
-            <div className="px-6 py-4 mt-6 bg-white shadow-md rounded-lg">
-                <h2 className="text-lg font-semibold mb-2 text-blue-600">Created Query</h2>
-                <StaffReport data={filterByDateAndReference(allqueries)} />
-            </div>
+            <div ref={contentRef}>
 
-            <div className="px-6 py-4 mt-4 bg-gray-100 shadow-md rounded-lg">
-                <h2 className="text-lg font-semibold mb-2 text-green-600">Assigned Sent</h2>
-                <StaffReport2 data={filterByDateAndReference(sentqueries)} />
-            </div>
+                <div className="px-6 py-4 mt-6 bg-white shadow-md rounded-lg">
+                    <h2 className="text-lg font-semibold mb-2 text-blue-600">Created Query</h2>
+                    <StaffReport data={filterByDateAndReference(allqueries)} />
+                </div>
 
-            <div className="px-6 py-4 mt-4 bg-gray-100 shadow-md rounded-lg">
-                <h2 className="text-lg font-semibold mb-2 text-red-600">Assigned Received</h2>
-                <StaffReport3 data={filterByDateAndReference(receivedqueries)} />
+                <div className="px-6 py-4 mt-4 bg-gray-100 shadow-md rounded-lg">
+                    <h2 className="text-lg font-semibold mb-2 text-green-600">Assigned Sent</h2>
+                    <StaffReport2 data={filterByDateAndReference(sentqueries)} />
+                </div>
+
+                <div className="px-6 py-4 mt-4 bg-gray-100 shadow-md rounded-lg">
+                    <h2 className="text-lg font-semibold mb-2 text-red-600">Assigned Received</h2>
+                    <StaffReport3 data={filterByDateAndReference(receivedqueries)} />
+                </div>
             </div>
         </>
     );
