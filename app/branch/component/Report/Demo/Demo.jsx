@@ -146,10 +146,17 @@ export default function Visit() {
                 ? new Date(query.fees[0].transactionDate)
                 : new Date(query.stage6Date);
 
-            const isWithinDateRange =
-                (!fromDate || relevantDate >= new Date(fromDate)) &&
-                (!toDate || relevantDate <= new Date(toDate));
+            const fromDateObj = fromDate ? new Date(fromDate) : null;
+            const toDateObj = toDate ? new Date(toDate) : null;
 
+            // Ensure fromDate starts at 00:00:00.000 and toDate ends at 23:59:59.999
+            if (fromDateObj) fromDateObj.setHours(0, 0, 0, 0);
+            if (toDateObj) toDateObj.setHours(23, 59, 59, 999);
+
+            const isWithinDateRange =
+                (!fromDateObj || relevantDate >= fromDateObj) &&
+                (!toDateObj || relevantDate <= toDateObj);
+                
             // Convert query.total and filters.total to numbers for exact match comparison
             const filterTotal = filters.total ? parseFloat(filters.total) : null;
             const queryTotal = query.total ? parseFloat(query.total) : 0;
@@ -232,7 +239,7 @@ export default function Visit() {
         setReferenceId(null);
         setSuboption(null);
     };
-    
+
     return (
         <>
             <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
@@ -244,12 +251,12 @@ export default function Visit() {
                         Total Queries: {filteredQueries.length}
                         <div className="shadow-lg rounded-lg bg-white mb-6">
                             <div className="p-4">
-                        <button
-                            onClick={removeFilter}
-                            className="mb-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
-                        >
-                            Remove Filters
-                        </button>
+                                <button
+                                    onClick={removeFilter}
+                                    className="mb-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
+                                >
+                                    Remove Filters
+                                </button>
 
                                 <div className=" flex justify-end">
                                     <div className="flex items-center space-x-2">

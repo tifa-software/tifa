@@ -128,6 +128,10 @@ export default function Visit() {
             const fromDateObj = fromDate ? new Date(fromDate) : null;
             const toDateObj = toDate ? new Date(toDate) : null;
 
+            if (fromDateObj) {
+                fromDateObj.setHours(0, 0, 0, 0); // Ensures fromDate starts at beginning of the day
+            }
+
             // Filter based on date range
             const isWithinDateRange =
                 (!fromDateObj || visitedDate >= fromDateObj) &&

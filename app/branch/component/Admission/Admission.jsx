@@ -150,7 +150,7 @@ export default function Visit() {
 
             const isWithinDateRange =
                 (!from || (admissionDate && admissionDate >= from)) &&
-                (!to || (admissionDate && admissionDate <= to));
+                (!to || (admissionDate && admissionDate <= new Date(to.setHours(23, 59, 59, 999))));
 
 
             const actualFinalFees =

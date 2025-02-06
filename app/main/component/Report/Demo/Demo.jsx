@@ -125,9 +125,16 @@ export default function Visit() {
                 ? new Date(query.fees[0].transactionDate)
                 : new Date(query.stage6Date);
 
+            const fromDateObj = fromDate ? new Date(fromDate) : null;
+            const toDateObj = toDate ? new Date(toDate) : null;
+
+            // Ensure fromDate starts at 00:00:00.000 and toDate ends at 23:59:59.999
+            if (fromDateObj) fromDateObj.setHours(0, 0, 0, 0);
+            if (toDateObj) toDateObj.setHours(23, 59, 59, 999);
+
             const isWithinDateRange =
-                (!fromDate || relevantDate >= new Date(fromDate)) &&
-                (!toDate || relevantDate <= new Date(toDate));
+                (!fromDateObj || relevantDate >= fromDateObj) &&
+                (!toDateObj || relevantDate <= toDateObj);
 
             const filterTotal = filters.total ? parseFloat(filters.total) : null;
             const queryTotal = query.total ? parseFloat(query.total) : 0;
