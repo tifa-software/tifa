@@ -167,7 +167,7 @@ export default function Lead() {
 
 
     return (
-        <div className="p-6 bg-white shadow-xl rounded-xl">
+        <div ref={contentRef} className="p-6 bg-white shadow-xl rounded-xl">
             <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
                 Lead Report
             </div>
@@ -317,7 +317,7 @@ export default function Lead() {
                 </div>
             ) : (
                 <>
-                    <div ref={contentRef} className='grid lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 gap-6 p-6 mt-6 bg-gray-50 rounded-xl'>
+                    <div  className='grid lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 gap-6 p-6 mt-6 bg-gray-50 rounded-xl'>
                         <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
                             <div className='flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full'>
                                 <PhoneCall className='w-8 h-8 text-blue-500' />

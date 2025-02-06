@@ -16,7 +16,7 @@ export default function StaffDatanew({ staffid }) {
     const today = new Date().toISOString().split("T")[0];
     const contentRef = useRef(null);
     const reactToPrintFn = useReactToPrint({ contentRef });
-    
+
 
     const [user, setUser] = useState([]);
     const [activeDay, setActiveDay] = useState(null);
@@ -232,7 +232,7 @@ export default function StaffDatanew({ staffid }) {
     const todayData = data1[today] || {};
     return (
         <>
-            <div className=" mx-auto my-6">
+            <div ref={contentRef} className=" mx-auto my-6">
                 <div className="text-xl font-bold text-center text-white bg-gradient-to-r from-blue-600 to-blue-400 py-4 rounded-lg shadow-lg">
                     Staff Report of{" "}
                     <span className="text-yellow-300">{userData?.name}</span> from{" "}
@@ -240,7 +240,7 @@ export default function StaffDatanew({ staffid }) {
                 </div>
 
                 {/* Filter Section */}
-                <div className="flex justify-around gap-4 items-center mt-6 bg-gray-50 shadow-md p-4 rounded-lg">
+                <div className="flex flex-wrap justify-around gap-4 items-center mt-6 bg-gray-50 shadow-md p-4 rounded-lg">
                     <div className=" flex gap-2 items-center">
                         <label className="font-semibold">Select Year:</label>
                         <select
@@ -301,9 +301,9 @@ export default function StaffDatanew({ staffid }) {
                     Remove Filters
                 </button>
 
-                <button  className="mt-4 ml-4 bg-green-500 text-white px-4 py-2 rounded shadow-md hover:bg-green-600" onClick={() => reactToPrintFn()}>Print</button>
+                <button className="mt-4 ml-4 bg-green-500 text-white px-4 py-2 rounded shadow-md hover:bg-green-600" onClick={() => reactToPrintFn()}>Print</button>
                 {/* Data Section */}
-                <div ref={contentRef} className="mt-6">
+                <div className="mt-6">
                     {/* Dynamic Heading */}
                     <h1 className="text-xl px-4 font-semibold">
                         {selectedYear || selectedMonth || startDate || endDate

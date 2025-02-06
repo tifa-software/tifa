@@ -134,90 +134,93 @@ export default function StaffReportdata({ staffid, staffName, staffBranch }) {
 
     return (
         <>
-            <div className="text-xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
-                Staff Report of <span className=' text-yellow-400'> {staffName}</span> at <span className=' text-yellow-400'> {staffBranch}</span> Branch
-            </div>
-            <button
-                onClick={() => reactToPrintFn()}
-                className="mt-4 bg-green-500 text-white px-4 py-2 rounded shadow-md hover:bg-green-600"
-            >
-                Print Page
-            </button>
-            <div className=' flex flex-wrap gap-5 justify-around'>
-                <div className="px-6 py-4 flex gap-4 justify-center items-center bg-gray-50 shadow-md rounded-lg mt-4">
-                    <label className="font-semibold">Reference Filter</label>
-                    <select
-                        value={referenceId}
-                        onChange={handleReferenceChange}
-                        className="p-2 border"
-                    >
-                        <option value="">All</option>
-                        {referenceData.map((data) => (
-                            <option key={data._id} value={data.referencename}>
-                                {data.referencename}
-                            </option>
-                        ))}
-                    </select>
+            <div ref={contentRef}>
 
-                    {selectedReference?.referencename === "Online" && selectedReference.suboptions?.length > 0 && (
+                <div className="text-xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
+                    Staff Report of <span className=' text-yellow-400'> {staffName}</span> at <span className=' text-yellow-400'> {staffBranch}</span> Branch
+                </div>
+                <button
+                    onClick={() => reactToPrintFn()}
+                    className="mt-4 bg-green-500 text-white px-4 py-2 rounded shadow-md hover:bg-green-600"
+                >
+                    Print Page
+                </button>
+                <div className=' flex flex-wrap gap-5 justify-around'>
+                    <div className="px-6 py-4 flex gap-4 justify-center items-center bg-gray-50 shadow-md rounded-lg mt-4">
+                        <label className="font-semibold">Reference Filter</label>
                         <select
-                            value={suboption}
-                            onChange={(e) => setSuboption(e.target.value)}
+                            value={referenceId}
+                            onChange={handleReferenceChange}
                             className="p-2 border"
                         >
                             <option value="">All</option>
-                            {selectedReference.suboptions.map((suboption, index) => (
-                                <option key={index} value={suboption.name}>
-                                    {suboption.name}
+                            {referenceData.map((data) => (
+                                <option key={data._id} value={data.referencename}>
+                                    {data.referencename}
                                 </option>
                             ))}
                         </select>
-                    )}
+
+                        {selectedReference?.referencename === "Online" && selectedReference.suboptions?.length > 0 && (
+                            <select
+                                value={suboption}
+                                onChange={(e) => setSuboption(e.target.value)}
+                                className="p-2 border"
+                            >
+                                <option value="">All</option>
+                                {selectedReference.suboptions.map((suboption, index) => (
+                                    <option key={index} value={suboption.name}>
+                                        {suboption.name}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
+
+                    <div className="px-6 py-4 flex gap-4 justify-center items-center bg-gray-50 shadow-md rounded-lg mt-4">
+                        <label className="font-semibold">Start Date:</label>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="border p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
+                        />
+                        <label className="font-semibold">End Date:</label>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="border p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
+                        />
+                    </div>
+
+                    {/* Reset Filter Button */}
+                    <div className="flex items-center justify-center mt-4">
+                        <button
+                            onClick={resetFilters}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg shadow-md"
+                        >
+                            Reset Filters
+                        </button>
+                    </div>
                 </div>
 
-                <div className="px-6 py-4 flex gap-4 justify-center items-center bg-gray-50 shadow-md rounded-lg mt-4">
-                    <label className="font-semibold">Start Date:</label>
-                    <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="border p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
-                    />
-                    <label className="font-semibold">End Date:</label>
-                    <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="border p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
-                    />
-                </div>
+                <div >
 
-                {/* Reset Filter Button */}
-                <div className="flex items-center justify-center mt-4">
-                    <button
-                        onClick={resetFilters}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg shadow-md"
-                    >
-                        Reset Filters
-                    </button>
-                </div>
-            </div>
+                    <div className="px-6 py-4 mt-6 bg-white shadow-md rounded-lg">
+                        <h2 className="text-lg font-semibold mb-2 text-blue-600">Created Query</h2>
+                        <StaffReport data={filterByDateAndReference(allqueries)} />
+                    </div>
 
-            <div ref={contentRef}>
+                    <div className="px-6 py-4 mt-4 bg-gray-100 shadow-md rounded-lg">
+                        <h2 className="text-lg font-semibold mb-2 text-green-600">Assigned Sent</h2>
+                        <StaffReport2 data={filterByDateAndReference(sentqueries)} />
+                    </div>
 
-                <div className="px-6 py-4 mt-6 bg-white shadow-md rounded-lg">
-                    <h2 className="text-lg font-semibold mb-2 text-blue-600">Created Query</h2>
-                    <StaffReport data={filterByDateAndReference(allqueries)} />
-                </div>
-
-                <div className="px-6 py-4 mt-4 bg-gray-100 shadow-md rounded-lg">
-                    <h2 className="text-lg font-semibold mb-2 text-green-600">Assigned Sent</h2>
-                    <StaffReport2 data={filterByDateAndReference(sentqueries)} />
-                </div>
-
-                <div className="px-6 py-4 mt-4 bg-gray-100 shadow-md rounded-lg">
-                    <h2 className="text-lg font-semibold mb-2 text-red-600">Assigned Received</h2>
-                    <StaffReport3 data={filterByDateAndReference(receivedqueries)} />
+                    <div className="px-6 py-4 mt-4 bg-gray-100 shadow-md rounded-lg">
+                        <h2 className="text-lg font-semibold mb-2 text-red-600">Assigned Received</h2>
+                        <StaffReport3 data={filterByDateAndReference(receivedqueries)} />
+                    </div>
                 </div>
             </div>
         </>

@@ -27,7 +27,7 @@ export default function StaffReport({ data }) {
     };
     return (
         <div>
-            <div className=' grid grid-cols-4 gap-6 p-6  bg-gray-50 rounded-xl'>
+            <div className=' grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-6 p-6  bg-gray-50 rounded-xl'>
 
                 <div className="flex items-center bg-white p-2 rounded-lg shadow-md">
                     <div className='flex items-center justify-center w-4 h-4 bg-blue-100 rounded-full'>
