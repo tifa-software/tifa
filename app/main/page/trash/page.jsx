@@ -339,7 +339,7 @@ export default function AllQuery() {
         <div>
           <div className="flex items-center gap-1 bg-gray-200 px-2 rounded-md">
             <span className="">Total Queries =</span>
-            <span className=" font-semibold">{queries.length}</span>
+            <span className=" font-semibold">{filteredqueries.length}</span>
           </div>
         </div>
 
