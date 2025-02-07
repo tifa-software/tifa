@@ -100,7 +100,10 @@ export default function UpdateQuery5({ query, audit }) {
         }
       }
       // Auto-close query if status count threshold is reached for 'no_visit_branch_yet' or 'not_confirmed_yet'
-      else if (statusCountsUpdate.interested_but_not_proper_response >= 3) {
+      else if (
+        ['no_visit_branch_yet', 'not_confirmed_yet','interested_but_not_proper_response'].includes(selectedOption) &&
+        statusCountsUpdate.interested_but_not_proper_response >= 3
+      ) {
         const queryUpdateData = {
           id: queryid,
           autoclosed: 'close'

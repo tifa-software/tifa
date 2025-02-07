@@ -17,6 +17,7 @@ export default function UpdateQuery6({ query, audit }) {
   const [feesAmount, setFeesAmount] = useState('');
   const [transactionDate, setTransactionDate] = useState(new Date().toISOString().split('T')[0]); // Default to today
   const [grade, setGrade] = useState('Null'); // New state for grade
+  const [subOption, setSubOption] = useState('');
 
   const handleOptionChange = (event) => {
     setSelectedOption(event.target.value);
@@ -34,6 +35,9 @@ export default function UpdateQuery6({ query, audit }) {
   const handleConnectionOptionChange = (event) => {
     setConnectionOption(event.target.value);
   };
+  const handleSubOptionChange = (event) => {
+    setSubOption(event.target.value);
+  };
 
 
   const handleModalSubmit = async () => {
@@ -44,7 +48,7 @@ export default function UpdateQuery6({ query, audit }) {
     // API call for fees update
     const feesData = {
       id: queryid,
-      courseId :query.courseInterest,
+      courseId: query.courseInterest,
       fees: {
         feesType,
         feesAmount: parseFloat(feesAmount),
@@ -151,24 +155,54 @@ export default function UpdateQuery6({ query, audit }) {
 
         </select>
       </div>
-      <div className="mb-6">
-        <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
-          Interested Status:
-        </label>
-        <select
-          id="statusSelect"
-          value={selectedOption}
-          onChange={handleOptionChange}
-          className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
-        >
-          <option value="" disabled>-- Select Interested Status --</option>
-          <option value="admission">Enroll</option>
-          <option value="demo">Demo</option>
-          <option value="not_interested">Not Interested</option>
-          <option value="response">Response</option>
-        </select>
-      </div>
+      {connectionOption === 'not_lifting' && (
+        <div className="mb-6 transition-opacity duration-300 ease-in-out">
+          <h4 className="text-lg font-semibold mb-3 text-[#29234b]">Not Lifting Options:</h4>
+          <select
+            value={selectedOption}
+            onChange={handleOptionChange}
+            className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+          >
+            <option value="" disabled>-- Select Sub Option --</option>
+            <option value="busy">Busy</option>
+            <option value="call_back">Call Back</option>
+          </select>
+        </div>
+      )}
+      {connectionOption === 'no_connected' && (
+        <div className="mb-6 transition-opacity duration-300 ease-in-out">
+          <h4 className="text-lg font-semibold mb-3 text-[#29234b]">No Connected Options:</h4>
+          <select
+            value={selectedOption}
+            onChange={handleOptionChange}
+            className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+          >
+            <option value="" disabled>-- Select Sub Option --</option>
+            <option value="switch_off">Switch Off</option>
+            <option value="network_error">Network Error</option>
+          </select>
+        </div>
+      )}
 
+      {connectionOption === 'connected' && (
+        <div className="mb-6">
+          <label htmlFor="statusSelect" className="block text-lg font-medium text-gray-700 mb-2">
+            Interested Status:
+          </label>
+          <select
+            id="statusSelect"
+            value={selectedOption}
+            onChange={handleOptionChange}
+            className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
+          >
+            <option value="" disabled>-- Select Interested Status --</option>
+            <option value="admission">Enroll</option>
+            <option value="demo">Demo</option>
+            <option value="not_interested">Not Interested</option>
+            <option value="response">Response</option>
+          </select>
+        </div>
+      )}
       {connectionOption === 'connected' && (
         <div className="mb-6 transition-opacity duration-300 ease-in-out">
           <label htmlFor="deadline" className="block text-lg font-medium text-gray-700 mb-2">Deadline:</label>
