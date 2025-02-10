@@ -500,10 +500,10 @@ export default function Page() {
                         </div>
 
 
-                        {formData.referenceid === 'Online' && (
+                        {referenceData.some((data) => data.referencename === formData.referenceid && data.suboptions?.length) && (
                             <div className="sm:col-span-6 col-span-12">
                                 <label htmlFor="suboption" className="block text-[15px] text-gray-700">
-                                    Online Type
+                                    Reference SubOption
                                 </label>
                                 <select name="suboption" value={formData.suboption} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
                                     <option value=""  selected>Select Reference name</option>
