@@ -19,7 +19,7 @@ export const GET = async (request) => {
         const queryIds = auditLogs.map(log => log.queryId);
 
         // Step 4: Fetch the queries from QueryModel where _id is in the list of queryIds
-        const queries = await QueryModel.find({ _id: { $in: queryIds }, defaultdata: "query" });
+        const queries = await QueryModel.find({ _id: { $in: queryIds },  autoclosed:"open", defaultdata: "query" });
 
         // Step 5: Map the queries to include the grade from AuditLog
         const result = queries.map(query => ({

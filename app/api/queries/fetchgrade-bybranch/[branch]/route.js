@@ -32,7 +32,9 @@ export const GET = async (request, context) => {
         // Step 4: Fetch the queries from QueryModel where _id is in the list of queryIds and branch matches
         const queries = await QueryModel.find({
             _id: { $in: queryIds },
-            branch: branch, // Match the branch parameter
+            branch: branch,
+            autoclosed:"open"
+             // Match the branch parameter
         });
 
         // Step 5: Map the queries to include the grade from AuditLog
