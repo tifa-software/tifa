@@ -82,6 +82,7 @@ export default function AdminData({ params }) {
         email: adminData.email,
         mobile: updatedData.mobile,
         branch: updatedData.branch,
+        usertype: updatedData.usertype,
       };
 
 
@@ -311,7 +312,76 @@ export default function AdminData({ params }) {
                   )}
                 </div>
               </div>
+              <div className="flex justify-between items-center border-b py-4">
+               <div>
+               <h2 className="font-medium flex gap-x-2 items-center">User Roll</h2>
+                {editField === "usertype" ? (
+                  <div className="relative">
+                    <label htmlFor="branch" className="px-2 absolute h-full flex items-center text-green-500">
+                      <Shield size={15} />
+                    </label>
+                    <select
+                      name="usertype"
+                      id="usertype"
+                      value={updatedData.usertype || adminData.usertype}
+                      onChange={(e) => handleInputChange(e, "usertype")}
+                      className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
+                      required
+                    >
+                      <option value="0">Staff</option>
+                      <option value="1">Admin</option>
+                    </select>
+                  </div>
+                ) : (
+                  <p className="text-gray-600 text-sm flex gap-x-2 items-center">
+                    <div className="relative">
+                      <label htmlFor="usertype" className="px-2 absolute h-full flex items-center text-green-500">
+                        <Shield size={15} />
+                      </label>
+                      <select
+                        name="usertype"
+                        id="usertype"
+                        disabled
+                        value={updatedData.usertype || adminData.usertype}
+                        onChange={(e) => handleInputChange(e, "usertype")}
+                        className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
+                        required
+                      >
+                         <option value="0">Staff</option>
+                         <option value="1">Admin</option>
+                      </select>
+                    </div>
+                  </p>
+                )}
+               </div>
 
+
+                <div>
+                  {editField === "usertype" ? (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveClick}
+                        className="bg-[#6cb049] text-white px-4 py-1 rounded-md"
+                      >
+                        <Check />
+                      </button>
+                      <button
+                        onClick={handleCancelClick}
+                        className="bg-red-500 text-white px-4 py-1 rounded-md"
+                      >
+                        <X />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleEditClick("usertype")}
+                      className="border border-green-100 px-5 py-1 rounded-md hover:bg-green-50 duration-150 text-[#6cb049]"
+                    >
+                      <Pencil />
+                    </button>
+                  )}
+                </div>
+              </div>
 
               <div className="flex justify-between items-center border-b py-4">
                 <div>

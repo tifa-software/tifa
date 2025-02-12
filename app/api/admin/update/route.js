@@ -6,7 +6,7 @@ export async function PATCH(req) {
     await dbConnect();
 
     try {
-        const { name, email, mobile, password, branch } = await req.json();
+        const { name, email, mobile, password, branch,usertype } = await req.json();
         
         if (!email) {
             return new Response(
@@ -30,7 +30,7 @@ export async function PATCH(req) {
             );
         }
 
-        const updates = { name, mobile, branch };
+        const updates = { name, mobile, branch,usertype };
 
         // Only update password if it's provided
         if (password) {
