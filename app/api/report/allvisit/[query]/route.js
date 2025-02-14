@@ -13,14 +13,22 @@ export const GET = async (request) => {
         // Step 2: Create a map of queryIds to their corresponding grades and transition dates
         const queryIdMap = {};
         const stageTransitionDates = {}; // Map to store the transition dates
+        
         auditLogs.forEach(log => {
             queryIdMap[log.queryId] = log.grade;
-
-            // Find the previous log where stage was 5 (if any)
-            const prevAuditLog = log.history.find(entry => entry.stage === "5");
-            if (prevAuditLog) {
+        
+            // Find the index of the entry where stage is "6"
+            const stage6Index = log.history.findIndex(exit => exit.stage === "6");
+        
+            if (stage6Index > 0) { 
+                // If there is a previous entry before stage "6"
+                const prevAuditLog = log.history[stage6Index - 1]; 
                 const transitionDate = new Date(prevAuditLog.actionDate);
-                // Format the date as '1-10-2024'
+                stageTransitionDates[log.queryId] = `${transitionDate.getDate()}-${transitionDate.getMonth() + 1}-${transitionDate.getFullYear()}`;
+            } else if (log.history.length > 0) { 
+                // If there's no stage "6", use the latest available action date
+                const latestAuditLog = log.history[log.history.length - 1]; 
+                const transitionDate = new Date(latestAuditLog.actionDate);
                 stageTransitionDates[log.queryId] = `${transitionDate.getDate()}-${transitionDate.getMonth() + 1}-${transitionDate.getFullYear()}`;
             }
         });
