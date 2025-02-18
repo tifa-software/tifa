@@ -8,6 +8,7 @@ const AdminSchema = new Schema(
         email: { type: String, required: true },
         password: { type: String, required: true },
         branch: { type: String, required: true },
+        status: { type: Boolean, required: true, default: true },
         usertype: { type: String, enum: ["0", "1", "2"], default: "0", required: true },
         defaultdata: { type: String, required: true, default: "admin" }
 
@@ -16,6 +17,6 @@ const AdminSchema = new Schema(
 );
 
 const AdminModel =
-    mongoose.models.admin1 || mongoose.model("admin1", AdminSchema);
+    mongoose.models.admin2 || mongoose.model("admin2", AdminSchema);
 
 export default AdminModel
