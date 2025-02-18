@@ -55,7 +55,11 @@ export default function Signin() {
         setLoading(false);
         return;
       }
-
+      if (userData.status === false) {
+        toast.error("This account is deactivated. Please contact admin.");
+        setLoading(false);
+        return;
+      }
       const res = await signIn("credentials", {
         email: formData.email,
         password: formData.password,
@@ -68,10 +72,10 @@ export default function Signin() {
         return;
       }
 
-    
+
       toast.success("Successfully signed in!");
 
-   
+
       if (userData.usertype === "2") {
         router.push("/main");
       } else if (userData.usertype === "1") {
@@ -145,11 +149,10 @@ export default function Signin() {
             <button
               type="submit"
               disabled={!isFormValid() || loading}
-              className={`w-full py-2 px-4 rounded-lg shadow-lg transform transition duration-300 ease-in-out ${
-                isFormValid() && !loading
-                  ? "bg-[#005ca8] text-white hover:bg-[#005ca8] hover:scale-105"
-                  : "bg-gray-400 text-gray-700 cursor-not-allowed"
-              } focus:outline-none focus:ring-2 focus:ring-[#005ca8]`}
+              className={`w-full py-2 px-4 rounded-lg shadow-lg transform transition duration-300 ease-in-out ${isFormValid() && !loading
+                ? "bg-[#005ca8] text-white hover:bg-[#005ca8] hover:scale-105"
+                : "bg-gray-400 text-gray-700 cursor-not-allowed"
+                } focus:outline-none focus:ring-2 focus:ring-[#005ca8]`}
             >
               {loading ? "Signing In..." : "Sign In"}
             </button>

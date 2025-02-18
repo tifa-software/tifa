@@ -6,8 +6,8 @@ export async function PATCH(req) {
     await dbConnect();
 
     try {
-        const { name, email, mobile, password, branch,usertype } = await req.json();
-        
+        const { name, email, mobile, password, branch, usertype, status } = await req.json();
+
         if (!email) {
             return new Response(
                 JSON.stringify({
@@ -19,7 +19,7 @@ export async function PATCH(req) {
         }
 
         const user = await AdminModel.findOne({ email });
-        
+
         if (!user) {
             return new Response(
                 JSON.stringify({
@@ -30,7 +30,7 @@ export async function PATCH(req) {
             );
         }
 
-        const updates = { name, mobile, branch,usertype };
+        const updates = { name, mobile, branch, usertype, status };
 
         // Only update password if it's provided
         if (password) {

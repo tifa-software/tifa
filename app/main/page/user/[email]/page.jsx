@@ -83,6 +83,7 @@ export default function AdminData({ params }) {
         mobile: updatedData.mobile,
         branch: updatedData.branch,
         usertype: updatedData.usertype,
+        status: updatedData.status,
       };
 
 
@@ -375,6 +376,77 @@ export default function AdminData({ params }) {
                   ) : (
                     <button
                       onClick={() => handleEditClick("usertype")}
+                      className="border border-green-100 px-5 py-1 rounded-md hover:bg-green-50 duration-150 text-[#6cb049]"
+                    >
+                      <Pencil />
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-between items-center border-b py-4">
+                <div>
+                  <h2 className="font-medium flex gap-x-2 items-center">Status</h2>
+                  {editField === "status" ? (
+                    <div className="relative">
+                      <label htmlFor="status" className="px-2 absolute h-full flex items-center text-green-500">
+                        <Shield size={15} />
+                      </label>
+                      <select
+                        name="status"
+                        id="status"
+                        value={updatedData.status || adminData.status}
+                        onChange={(e) => handleInputChange(e, "status")}
+                        className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
+                        required
+                      >
+                           <option value="true">🟢 Active</option>
+                           <option value="false">🔴 Deactive</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <p className="text-gray-600 text-sm flex gap-x-2 items-center">
+                      <div className="relative">
+                        <label htmlFor="status" className="px-2 absolute h-full flex items-center text-green-500">
+                          <Shield size={15} />
+                        </label>
+                        <select
+                          name="status"
+                          id="status"
+                          disabled
+                          value={updatedData.status || adminData.status}
+                          onChange={(e) => handleInputChange(e, "status")}
+                          className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
+                          required
+                        >
+
+                          <option value="true">🟢 Active</option>
+                          <option value="false">🔴 Deactive</option>
+                        </select>
+                      </div>
+                    </p>
+                  )}
+                </div>
+
+
+                <div>
+                  {editField === "status" ? (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveClick}
+                        className="bg-[#6cb049] text-white px-4 py-1 rounded-md"
+                      >
+                        <Check />
+                      </button>
+                      <button
+                        onClick={handleCancelClick}
+                        className="bg-red-500 text-white px-4 py-1 rounded-md"
+                      >
+                        <X />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleEditClick("status")}
                       className="border border-green-100 px-5 py-1 rounded-md hover:bg-green-50 duration-150 text-[#6cb049]"
                     >
                       <Pencil />

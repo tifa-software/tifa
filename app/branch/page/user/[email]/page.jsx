@@ -82,6 +82,7 @@ export default function AdminData({ params }) {
         email: adminData.email,
         mobile: updatedData.mobile,
         branch: updatedData.branch,
+        status: updatedData.status,
       };
 
 
@@ -120,7 +121,7 @@ export default function AdminData({ params }) {
 
   const handledelete = async () => {
     const isConfirmed = window.confirm("Are you sure you want to delete this User?");
-    
+
     if (isConfirmed) {
       try {
         await axios.delete(`/api/admin/delete/${user}`);
@@ -132,7 +133,7 @@ export default function AdminData({ params }) {
       }
     }
   };
-  
+
 
   if (loading) {
     return (
@@ -235,58 +236,55 @@ export default function AdminData({ params }) {
                 </div>
               </div>
 
+
+
+
               <div className="flex justify-between items-center border-b py-4">
-               <div>
-               <h2 className="font-medium flex gap-x-2 items-center">Branch</h2>
-                {editField === "branch" ? (
-                  <div className="relative">
-                    <label htmlFor="branch" className="px-2 absolute h-full flex items-center text-green-500">
-                      <Shield size={15} />
-                    </label>
-                    <select
-                      name="branch"
-                      id="branch"
-                      value={updatedData.branch || adminData.branch}
-                      onChange={(e) => handleInputChange(e, "branch")}
-                      className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
-                      required
-                    >
-                      {branches.map((branch) => (
-                        <option key={branch._id} value={branch.branch_name}>
-                          {branch.branch_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ) : (
-                  <p className="text-gray-600 text-sm flex gap-x-2 items-center">
+                <div>
+                  <h2 className="font-medium flex gap-x-2 items-center">Status</h2>
+                  {editField === "status" ? (
                     <div className="relative">
-                      <label htmlFor="branch" className="px-2 absolute h-full flex items-center text-green-500">
+                      <label htmlFor="status" className="px-2 absolute h-full flex items-center text-green-500">
                         <Shield size={15} />
                       </label>
                       <select
-                        name="branch"
-                        id="branch"
-                        disabled
-                        value={updatedData.branch || adminData.branch}
-                        onChange={(e) => handleInputChange(e, "branch")}
+                        name="status"
+                        id="status"
+                        value={updatedData.status || adminData.status}
+                        onChange={(e) => handleInputChange(e, "status")}
                         className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                         required
                       >
-                        {branches.map((branch) => (
-                          <option key={branch._id} value={branch.branch_name}>
-                            {branch.branch_name}
-                          </option>
-                        ))}
+                        <option value="true">🟢 Active</option>
+                        <option value="false">🔴 Deactive</option>
                       </select>
                     </div>
-                  </p>
-                )}
-               </div>
+                  ) : (
+                    <p className="text-gray-600 text-sm flex gap-x-2 items-center">
+                      <div className="relative">
+                        <label htmlFor="status" className="px-2 absolute h-full flex items-center text-green-500">
+                          <Shield size={15} />
+                        </label>
+                        <select
+                          name="status"
+                          id="status"
+                          disabled
+                          value={updatedData.status || adminData.status}
+                          onChange={(e) => handleInputChange(e, "status")}
+                          className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
+                          required
+                        >
+                          <option value="true">🟢 Active</option>
+                          <option value="false">🔴 Deactive</option>
+                        </select>
+                      </div>
+                    </p>
+                  )}
+                </div>
 
 
                 <div>
-                  {editField === "branch" ? (
+                  {editField === "status" ? (
                     <div className="flex gap-2">
                       <button
                         onClick={handleSaveClick}
@@ -303,7 +301,7 @@ export default function AdminData({ params }) {
                     </div>
                   ) : (
                     <button
-                      onClick={() => handleEditClick("branch")}
+                      onClick={() => handleEditClick("status")}
                       className="border border-green-100 px-5 py-1 rounded-md hover:bg-green-50 duration-150 text-[#6cb049]"
                     >
                       <Pencil />
@@ -408,13 +406,13 @@ export default function AdminData({ params }) {
                 )}
               </div>
               <div className="mt-2">
-                    <button
-                      onClick={handledelete}
-                      className="py-2 px-4 bg-red-600 text-white rounded"
-                    >
-                      Delete This User
-                    </button>
-                  </div>
+                <button
+                  onClick={handledelete}
+                  className="py-2 px-4 bg-red-600 text-white rounded"
+                >
+                  Delete This User
+                </button>
+              </div>
             </div>
           )}
         </div>
