@@ -67,10 +67,12 @@ export const GET = async (request, context) => {
                 const actionMonth = actionDate.slice(0, 7);
                 const actionType = entry.action || "UNKNOWN";
 
+                // Initialize daily activity for the date
                 acc.dailyActivity[actionDate] = acc.dailyActivity[actionDate] || { count: [0, 0], queries: [] };
-                acc.dailyActivity[actionDate].count[0]++;
-                let admissionsCount = 0;
 
+                acc.dailyActivity[actionDate].count[0]++;
+
+                let admissionsCount = 0;
                 if (
                     entry.changes.oflinesubStatus?.newValue === "admission" ||
                     entry.changes.onlinesubStatus?.newValue === "admission"
@@ -79,11 +81,36 @@ export const GET = async (request, context) => {
                     acc.dailyActivity[actionDate].count[1]++;
                 }
 
+                // Find the corresponding query
                 const queryData = queries.find(q => q._id.toString() === queryId);
-                if (queryData && !acc.dailyActivity[actionDate].queries.some(q => q._id.toString() === queryId)) {
-                    acc.dailyActivity[actionDate].queries.push(queryData);
+                if (queryData) {
+                    let existingQuery = acc.dailyActivity[actionDate].queries.find(q => q._id.toString() === queryId);
+                    
+                    if (!existingQuery) {
+                        existingQuery = { ...queryData.toObject(), connectionStatus: [] };
+                        acc.dailyActivity[actionDate].queries.push(existingQuery);
+                    }
+
+                    // Ensure connection status is properly recorded
+                    const status = entry.changes?.connectionStatus?.newValue || log.connectionStatus;
+                    existingQuery.connectionStatus.push({ status, time: entry.actionDate });
                 }
 
+                // Store connection status for each day
+                if (!dailyConnectionStatus[actionDate]) {
+                    dailyConnectionStatus[actionDate] = { no_connected: 0, not_lifting: 0, connected: 0 };
+                }
+
+                const status = entry.changes?.connectionStatus?.newValue || log.connectionStatus;
+                if (status === "no_connected") {
+                    dailyConnectionStatus[actionDate].no_connected++;
+                } else if (status === "not_lifting") {
+                    dailyConnectionStatus[actionDate].not_lifting++;
+                } else if (status === "connected") {
+                    dailyConnectionStatus[actionDate].connected++;
+                }
+
+                // Monthly & Weekly Activity
                 acc.monthlyActivity[actionMonth] = acc.monthlyActivity[actionMonth] || [0, 0];
                 acc.monthlyActivity[actionMonth][0]++;
                 acc.monthlyActivity[actionMonth][1] += admissionsCount;
@@ -99,20 +126,6 @@ export const GET = async (request, context) => {
                 }
 
                 acc.actionBreakdown[actionType] = (acc.actionBreakdown[actionType] || 0) + 1;
-
-                // Store connection status for each day
-                if (!dailyConnectionStatus[actionDate]) {
-                    dailyConnectionStatus[actionDate] = { no_connected: 0, not_lifting: 0, connected: 0 };
-                }
-
-                const status = entry.changes?.connectionStatus?.newValue || log.connectionStatus;
-                if (status === "no_connected") {
-                    dailyConnectionStatus[actionDate].no_connected++;
-                } else if (status === "not_lifting") {
-                    dailyConnectionStatus[actionDate].not_lifting++;
-                } else if (status === "connected") {
-                    dailyConnectionStatus[actionDate].connected++;
-                }
             });
 
             return acc;

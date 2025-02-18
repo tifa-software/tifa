@@ -94,14 +94,15 @@ export default function StaffDatanew({ staffid }) {
     };
     const removeFilter = () => {
         // Reset the filter states
-        setSelectedYear(null);
-        setSelectedMonth(null);
-        setStartDate(null);
-        setEndDate(null);
-
-        // Reset the filtered dates to the original data
-        setFilteredDates(Object.entries(data.dailyActivity)); // Assuming you want to reset to the full data
+        setSelectedYear("");
+        setSelectedMonth("");
+        setStartDate("");
+        setEndDate("");
+    
+        // Reset the filtered dates to an empty array
+        setFilteredDates([]);
     };
+    
     const closeModal = () => {
         setIsModalOpen(false);
     };
@@ -293,7 +294,11 @@ export default function StaffDatanew({ staffid }) {
                 </div>
                 <button
                     onClick={removeFilter}
-                    className="ml-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
+                    disabled={!selectedYear && !selectedMonth && !startDate && !endDate}
+                    className={`ml-4 px-4 py-2 rounded shadow-md transition duration-200 
+        ${!selectedYear && !selectedMonth && !startDate && !endDate
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-blue-500 text-white hover:bg-blue-600"}`}
                 >
                     Remove Filters
                 </button>
@@ -474,6 +479,9 @@ export default function StaffDatanew({ staffid }) {
                                                             <th scope="col" className="px-4 font-medium capitalize py-2">
                                                                 Status
                                                             </th>
+                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
+                                                                Connection Status
+                                                            </th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -529,6 +537,32 @@ export default function StaffDatanew({ staffid }) {
                                                                         {query.addmission ? "Enroll" : "Not Enroll"}
                                                                     </td>
                                                                 </td>
+                                                                <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                    {query.connectionStatus && query.connectionStatus.length > 0 ? (
+                                                                        Object.entries(
+                                                                            query.connectionStatus.reduce((acc, statusEntry) => {
+                                                                                const statusLabel =
+                                                                                    statusEntry.status === "no_connected" ? "No Connected" :
+                                                                                        statusEntry.status === "not_lifting" ? "Not Lifting" :
+                                                                                            statusEntry.status === "connected" ? "Connected" : "Unknown";
+
+                                                                                if (!acc[statusLabel]) {
+                                                                                    acc[statusLabel] = { count: 0, time: statusEntry.time };
+                                                                                }
+                                                                                acc[statusLabel].count++;
+                                                                                return acc;
+                                                                            }, {})
+                                                                        ).map(([status, data], index) => (
+                                                                            <div key={index} className="flex flex-col">
+                                                                                <span className="text-gray-700">{status} ({data.count})</span>
+
+                                                                            </div>
+                                                                        ))
+                                                                    ) : (
+                                                                        <span className="text-gray-500">No Status</span>
+                                                                    )}
+                                                                </td>
+
                                                             </tr>
                                                         ))}
                                                     </tbody>
