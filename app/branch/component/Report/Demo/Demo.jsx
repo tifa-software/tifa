@@ -88,6 +88,7 @@ export default function Visit() {
         const fetchCourses = async () => {
             try {
                 const response = await axios.get(`/api/course/fetchall/courses`);
+
                 const courseMapping = response.data.fetch.reduce((acc, course) => {
                     acc[course._id] = course.course_name;
                     return acc;
@@ -95,21 +96,20 @@ export default function Visit() {
                 setCourses(courseMapping);
 
                 const coursesfeeMapping = response.data.fetch.reduce((acc, coursesfee) => {
-                    // Parse enrollpercent as a number and calculate the enrollment fee
-                    const enrollPercent = parseFloat(coursesfee.enrollpercent) || 0; // Default to 0 if enrollpercent is invalid
-                    const enrollmentFee = coursesfee.fees * (enrollPercent / 100); // Calculate the enrollment fee
+                    const enrollPercent = parseFloat(coursesfee.enrollpercent) || 0;
 
                     acc[coursesfee._id] = {
                         totalFee: coursesfee.fees,
                         enrollPercent: enrollPercent,
-                        enrollmentFee: enrollmentFee.toFixed() // Keep the fee to two decimal places
+                        enrollmentFee: (finalFees) => {
+                            const baseFee = finalFees > 0 ? finalFees : coursesfee.fees; // Use finalFees if available
+                            return Math.round(baseFee * (enrollPercent / 100)); // Calculate enrollment fee dynamically
+                        }
                     };
                     return acc;
                 }, {});
 
                 setCoursesfee(coursesfeeMapping);
-
-
             } catch (error) {
                 console.error("Error fetching courses:", error.message);
             }
@@ -117,6 +117,7 @@ export default function Visit() {
 
         fetchCourses();
     }, []);
+
 
     useEffect(() => {
         const fetchuserData = async () => {
@@ -156,7 +157,7 @@ export default function Visit() {
             const isWithinDateRange =
                 (!fromDateObj || relevantDate >= fromDateObj) &&
                 (!toDateObj || relevantDate <= toDateObj);
-                
+
             // Convert query.total and filters.total to numbers for exact match comparison
             const filterTotal = filters.total ? parseFloat(filters.total) : null;
             const queryTotal = query.total ? parseFloat(query.total) : 0;
@@ -490,7 +491,10 @@ export default function Visit() {
                                                                         : new Date(query.stage6Date).toLocaleDateString()}
                                                                 </td>
 
-                                                                <td className="px-6 py-1">{coursesfeen.enrollmentFee} ₹</td>
+                                                                <td className="px-6 py-1">
+                                                                    {coursesfee?.[query.courseInterest]?.enrollmentFee(query.finalfees) || 0} ₹
+                                                                </td>
+
                                                                 <td className="px-6 py-1">{query.total} ₹</td>
 
                                                                 <td className="px-6 py-1">
