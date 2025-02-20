@@ -155,7 +155,7 @@ export default function BulkAssign({ initialData, data }) {
 
           {isDropdownOpen && (
             <div className="absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-auto">
-              {filteredUsers.filter(user => user.usertype !== "2" && user._id !== adminid).length > 0 ? (
+              {filteredUsers.filter(user => user.usertype !== "2" && user._id !== adminid && user.status !== false).length > 0 ? (
                 filteredUsers
                   .filter(user => user.usertype !== "2" && user._id !== adminid)
                   .map((user) => (
