@@ -174,61 +174,40 @@ export default function StaffDatanew({ staffid }) {
         );
     }
     const calculateFilteredTotals = () => {
-        let filteredEntries = Object.entries(data1 || {});
-
-        const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
-
-        // Show only today's data by default
-        if (!selectedYear && !selectedMonth && !startDate && !endDate) {
-            filteredEntries = filteredEntries.filter(([date]) => date === today);
-        }
-
-        // Filter based on selected Year
-        if (selectedYear) {
-            filteredEntries = filteredEntries.filter(([date]) =>
-                new Date(date).getFullYear().toString() === selectedYear
-            );
-        }
-
-        // Filter based on selected Month
-        if (selectedMonth) {
-            filteredEntries = filteredEntries.filter(([date]) =>
-                (new Date(date).getMonth() + 1).toString() === selectedMonth
-            );
-        }
-
-        // Filter based on Date Range
-        if (startDate) {
-            filteredEntries = filteredEntries.filter(([date]) =>
-                new Date(date) >= new Date(startDate)
-            );
-        }
-        if (endDate) {
-            filteredEntries = filteredEntries.filter(([date]) =>
-                new Date(date) <= new Date(endDate)
-            );
-        }
-
+        let filteredEntries = filteredDates || [];
+    
         // Calculate total values
         let totalConnected = 0;
         let totalNoConnected = 0;
         let totalNotLifting = 0;
         let totalActions = 0;
-
-        filteredEntries.forEach(([_, value]) => {
-            totalConnected += value?.connected || 0;
-            totalNoConnected += value?.no_connected || 0;
-            totalNotLifting += value?.not_lifting || 0;
+    
+        filteredEntries.forEach(([day, activity]) => {
+            activity.queries.forEach((query) => {
+                if (query.connectionStatus && query.connectionStatus.length > 0) {
+                    query.connectionStatus.forEach((statusEntry) => {
+                        if (statusEntry.status === "connected") {
+                            totalConnected++;
+                        } else if (statusEntry.status === "no_connected") {
+                            totalNoConnected++;
+                        } else if (statusEntry.status === "not_lifting") {
+                            totalNotLifting++;
+                        }
+                    });
+                }
+            });
         });
-
+    
         // Calculate Total Actions
         totalActions = totalConnected + totalNoConnected + totalNotLifting;
-
+    
         return { totalConnected, totalNoConnected, totalNotLifting, totalActions, filteredEntries };
     };
-
+    
     // Get calculated totals
     const { totalConnected, totalNoConnected, totalNotLifting, totalActions, filteredEntries } = calculateFilteredTotals();
+    
+
     const exportToExcel = () => {
         // Convert filtered entries into an array of objects for better structuring
         const formattedData = filteredEntries.map(([date, data]) => ({
