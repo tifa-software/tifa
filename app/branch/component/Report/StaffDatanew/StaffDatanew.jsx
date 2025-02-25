@@ -98,11 +98,11 @@ export default function StaffDatanew({ staffid }) {
         setSelectedMonth("");
         setStartDate("");
         setEndDate("");
-    
+
         // Reset the filtered dates to an empty array
         setFilteredDates([]);
     };
-    
+
     const closeModal = () => {
         setIsModalOpen(false);
     };
@@ -547,21 +547,33 @@ export default function StaffDatanew({ staffid }) {
                                                                                             statusEntry.status === "connected" ? "Connected" : "Unknown";
 
                                                                                 if (!acc[statusLabel]) {
-                                                                                    acc[statusLabel] = { count: 0, time: statusEntry.time };
+                                                                                    acc[statusLabel] = { count: 0, time: statusEntry.time, subStatus: {} };
                                                                                 }
+
                                                                                 acc[statusLabel].count++;
+
+                                                                                if (statusEntry.subStatus) {
+                                                                                    acc[statusLabel].subStatus[statusEntry.subStatus] =
+                                                                                        (acc[statusLabel].subStatus[statusEntry.subStatus] || 0) + 1;
+                                                                                }
+
                                                                                 return acc;
                                                                             }, {})
                                                                         ).map(([status, data], index) => (
                                                                             <div key={index} className="flex flex-col">
                                                                                 <span className="text-gray-700">{status} ({data.count})</span>
-
+                                                                                {Object.entries(data.subStatus).map(([sub, count], subIndex) => (
+                                                                                    <span key={subIndex} className="text-gray-500 ml-2">
+                                                                                        {sub}: {count}
+                                                                                    </span>
+                                                                                ))}
                                                                             </div>
                                                                         ))
                                                                     ) : (
                                                                         <span className="text-gray-500">No Status</span>
                                                                     )}
                                                                 </td>
+
 
                                                             </tr>
                                                         ))}

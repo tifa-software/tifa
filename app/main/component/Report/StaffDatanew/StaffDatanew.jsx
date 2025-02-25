@@ -237,18 +237,18 @@ export default function StaffDatanew({ staffid }) {
             "Not Connected": data.no_connected || 0,
             "Not Lifting": data.not_lifting || 0,
         }));
-    
+
         // Convert JSON data to a worksheet
         const worksheet = XLSX.utils.json_to_sheet(formattedData);
         const workbook = XLSX.utils.book_new();
-    
+
         // Append the sheet to the workbook
         XLSX.utils.book_append_sheet(workbook, worksheet, "Filtered Queries");
-    
+
         // Save the file
         XLSX.writeFile(workbook, "filtered_queries.xlsx");
     };
-    
+
 
     const todayData = data1[today] || {};
     return (
@@ -327,7 +327,7 @@ export default function StaffDatanew({ staffid }) {
                 </button>
                 <button
                     onClick={exportToExcel}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                    className="bg-blue-500 ms-2 text-white px-4 py-2 rounded hover:bg-blue-600"
                 >
                     Export to Excel
                 </button>
@@ -577,21 +577,33 @@ export default function StaffDatanew({ staffid }) {
                                                                                             statusEntry.status === "connected" ? "Connected" : "Unknown";
 
                                                                                 if (!acc[statusLabel]) {
-                                                                                    acc[statusLabel] = { count: 0, time: statusEntry.time };
+                                                                                    acc[statusLabel] = { count: 0, time: statusEntry.time, subStatus: {} };
                                                                                 }
+
                                                                                 acc[statusLabel].count++;
+
+                                                                                if (statusEntry.subStatus) {
+                                                                                    acc[statusLabel].subStatus[statusEntry.subStatus] =
+                                                                                        (acc[statusLabel].subStatus[statusEntry.subStatus] || 0) + 1;
+                                                                                }
+
                                                                                 return acc;
                                                                             }, {})
                                                                         ).map(([status, data], index) => (
                                                                             <div key={index} className="flex flex-col">
                                                                                 <span className="text-gray-700">{status} ({data.count})</span>
-
+                                                                                {Object.entries(data.subStatus).map(([sub, count], subIndex) => (
+                                                                                    <span key={subIndex} className="text-gray-500 ml-2">
+                                                                                        {sub}: {count}
+                                                                                    </span>
+                                                                                ))}
                                                                             </div>
                                                                         ))
                                                                     ) : (
                                                                         <span className="text-gray-500">No Status</span>
                                                                     )}
                                                                 </td>
+
                                                             </tr>
                                                         ))}
                                                     </tbody>
