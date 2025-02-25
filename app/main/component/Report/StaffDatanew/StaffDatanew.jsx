@@ -4,6 +4,8 @@ import axios from "axios";
 import { PhoneCall, CheckCircle, Navigation, XCircle, Loader } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import { useRef } from "react";
+import * as XLSX from "xlsx";
+
 export default function StaffDatanew({ staffid }) {
     const [userData, setUserData] = useState(null);
     const [adminData, setAdminData] = useState(null);
@@ -227,7 +229,26 @@ export default function StaffDatanew({ staffid }) {
 
     // Get calculated totals
     const { totalConnected, totalNoConnected, totalNotLifting, totalActions, filteredEntries } = calculateFilteredTotals();
-
+    const exportToExcel = () => {
+        // Convert filtered entries into an array of objects for better structuring
+        const formattedData = filteredEntries.map(([date, data]) => ({
+            Date: date,
+            Connected: data.connected || 0,
+            "Not Connected": data.no_connected || 0,
+            "Not Lifting": data.not_lifting || 0,
+        }));
+    
+        // Convert JSON data to a worksheet
+        const worksheet = XLSX.utils.json_to_sheet(formattedData);
+        const workbook = XLSX.utils.book_new();
+    
+        // Append the sheet to the workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Filtered Queries");
+    
+        // Save the file
+        XLSX.writeFile(workbook, "filtered_queries.xlsx");
+    };
+    
 
     const todayData = data1[today] || {};
     return (
@@ -304,7 +325,12 @@ export default function StaffDatanew({ staffid }) {
                 >
                     Remove Filters
                 </button>
-
+                <button
+                    onClick={exportToExcel}
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                >
+                    Export to Excel
+                </button>
                 <button className="mt-4 ml-4 bg-green-500 text-white px-4 py-2 rounded shadow-md hover:bg-green-600" onClick={() => reactToPrintFn()}>Print</button>
                 {/* Data Section */}
                 <div className="mt-6">
