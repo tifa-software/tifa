@@ -20,8 +20,10 @@ export default function StaffDatanew({ staffid }) {
     const [selectedYear, setSelectedYear] = useState("");
     const [selectedMonth, setSelectedMonth] = useState("");
     const [filteredDates, setFilteredDates] = useState([]);
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
+    
+    const [startDate, setStartDate] = useState(today);
+    const [endDate, setEndDate] = useState(today);
+
     const [monthlyActivity, setMonthlyActivity] = useState(null);
 
 
@@ -171,13 +173,14 @@ export default function StaffDatanew({ staffid }) {
     }
     const calculateFilteredTotals = () => {
         let filteredEntries = filteredDates || [];
-    
-        // Calculate total values
+
+        // Initialize total values
         let totalConnected = 0;
         let totalNoConnected = 0;
         let totalNotLifting = 0;
+        let totalUnknown = 0; // New unknown category
         let totalActions = 0;
-    
+
         filteredEntries.forEach(([day, activity]) => {
             activity.queries.forEach((query) => {
                 if (query.connectionStatus && query.connectionStatus.length > 0) {
@@ -188,21 +191,24 @@ export default function StaffDatanew({ staffid }) {
                             totalNoConnected++;
                         } else if (statusEntry.status === "not_lifting") {
                             totalNotLifting++;
+                        } else {
+                            totalUnknown++; // Count unknown statuses
                         }
                     });
                 }
             });
         });
-    
-        // Calculate Total Actions
-        totalActions = totalConnected + totalNoConnected + totalNotLifting;
-    
-        return { totalConnected, totalNoConnected, totalNotLifting, totalActions, filteredEntries };
+
+        // Calculate Total Actions (including Unknown)
+        totalActions = totalConnected + totalNoConnected + totalNotLifting + totalUnknown;
+
+        return { totalConnected, totalNoConnected, totalNotLifting, totalUnknown, totalActions, filteredEntries };
     };
-    
+
+
     // Get calculated totals
     const { totalConnected, totalNoConnected, totalNotLifting, totalActions, filteredEntries } = calculateFilteredTotals();
-    
+
 
     const todayData = data1[today] || {};
     return (
