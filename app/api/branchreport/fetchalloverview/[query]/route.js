@@ -95,7 +95,10 @@ export const GET = async (request) => {
       queryFilter.branch = { $regex: location, $options: "i" };
     }
     if (studentName) {
-      queryFilter.studentName = { $exists: false }; // Finds documents where studentName does not exist
+      queryFilter.$or = [
+        { studentName: { $exists: false } }, 
+        { studentName: "" } 
+      ];
     }
 
 
