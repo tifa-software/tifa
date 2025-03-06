@@ -110,16 +110,33 @@ export default function Page({ params }) {
                                     onClick={async () => {
                                         if (query.autoclosed === "close") {
                                             try {
-                                                // Call the update API to change autoclosed to "open"
+                                                // First API call: Update `autoclosed` to "open"
                                                 const newApiResponse = await axios.patch('/api/queries/update', {
                                                     id: query._id,
-                                                    autoclosed: "open"  // Change autoclosed to "open" when recovering query
+                                                    autoclosed: "open"  // Recover the query
+                                                });
+
+                                                // Second API call: Update audit data with `statusCounts`
+                                                const auditResponse = await axios.patch('/api/audit/update', {
+                                                    queryId: query._id,
+                                                    statusCounts: {
+                                                        busy: 0,
+                                                        call_back: 0,
+                                                        switch_off: 0,
+                                                        network_error: 0,
+                                                        interested_but_not_proper_response: 0,
+                                                        no_visit_branch_yet: 0,
+                                                        not_confirmed_yet: 0,
+                                                        not_proper_response: 0
+                                                    }
                                                 });
 
                                                 // Optionally, refresh data after the update
                                                 fetchBranchData();
+
+                                                console.log("Query recovered and audit updated:", newApiResponse.data, auditResponse.data);
                                             } catch (error) {
-                                                console.error("Error updating query:", error);
+                                                console.error("Error updating query or audit:", error);
                                             }
                                         } else {
                                             // Open the modal if query.autoclosed is not "close"
