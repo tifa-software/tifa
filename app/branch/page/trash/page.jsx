@@ -121,6 +121,8 @@ export default function AllQuery() {
 
     return sortedQueries;
   };
+
+  const [customDate, setCustomDate] = React.useState("");
   // Filter queries based on course and search term
   const filterByDeadline = (querie) => {
     const currentDate = new Date();
@@ -139,6 +141,9 @@ export default function AllQuery() {
         return querieDeadline.toDateString() === dayAfterTomorrow.toDateString();
       case "past":
         return querieDeadline < new Date(currentDate.setHours(0, 0, 0, 0));
+      case "custom":
+        const customDateObj = new Date(customDate);
+        return querieDeadline.toDateString() === customDateObj.toDateString();
       default:
         return true; // 'All' will display all queries
     }
@@ -257,8 +262,16 @@ export default function AllQuery() {
                   <option value="tomorrow">Tomorrow</option>
                   <option value="dayAfterTomorrow">Day After Tomorrow</option>
                   <option value="past">Past Date</option>
+                  <option value="custom">Custom Date</option>
                 </select>
-
+                {deadlineFilter === "custom" && (
+                  <input
+                    type="date"
+                    className="border px-3 py-2 focus:outline-none text-sm"
+                    value={customDate}
+                    onChange={(e) => setCustomDate(e.target.value)} // Update custom date state
+                  />
+                )}
                 <select
                   className="border px-3 py-2 focus:outline-none text-sm"
                   value={sortOrder}
@@ -313,21 +326,30 @@ export default function AllQuery() {
             <option value="C">C</option>
 
           </select>
-
-          <select
-            className="border px-3 py-2 focus:outline-none text-sm"
-            value={deadlineFilter} // Binding the deadline filter state
-            onChange={(e) => setDeadlineFilter(e.target.value)} // Update the deadline filter state
-          >
-            <option value="" disabled>Deadline</option>
-            <option value="">All </option>
-            <option value="today">Today</option>
-            <option value="tomorrow">Tomorrow</option>
-            <option value="dayAfterTomorrow">Day After Tomorrow</option>
-            <option value="past">Past Date</option>
-          </select>
-
-
+          <div className=' relative'>
+            <select
+              className="border px-3 py-2 focus:outline-none text-sm"
+              value={deadlineFilter} // Binding the deadline filter state
+              onChange={(e) => setDeadlineFilter(e.target.value)} // Update the deadline filter state
+            >
+              <option value="" disabled>Deadline</option>
+              <option value="">All </option>
+              <option value="today">Today</option>
+              <option value="tomorrow">Tomorrow</option>
+              <option value="dayAfterTomorrow">Day After Tomorrow</option>
+              <option value="custom">Custom Date</option>
+            </select>
+            {deadlineFilter === "custom" && (
+              <div className=' absolute'>
+                <input
+                  type="date"
+                  className="border px-3 py-2 focus:outline-none text-sm"
+                  value={customDate}
+                  onChange={(e) => setCustomDate(e.target.value)} // Update custom date state
+                />
+              </div>
+            )}
+          </div>
 
           <select
             className="border px-3 py-2 focus:outline-none text-sm"
