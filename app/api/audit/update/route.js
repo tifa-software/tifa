@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+export const preferredRegion = ["bom1"]; 
 import dbConnect from "@/lib/dbConnect";
 import QueryUpdateModel from "@/model/AuditLog";
 import QueryModel from "@/model/Query"; // Import the QueryModel to update deadline

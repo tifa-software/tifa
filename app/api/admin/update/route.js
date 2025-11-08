@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+export const preferredRegion = ["bom1"]; 
 import AdminModel from "@/model/Admin";
 import dbConnect from "@/lib/dbConnect";
 import bcrypt from "bcryptjs";

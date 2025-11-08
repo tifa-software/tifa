@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+export const preferredRegion = ["bom1"]; 
 import dbConnect from "@/lib/dbConnect";
 import ReferenceModel from "@/model/Reference";
 import { ObjectId } from "mongodb"; // Ensure you're using ObjectId for valid MongoDB IDs

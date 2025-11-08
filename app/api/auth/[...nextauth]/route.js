@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+export const preferredRegion = ["bom1"]; 
 import NextAuth from "next-auth/next";
 import CredentialsProvider from "next-auth/providers/credentials";
 import dbConnect from "@/lib/dbConnect";
