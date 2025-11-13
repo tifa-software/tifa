@@ -134,8 +134,15 @@ export const GET = async (request, context) => {
     const parsedDeadlineExpression = {
       $let: {
         vars: {
-          deadlineStr: { $ifNull: ["$deadline", ""] },
+          deadlineStr: {
+            $cond: {
+              if: { $eq: [{ $type: "$deadline" }, "string"] },
+              then: "$deadline",
+              else: { $toString: { $ifNull: ["$deadline", ""] } },
+            },
+          },
         },
+
         in: {
           $switch: {
             branches: [
@@ -251,25 +258,25 @@ export const GET = async (request, context) => {
       { $addFields: { parsedDeadline: parsedDeadlineExpression } },
     ];
 
-      if (dateFilter === "today") {
+    if (dateFilter === "today") {
       pipeline.push({
         $match: {
           parsedDeadline: { $gte: todayStart, $lt: tomorrowStart },
         },
-        });
-      } else if (dateFilter === "tomorrow") {
+      });
+    } else if (dateFilter === "tomorrow") {
       pipeline.push({
         $match: {
           parsedDeadline: { $gte: tomorrowStart, $lt: dayAfterTomorrowStart },
         },
-        });
-      } else if (dateFilter === "dayAfterTomorrow") {
+      });
+    } else if (dateFilter === "dayAfterTomorrow") {
       pipeline.push({
         $match: {
           parsedDeadline: { $gte: dayAfterTomorrowStart, $lt: threeDaysOutStart },
         },
-        });
-      } else if (dateFilter === "past") {
+      });
+    } else if (dateFilter === "past") {
       pipeline.push({
         $match: {
           parsedDeadline: { $lt: todayStart },
