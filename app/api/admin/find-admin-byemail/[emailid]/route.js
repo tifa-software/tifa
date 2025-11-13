@@ -1,37 +1,40 @@
 export const runtime = "nodejs";
-export const preferredRegion = ["bom1"]; 
+export const preferredRegion = ["bom1"];
 import dbConnect from "@/lib/dbConnect";
 import AdminModel from "@/model/Admin";
 
-export async function GET(request, context) {
+export async function GET(req, context) {
   await dbConnect();
 
   try {
-
-    const emailid = context.params.emailid;
-
-
-    const user = await AdminModel.findOne({ email: emailid });
-    console.log("user")
-    if (!user) {
-      return Response.json(
-        {
-          message: "User not found!",
-          success: false,
-        },
-        { status: 404 }
-      );
+    const { emailid } = context.params || {};
+    if (!emailid) {
+      return new Response(JSON.stringify({ success: false, message: "Email ID required" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
-    return Response.json(user, { status: 200 });
+    const user = await AdminModel.findOne({ email: emailid })
+      .select("-password -__v")
+      .lean();
+
+    if (!user) {
+      return new Response(JSON.stringify({ success: false, message: "User not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify(user), {
+      status: 200,
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    });
   } catch (error) {
-    console.log("Error on getting user:", error);
-    return Response.json(
-      {
-        message: "Error on getting user!",
-        success: false,
-      },
-      { status: 500 }
-    );
+    console.error("Error on getting user:", error);
+    return new Response(JSON.stringify({ success: false, message: "Server error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
