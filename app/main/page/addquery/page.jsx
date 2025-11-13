@@ -79,46 +79,42 @@ export default function Page() {
     const [existingBranch, setExistingBranch] = useState("");
 
     useEffect(() => {
-        let isMounted = true; // To prevent state updates if the component unmounts during the fetch
-    
+        if (!formData.studentContact.phoneNumber) return;
+
+        let isMounted = true;
+
         const fetchData = async () => {
             setLoading(true);
             try {
-                const response = await axios.get("/api/queries/number/s");
-                if (isMounted) {
-                    // Create a map of phone numbers to their branches
-                    const phoneBranchMap = new Map(
-                        response.data.fetch.map((item) => [
-                            item.studentContact.phoneNumber,
-                            item.branch,
-                        ])
-                    );
-    
-                    const branch = phoneBranchMap.get(formData.studentContact.phoneNumber);
-                    setIsPhoneNumberExist(!!branch); // Update state to reflect if the phone number exists
-                    setExistingBranch(branch || null); // Set the branch if the phone number exists
-    
-                    // Trigger toast if the phone number exists
-                    if (branch) {
+                const response = await axios.get(`/api/queries/number/s`, {
+                    params: { phoneNumber: formData.studentContact.phoneNumber },
+                });
+
+                if (isMounted && response.data.success) {
+                    const { exists, branch } = response.data;
+
+                    setIsPhoneNumberExist(exists);
+                    setExistingBranch(branch);
+
+                    if (exists && branch) {
                         toast.error(`Phone Number already exists in branch: ${branch}`);
                     }
                 }
             } catch (error) {
-                console.error("Error fetching data:", error);
+                console.error("Error fetching phone number:", error);
             } finally {
-                if (isMounted) {
-                    setLoading(false);
-                }
+                if (isMounted) setLoading(false);
             }
         };
-    
+
         fetchData();
-    
+
         return () => {
-            isMounted = false; // Cleanup to avoid setting state on unmounted component
+            isMounted = false;
         };
     }, [formData.studentContact.phoneNumber]);
-    
+
+
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
@@ -505,7 +501,7 @@ export default function Page() {
                                     Reference SubOption
                                 </label>
                                 <select name="suboption" value={formData.suboption} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
-                                    <option value=""  selected>Select Reference name</option>
+                                    <option value="" selected>Select Reference name</option>
                                     {referenceData
                                         .find(data => data.referencename === formData.referenceid)?.suboptions
                                         .map((suboption, subIndex) => (
@@ -941,7 +937,7 @@ export default function Page() {
                                         <option value="" disabled>Select Interest Status</option>
 
                                         <option value="interested">Interested</option>
-                                    <option value="Visited">Visited</option>
+                                        <option value="Visited">Visited</option>
 
                                         <option value="not_interested">Not Interested</option>
 

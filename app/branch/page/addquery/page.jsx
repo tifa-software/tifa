@@ -97,44 +97,39 @@ export default function Page() {
 
     const [existingBranch, setExistingBranch] = useState("");
 
-    useEffect(() => {
-        let isMounted = true; // To prevent state updates if the component unmounts during the fetch
+     useEffect(() => {
+        if (!formData.studentContact.phoneNumber) return;
+
+        let isMounted = true;
 
         const fetchData = async () => {
             setLoading(true);
             try {
-                const response = await axios.get("/api/queries/number/s");
-                if (isMounted) {
-                    // Create a map of phone numbers to their branches
-                    const phoneBranchMap = new Map(
-                        response.data.fetch.map((item) => [
-                            item.studentContact.phoneNumber,
-                            item.branch,
-                        ])
-                    );
+                const response = await axios.get(`/api/queries/number/s`, {
+                    params: { phoneNumber: formData.studentContact.phoneNumber },
+                });
 
-                    const branch = phoneBranchMap.get(formData.studentContact.phoneNumber);
-                    setIsPhoneNumberExist(!!branch); // Update state to reflect if the phone number exists
-                    setExistingBranch(branch || null); // Set the branch if the phone number exists
+                if (isMounted && response.data.success) {
+                    const { exists, branch } = response.data;
 
-                    // Trigger toast if the phone number exists
-                    if (branch) {
+                    setIsPhoneNumberExist(exists);
+                    setExistingBranch(branch);
+
+                    if (exists && branch) {
                         toast.error(`Phone Number already exists in branch: ${branch}`);
                     }
                 }
             } catch (error) {
-                console.error("Error fetching data:", error);
+                console.error("Error fetching phone number:", error);
             } finally {
-                if (isMounted) {
-                    setLoading(false);
-                }
+                if (isMounted) setLoading(false);
             }
         };
 
         fetchData();
 
         return () => {
-            isMounted = false; // Cleanup to avoid setting state on unmounted component
+            isMounted = false;
         };
     }, [formData.studentContact.phoneNumber]);
 
