@@ -1,78 +1,71 @@
 export const runtime = "nodejs";
-export const preferredRegion = ["bom1"]; 
+export const preferredRegion = ["bom1"];
 import dbConnect from "@/lib/dbConnect";
 import QueryUpdateModel from "@/model/AuditLog";
 
-export const GET = async (request) => {
-    await dbConnect();
+export const GET = async () => {
+  await dbConnect();
 
-    try {
-        // Fetch total number of queries excluding where defaultdata is "query"
-        const fetch = await QueryUpdateModel.aggregate([
-            {
-                $match: { message: { $ne: "query" } }, // Exclude documents with defaultdata set to "query"
+  try {
+    const dateWiseUpdates = await QueryUpdateModel.aggregate([
+      {
+        $match: { defaultdata: { $ne: "query" } },
+      },
+      { $unwind: "$history" },
+      {
+        $addFields: {
+          year: { $year: "$history.actionDate" },
+          month: { $month: "$history.actionDate" },
+          day: { $dayOfMonth: "$history.actionDate" },
+        },
+      },
+      {
+        $addFields: {
+          weekOfMonth: {
+            $ceil: {
+              $divide: [
+                { $add: [{ $subtract: ["$day", 1] }, 1] },
+                7,
+              ],
             },
-            {
-                $group: {
-                    _id: null,
-                    Total: { $sum: 1 }
-                },
-            },
-            {
-                $project: {
-                    _id: 0,
-                    Total: 1,
-                },
-            }
-        ]);
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: "$year",
+            month: "$month",
+            week: "$weekOfMonth",
+          },
+          updatedCount: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          year: "$_id.year",
+          month: "$_id.month",
+          week: "$_id.week",
+          updatedCount: 1,
+        },
+      },
+      { $sort: { year: 1, month: 1, week: 1 } },
+    ]);
 
-        // Fetch date-wise update counts based on history.actionDate excluding defaultdata: "query"
-        const dateWiseUpdates = await QueryUpdateModel.aggregate([
-            {
-                $match: { defaultdata: { $ne: "query" } }, // Exclude documents with defaultdata set to "query"
-            },
-            {
-                $unwind: "$history" // Unwind the history array
-            },
-            {
-                $group: {
-                    _id: {
-                        date: { $dateToString: { format: "%Y-%m-%d", date: "$history.actionDate" } }
-                    },
-                    updatedCount: { $sum: 1 },
-                },
-            },
-            {
-                $project: {
-                    _id: 0,
-                    date: "$_id.date",
-                    updatedCount: 1,
-                },
-            },
-            { $sort: { date: 1 } }  // Sort by date in ascending order
-        ]);
+    const totalQueries = await QueryUpdateModel.countDocuments({
+      message: { $ne: "query" },
+    });
 
-        const result = fetch[0] || { Total: 0 };
-
-        return Response.json(
-            {
-                message: "All data fetched!",
-                success: true,
-                data: {
-                    totalQueries: result.Total,
-                    dateWiseUpdates
-                },
-            },
-            { status: 200 }
-        );
-    } catch (error) {
-        console.log("Error on getting data list:", error);
-        return Response.json(
-            {
-                message: "Error on getting data list!",
-                success: false,
-            },
-            { status: 500 }
-        );
-    }
+    return Response.json(
+      {
+        success: true,
+        data: { totalQueries, dateWiseUpdates },
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return Response.json({ success: false, message: "Server error" }, { status: 500 });
+  }
 };
