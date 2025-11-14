@@ -165,8 +165,14 @@ export const GET = async (request, context) => {
 
     const parsedDeadlineExpression = {
       $let: {
-        vars: {
-          deadlineStr: { $ifNull: ["$deadline", ""] },
+       vars: {
+          deadlineStr: {
+            $cond: {
+              if: { $eq: [{ $type: "$deadline" }, "string"] },
+              then: "$deadline",
+              else: { $toString: { $ifNull: ["$deadline", ""] } },
+            },
+          },
         },
         in: {
           $switch: {
