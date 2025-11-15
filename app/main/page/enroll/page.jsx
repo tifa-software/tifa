@@ -1,240 +1,212 @@
 "use client";
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import Loader from '@/components/Loader/Loader';
+
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+// import SkeletonTable from "@/components/SkeletonTable";
 import { useRouter } from "next/navigation";
 
 export default function Assigned() {
-    const [queries, setQueries] = useState([]);
-    const [branchStats, setBranchStats] = useState({});
-    const [cityStats, setCityStats] = useState({}); // New state for city statistics
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [searchTerm, setSearchTerm] = useState('');
-
-    // Pagination states
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(6); // Items to show per page
     const router = useRouter();
 
-    // Fetch enrolled queries and branch statistics
+    const [queries, setQueries] = useState([]);
+    const [branchStats, setBranchStats] = useState([]);
+    const [cityStats, setCityStats] = useState([]);
+
+    const [branches, setBranches] = useState([]);
+    const [cities, setCities] = useState([]);
+
+    const [loading, setLoading] = useState(true);
+
+    // Filters
+    const [branchFilter, setBranchFilter] = useState("All");
+    const [cityFilter, setCityFilter] = useState("All");
+
+    // Search fields
+    const [searchTerm, setSearchTerm] = useState("");
+    const [searchBy, setSearchBy] = useState("name"); // NEW
+
+    // Pagination
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+
+    const getData = async () => {
+        setLoading(true);
+
+        try {
+            const res = await axios.get(
+                `/api/queries/enrolledserver?` +
+                `page=${page}&limit=6&` +
+                `branch=${branchFilter}&` +
+                `city=${cityFilter}&` +
+                `search=${searchTerm}&` +
+                `searchBy=${searchBy}`
+            );
+
+            setQueries(res.data.fetch);
+            setBranchStats(res.data.branchStats);
+            setCityStats(res.data.cityStats);
+            setBranches(res.data.branches);
+            setCities(res.data.cities);
+            setTotalPages(res.data.totalPages);
+        } catch (error) {
+            console.log(error);
+        }
+
+        setLoading(false);
+    };
+
     useEffect(() => {
-        const fetchEnrolledQueries = async () => {
-            try {
-                setLoading(true);
-                const response = await axios.get('/api/queries/enrolled/5');
-                setQueries(response.data.fetch);
-                calculateBranchStats(response.data.fetch); // Calculate stats based on the fetched data
-                calculateCityStats(response.data.fetch); // Calculate city stats based on the fetched data
-            } catch (error) {
-                setError('Failed to fetch data. Please try again later.');
-                console.error('Error fetching enrolled queries:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
+        getData();
+    }, [page, branchFilter, cityFilter, searchTerm, searchBy]);
 
-        fetchEnrolledQueries();
-    }, []);
-
-    // Calculate statistics per branch
-    const calculateBranchStats = (data) => {
-        const stats = data.reduce((acc, query) => {
-            acc[query.branch] = (acc[query.branch] || 0) + 1;
-            return acc;
-        }, {});
-        setBranchStats(stats);
-    };
-
-    // Calculate statistics per city
-    const calculateCityStats = (data) => {
-        const stats = data.reduce((acc, query) => {
-            acc[query.studentContact.city] = (acc[query.studentContact.city] || 0) + 1;
-            return acc;
-        }, {});
-        setCityStats(stats); // Update city stats
-    };
-
-    // Handle search input change
-    const handleSearch = (e) => {
-        setSearchTerm(e.target.value);
-        setCurrentPage(1); // Reset to first page on search
-    };
-
-    // Filter queries based on search term (name or contact number)
-    const filteredQueries = queries.filter((query) => {
-        const studentName = query.studentName || ""; // Default to empty string if undefined
-        const phoneNumber = query.studentContact?.phoneNumber || ""; // Optional chaining for nested property
-        const city = query.studentContact?.city || ""; // Optional chaining for nested property
-    
-        return (
-            studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            phoneNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            city.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    });
-    
-
-    // Pagination Logic
-    const indexOfLastQuery = currentPage * itemsPerPage;
-    const indexOfFirstQuery = indexOfLastQuery - itemsPerPage;
-    const currentQueries = filteredQueries.slice(indexOfFirstQuery, indexOfLastQuery);
-    const totalPages = Math.ceil(filteredQueries.length / itemsPerPage);
-
-    if (loading) {
-        return <div><Loader /></div>;
-    }
-
-    if (error) {
-        return <div className="text-red-500 text-center">{error}</div>;
-    }
-
-    const handleRowClick = (id) => {
-        router.push(`/main/page/allquery/${id}`);
-    };
+    const handleRowClick = (id) => router.push(`/main/page/allquery/${id}`);
 
     return (
-        <div className="container mx-auto p-6">
-            <div className="flex flex-col lg:flex-row justify-between space-y-6 lg:space-y-0 lg:space-x-6">
+        <div className="container mx-auto p-5">
 
-                {/* Assigned Queries Table */}
-                <div className="w-full lg:w-2/3">
-                    <div className="shadow-lg rounded-lg bg-white mb-6 relative overflow-hidden">
-                        <div className="p-6">
-                            <h2 className="text-2xl font-bold mb-4 text-gray-800">Enrolled Queries</h2>
-                            <p className="text-sm text-gray-600 mb-4">
-                                Total Students: <span className="font-bold">{filteredQueries.length}</span>
-                            </p>
-                            <div className="relative overflow-y-auto" style={{ height: '400px' }}>
-                                <table className="min-w-full text-xs text-left text-gray-600 font-sans">
-                                    <thead className="bg-[#29234b] text-white uppercase">
-                                        <tr>
-                                            <th className="px-6 py-4">Sr. No.</th>
-                                            <th className="px-6 py-4">Student Name</th>
-                                            <th className="px-6 py-4">Branch</th>
-                                            <th className="px-6 py-4">City</th>
-                                            <th className="px-6 py-4">Status</th>
+            <h1 className="text-3xl font-bold text-[#29234b] mb-2">Enrolled Students</h1>
+            <p className="text-gray-600 mb-6">Search & filter enrolled students</p>
+
+            {/* FILTER BOX */}
+            <div className="bg-white rounded-xl shadow-md p-5 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+                    {/* Branch */}
+                    <select
+                        onChange={(e) => setBranchFilter(e.target.value)}
+                        className="border p-3 rounded-lg bg-gray-50"
+                    >
+                        <option value="All">All Branches</option>
+                        {branches.map((b, i) => (
+                            <option key={i} value={b}>{b}</option>
+                        ))}
+                    </select>
+
+                    {/* City */}
+                    <select
+                        onChange={(e) => setCityFilter(e.target.value)}
+                        className="border p-3 rounded-lg bg-gray-50"
+                    >
+                        <option value="All">All Cities</option>
+                        {cities.map((c, i) => (
+                            <option key={i} value={c}>{c}</option>
+                        ))}
+                    </select>
+
+                    {/* Search By */}
+                    <select
+                        onChange={(e) => setSearchBy(e.target.value)}
+                        className="border p-3 rounded-lg bg-gray-50"
+                    >
+                        <option value="name">Search by Name</option>
+                        <option value="phone">Search by Number</option>
+                        <option value="city">Search by City</option>
+                    </select>
+
+                    {/* Search Input */}
+                    <input
+                        className="border p-3 rounded-lg bg-gray-50"
+                        placeholder="Enter search text..."
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+            </div>
+
+            <div className="flex flex-col lg:flex-row gap-6">
+
+                {/* TABLE */}
+                <div className="lg:w-2/3 w-full">
+                    <div className="bg-white p-5 rounded-xl shadow-lg">
+                        <h2 className="text-xl font-semibold mb-3">Student List</h2>
+
+                        <div className="border rounded-lg p-4 bg-gray-50">
+                            {loading ? (
+                                
+                                <div>Loading...</div>
+                            ) : (
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr className="bg-[#29234b] text-white">
+                                            <th className="py-3 px-4">#</th>
+                                            <th className="py-3 px-4">Name</th>
+                                            <th className="py-3 px-4">City</th>
+                                            <th className="py-3 px-4">Phone</th>
+                                            <th className="py-3 px-4">Branch</th>
                                         </tr>
                                     </thead>
+
                                     <tbody>
-                                        {loading ? (
-                                            <tr>
-                                                <td colSpan="4" className="px-6 py-4 text-center">
-                                                    <div className="flex items-center justify-center h-full">
-                                                        <Loader />
-                                                    </div>
+                                        {queries.map((q, i) => (
+                                            <tr
+                                                key={q._id}
+                                                onClick={() => handleRowClick(q._id)}
+                                                className="border-b bg-white hover:bg-gray-100 cursor-pointer"
+                                            >
+                                                <td className="py-3 px-4">
+                                                    {(page - 1) * 6 + i + 1}
                                                 </td>
-                                            </tr>
-                                        ) : currentQueries.length > 0 ? (
-                                            currentQueries.map((query, index) => {
-                                                const deadline = new Date(query.deadline);
-                                                const isToday = deadline.toDateString() === new Date().toDateString();
-                                                const isPastDeadline = deadline < new Date();
-                                                const isIn24Hours =
-                                                    deadline.toDateString() ===
-                                                    new Date(Date.now() + 24 * 60 * 60 * 1000).toDateString();
-                                                const isIn48Hours =
-                                                    deadline.toDateString() ===
-                                                    new Date(Date.now() + 48 * 60 * 60 * 1000).toDateString();
 
-
-                                                return (
-                                                    <tr
-                                                        key={query._id}
-                                                        className={`border-b cursor-pointer transition-colors duration-200 hover:opacity-90`}
-                                                        onClick={() => handleRowClick(query._id)}
-                                                    >
-                                                        <td className="px-6 py-1 font-semibold">{indexOfFirstQuery + index + 1}</td>
-                                                        <td className="px-6 py-1 font-semibold">{query.studentName}</td>
-                                                        <td className="px-6 py-1">{query.branch}</td>
-                                                        <td className="px-6 py-1">
-                                                            {query.studentContact.city}
-                                                        </td>
-                                                        <td className="px-6 py-1">
-                                                            {query.addmission ? "Enroll" : "Pending"}
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })
-                                        ) : (
-                                            <tr>
-                                                <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
-                                                    No queries available
-                                                </td>
+                                                <td className="py-3 px-4">{q.studentName}</td>
+                                                <td className="py-3 px-4">{q.studentContact.city}</td>
+                                                <td className="py-3 px-4">{q.studentContact.phoneNumber}</td>
+                                                <td className="py-3 px-4">{q.branch}</td>
                                             </tr>
-                                        )}
+                                        ))}
                                     </tbody>
                                 </table>
-                            </div>
+                            )}
                         </div>
-                    </div>
 
-                    {/* Pagination Controls */}
-                    <div className="flex justify-between items-center mt-4">
-                        <button
-                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                            className={`px-4 py-2 rounded bg-blue-600 text-white transition duration-200 ease-in-out hover:bg-blue-500 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            Previous
-                        </button>
-                        <span className="font-semibold">Page {currentPage} of {totalPages}</span>
-                        <button
-                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                            className={`px-4 py-2 rounded bg-blue-600 text-white transition duration-200 ease-in-out hover:bg-blue-500 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            Next
-                        </button>
+                        {/* Pagination */}
+                        <div className="flex justify-between items-center mt-4">
+                            <button
+                                disabled={page === 1}
+                                onClick={() => setPage(page - 1)}
+                                className="px-4 py-2 bg-[#29234b] text-white rounded-lg disabled:opacity-40"
+                            >
+                                Prev
+                            </button>
+
+                            <span className="font-semibold text-gray-600">
+                                Page {page} of {totalPages}
+                            </span>
+
+                            <button
+                                disabled={page === totalPages}
+                                onClick={() => setPage(page + 1)}
+                                className="px-4 py-2 bg-[#29234b] text-white rounded-lg disabled:opacity-40"
+                            >
+                                Next
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                {/* Branch Statistics */}
-                <div className="w-full lg:w-1/3 space-y-6">
-                    <div className="shadow-lg rounded-lg bg-white p-6">
-                        <h2 className="text-2xl font-bold mb-4 text-gray-800">Branch Statistics</h2>
-                        <ul className="space-y-2 text-sm">
-                            {Object.keys(branchStats).length > 0 ? (
-                                Object.entries(branchStats).map(([branch, count], index) => (
-                                    <li key={index} className="flex justify-between">
-                                        <span>{branch}</span>
-                                        <span className="font-bold">{count}</span>
-                                    </li>
-                                ))
-                            ) : (
-                                <li>No branch statistics available.</li>
-                            )}
-                        </ul>
+                {/* RIGHT SIDE STATS */}
+                <div className="lg:w-1/3 w-full space-y-6">
+
+                    {/* Branch Stats */}
+                    <div className="bg-white p-5 rounded-xl shadow-lg">
+                        <h2 className="text-xl font-semibold mb-3">Branch Stats</h2>
+                        {branchStats.map((b, i) => (
+                            <div key={i} className="flex justify-between py-2 border-b">
+                                <span>{b._id}</span>
+                                <span className="font-bold">{b.count}</span>
+                            </div>
+                        ))}
                     </div>
 
-                    {/* City Statistics */}
-                    <div className="shadow-lg rounded-lg bg-white p-6">
-                        <h2 className="text-2xl font-bold mb-4 text-gray-800">City Statistics</h2>
-                        <ul className="space-y-2 text-sm">
-                            {Object.keys(cityStats).length > 0 ? (
-                                Object.entries(cityStats).map(([city, count], index) => (
-                                    <li key={index} className="flex justify-between">
-                                        <span>{city}</span>
-                                        <span className="font-bold">{count}</span>
-                                    </li>
-                                ))
-                            ) : (
-                                <li>No city statistics available.</li>
-                            )}
-                        </ul>
+                    {/* City Stats */}
+                    <div className="bg-white p-5 rounded-xl shadow-lg">
+                        <h2 className="text-xl font-semibold mb-3">City Stats</h2>
+                        {cityStats.map((c, i) => (
+                            <div key={i} className="flex justify-between py-2 border-b">
+                                <span>{c._id}</span>
+                                <span className="font-bold">{c.count}</span>
+                            </div>
+                        ))}
                     </div>
 
-                    {/* Search by Name/Contact */}
-                    <div className="shadow-lg rounded-lg bg-white p-6">
-                        <h3 className="text-lg font-semibold mb-4 text-gray-800">Search by Name , Contact Number or City</h3>
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={handleSearch}
-                            placeholder="Search by Name , Contact Number or City"
-                            className="w-full px-3 border border-gray-300 rounded focus:outline-none focus:ring-1 transition duration-200 ease-in-out"
-                        />
-                    </div>
                 </div>
             </div>
         </div>
