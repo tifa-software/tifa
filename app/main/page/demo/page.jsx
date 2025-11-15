@@ -73,7 +73,7 @@ export default function Assigned() {
           <div className="shadow-lg rounded-lg bg-white mb-6 relative">
             <div className="p-4">
               <h2 className="text-xl font-semibold mb-4 text-gray-800">
-                Demo Count (Server Filter)
+                Demo Count
               </h2>
 
               <div className="relative overflow-y-auto" style={{ height: "400px" }}>
