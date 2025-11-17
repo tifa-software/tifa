@@ -17,6 +17,14 @@ export const GET = async (request) => {
     // Parse query parameters
     const { searchParams } = new URL(request.url);
     const referenceId = searchParams.get("referenceId");
+    const pageParam = parseInt(searchParams.get("page") || "1", 10);
+    const limitParam = parseInt(searchParams.get("limit") || "50", 10);
+    const page = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
+    const limit =
+      Number.isNaN(limitParam) || limitParam < 1
+        ? 50
+        : Math.min(limitParam, 200);
+    const skip = (page - 1) * limit;
     const suboption = searchParams.get("suboption");
     const fromDate = searchParams.get("fromDate");
     const toDate = searchParams.get("toDate");
@@ -156,8 +164,11 @@ export const GET = async (request) => {
       queryFilter.branch = branch;
     }
 
-    // Fetch queries based on the filter
-    const queries = await QueryModel.find(queryFilter);
+    // Fetch queries and total count based on the filter
+    const [queries, totalQueries] = await Promise.all([
+      QueryModel.find(queryFilter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      QueryModel.countDocuments(queryFilter),
+    ]);
 
     // Fetch admin data for mapping
     const admins = await AdminModel.find({}, { _id: 1, name: 1 });
@@ -246,6 +257,12 @@ export const GET = async (request) => {
         message: "All data fetched!",
         success: true,
         fetch: formattedQueries,
+        pagination: {
+          total: totalQueries,
+          page,
+          limit,
+          totalPages: limit > 0 ? Math.max(1, Math.ceil(totalQueries / limit)) : 1,
+        },
       },
       { status: 200 }
     );

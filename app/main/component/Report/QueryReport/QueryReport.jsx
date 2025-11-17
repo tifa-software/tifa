@@ -1,7 +1,6 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import axios from "axios";
-import Loader from "@/components/Loader/Loader";
 import { useSession } from 'next-auth/react';
 import Link from "next/link";
 import * as XLSX from "xlsx";
@@ -10,6 +9,10 @@ import { ChevronDownSquare } from "lucide-react";
 export default function QueryReport() {
   const [allquery, setAllquery] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Filter states
   const [referenceId, setReferenceId] = useState("");
@@ -31,7 +34,7 @@ export default function QueryReport() {
   const [selectedReference, setSelectedReference] = useState(null);
   const { data: session } = useSession();
   const [branch, setBranch] = useState("");
-  const [showClosed, setShowClosed] = useState(false);
+  const [showClosed, setShowClosed] = useState("");
   const options = [
     { value: "interested_but_not_proper_response", label: "Interested but not proper response" },
     { value: "Wrong Lead Looking For Job", label: "Wrong Lead Looking For Job" },
@@ -48,6 +51,7 @@ export default function QueryReport() {
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const tableWrapperRef = useRef(null);
 
   // ✅ Toggle selection of an option
   const toggleOption = (value) => {
@@ -111,10 +115,15 @@ export default function QueryReport() {
           assignedFrom,
           userName,
           showClosed,
-          studentName
+          studentName,
+          page,
+          limit,
         },
       });
-      setAllquery(response.data.fetch);
+      const fetchedData = response.data.fetch || [];
+      setAllquery(fetchedData);
+      setTotalCount(response.data.pagination?.total ?? fetchedData.length);
+      setTotalPages(response.data.pagination?.totalPages ?? 1);
     } catch (error) {
       console.error("Error fetching filtered data:", error);
     } finally {
@@ -122,14 +131,15 @@ export default function QueryReport() {
     }
   };
 
-  // Fetch data whenever filters change
+  // Fetch data whenever filters or pagination change
   useEffect(() => {
     fetchFilteredData();
-  }, [referenceId, studentName, suboption, fromDate, branch, toDate, admission, grade, reason, location, city, assignedName, assignedFrom, userName, showClosed]);
+  }, [referenceId, studentName, suboption, fromDate, branch, toDate, admission, grade, reason, location, city, assignedName, assignedFrom, userName, showClosed, page, limit]);
 
-  const handleFilter = () => {
-    fetchFilteredData();
-  };
+  // Reset to first page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [referenceId, studentName, suboption, fromDate, branch, toDate, admission, grade, reason, location, city, assignedName, assignedFrom, userName, showClosed]);
 
   const removeFilter = () => {
     // Reset all filter variables to their default values
@@ -140,7 +150,7 @@ export default function QueryReport() {
     setAdmission("");
     setReson("");
     setGrade("");
-    setReason("");
+    setReason([]);
     setBranch("");
     setLocation("");
     setCity("");
@@ -148,8 +158,25 @@ export default function QueryReport() {
     setAssignedFrom("");
     setUserName("");
     setStudentName("");
+    setShowClosed("");
+    setPage(1);
   };
 
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setPage(newPage);
+  };
+
+  useEffect(() => {
+    if (tableWrapperRef.current) {
+      tableWrapperRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [page]);
+
+  const handleLimitChange = (event) => {
+    setLimit(Number(event.target.value));
+    setPage(1);
+  };
 
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(allquery);
@@ -166,7 +193,7 @@ export default function QueryReport() {
     if (toDate) filters.push(`To Date: ${toDate}`);
     if (admission) filters.push(`Admission: ${admission === "true" ? "Enroll" : "Not Enroll"}`);
     if (grade) filters.push(`Grade: ${grade}`);
-    if (reason) filters.push(`Reason: ${reason}`);
+    if (reason.length > 0) filters.push(`Reason: ${reason.join(", ")}`);
     if (location) filters.push(`Branch: ${location}`);
     if (city) filters.push(`City: ${city}`);
     if (assignedName) filters.push(`Assigned To: ${assignedName}`);
@@ -178,13 +205,17 @@ export default function QueryReport() {
     return filters.length > 0 ? filters.join(" | ") : "No filters applied.";
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader />
-      </div>
-    );
-  }
+  const startIndex = (page - 1) * limit;
+  const safeTotalPages = Math.max(1, totalPages);
+  const displayedFrom = totalCount === 0 ? 0 : startIndex + 1;
+  const displayedTo = Math.min(totalCount, startIndex + allquery.length);
+  const sortedQueries = useMemo(
+    () => [...allquery].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+    [allquery]
+  );
+  const isEmptyState = !loading && sortedQueries.length === 0;
+  const skeletonRowCount = Math.min(limit, 10);
+  const tableColumnCount = 15;
 
 
 
@@ -196,38 +227,77 @@ export default function QueryReport() {
   };
   return (
     <>
-      <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
-        Over-View
+      <div className="text-3xl font-bold text-center text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 py-4 rounded-t-xl shadow-md">
+        Overview
       </div>
-      <div className="mt-8 container lg:w-[98%] mx-auto">
-
-        Total Queries: {allquery.length}
-        <div className="flex justify-between gap-5 items-center">
-          <div className="py-3 px-4 flex-auto mb-4 bg-blue-100 text-blue-800 rounded-lg shadow-md flex justify-between items-center">
-            <span className="text-sm font-medium">{getFilterSummary()}</span>
-
-          </div>
+      <div className="mt-8 container lg:w-[98%] mx-auto space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white/80 p-5 shadow-lg ring-1 ring-gray-100 backdrop-blur">
           <div>
-            {/* 
-            <button
-              onClick={handleFilter}
-              className="mb-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
-            >
-              Apply Filters
-            </button> */}
+            <p className="text-sm text-gray-500 uppercase tracking-wider">Total Queries</p>
+            <p className="text-3xl font-bold text-gray-900">{loading ? "…" : totalCount}</p>
+          </div>
+          <div className="flex-1 min-w-[200px]">
+            <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Active Filters</p>
+            <div className="rounded-xl border border-dashed border-blue-200 bg-blue-50/80 px-4 py-3 text-sm text-blue-900">
+              {getFilterSummary()}
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
             <button
               onClick={removeFilter}
-              className="mb-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
+              className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50"
             >
-              Remove Filters
+              Clear Filters
             </button>
-          </div>
-          <div className="flex justify-between items-center gap-5 mb-4">
             <button
               onClick={exportToExcel}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:bg-blue-500"
             >
               Export to Excel
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-4 text-sm text-gray-700">
+          <span>
+            Showing {displayedFrom}-{displayedTo} of {totalCount} results
+          </span>
+          <div className="flex items-center gap-2">
+            <span>Rows per page:</span>
+            <select
+              value={limit}
+              onChange={handleLimitChange}
+              className="border rounded px-2 py-1 text-gray-800 focus:outline-none focus:ring-0"
+            >
+              {[25, 50, 100, 200].map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1}
+              className={`px-3 py-1 rounded border ${
+                page === 1 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Previous
+            </button>
+            <span>
+              Page {page} of {safeTotalPages}
+            </span>
+            <button
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page >= safeTotalPages}
+              className={`px-3 py-1 rounded border ${
+                page >= safeTotalPages
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Next
             </button>
           </div>
         </div>
@@ -242,8 +312,10 @@ export default function QueryReport() {
             Show Only Closed Queries
           </label>
         </div>
-
-        <div className="  shadow-lg rounded-lg border border-gray-300">
+        <div
+          ref={tableWrapperRef}
+          className="shadow-xl rounded-2xl border border-gray-200 bg-white overflow-x-auto max-h-[70vh] overflow-y-auto scroll-smooth"
+        >
           <table className="min-w-full text-left text-[12px] font-light border-collapse">
             <thead className="bg-gray-800 text-white">
               <tr className="divide-x divide-gray-700">
@@ -459,14 +531,23 @@ export default function QueryReport() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {allquery.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                .map((data, index) => (
-
+              {loading &&
+                Array.from({ length: skeletonRowCount }).map((_, index) => (
+                  <tr key={`skeleton-${index}`} className="animate-pulse">
+                    {Array.from({ length: tableColumnCount }).map((__, cellIndex) => (
+                      <td key={cellIndex} className="px-4 py-4">
+                        <div className="h-3 rounded-full bg-gray-200" />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              {!loading &&
+                sortedQueries.map((data, index) => (
                   <tr
-                    key={index}
-                    className="odd:bg-gray-50 even:bg-gray-100 hover:bg-gray-200 transition-all"
+                    key={data._id || index}
+                    className="odd:bg-gray-50 even:bg-gray-100 hover:bg-blue-50 transition-colors"
                   >
-                    <td className="px-4 py-3 text-[12px]">{index + 1}</td>
+                    <td className="px-4 py-3 text-[12px]">{startIndex + index + 1}</td>
                     <td className="px-4 py-3 text-[12px]">{data.userid}</td>
                     <td className="px-4 py-3 text-[12px] text-blue-500"> <Link href={`/main/page/allquery/${data._id}`}>{data.studentName}</Link></td>
                     <td className="px-4 py-3 text-[12px]">{data.studentContact.phoneNumber}</td>
@@ -528,10 +609,15 @@ export default function QueryReport() {
                     )}
 
                     <td className="px-4 py-3 text-[12px]">{data.addmission ? "Enrolled" : "Not Enrolled"}</td>
-
                   </tr>
-
                 ))}
+              {isEmptyState && (
+                <tr>
+                  <td colSpan={14} className="px-4 py-10 text-center text-sm text-gray-500">
+                    No data available for current filters.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div >
