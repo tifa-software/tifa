@@ -15,7 +15,7 @@ export async function POST(req) {
         if (alreadyUser) {
             return Response.json(
                 {
-                    message: "User already exists with the provided email address!",
+                    message: "User already exists with this provided email address!",
                     success: false,
                 },
                 { status: 400 }
