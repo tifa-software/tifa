@@ -1,58 +1,200 @@
 export const runtime = "nodejs";
-export const preferredRegion = ["bom1"]; 
+export const preferredRegion = ["bom1"];
+
 import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
 import AuditModel from "@/model/AuditLog";
 import AdminModel from "@/model/Admin";
+import CourseModel from "@/model/Courses";
+import ReferenceModel from "@/model/Reference";
+
+const sanitizeId = (value) => {
+    if (!value) return null;
+    return /^[0-9a-fA-F]{24}$/.test(value) ? value : null;
+};
+
+const buildDateRange = (fromDate, toDate) => {
+    if (!fromDate && !toDate) return null;
+
+    const range = {};
+    if (fromDate) {
+        const start = new Date(fromDate);
+        if (!Number.isNaN(start.getTime())) {
+            range.$gte = start;
+        }
+    }
+    if (toDate) {
+        const end = new Date(toDate);
+        if (!Number.isNaN(end.getTime())) {
+            end.setHours(23, 59, 59, 999);
+            range.$lte = end;
+        }
+    }
+
+    return Object.keys(range).length > 0 ? range : null;
+};
 
 export const GET = async (request) => {
     await dbConnect();
 
     try {
-        // Step 1: Fetch the queries matching the criteria
-        const queries = await QueryModel.find({ addmission: true });
+        const { searchParams } = new URL(request.url);
 
-        // Step 2: Fetch audit logs for the fetched query IDs
-        const queryIds = queries.map((query) => query._id.toString());
-        const auditLogs = await AuditModel.find({ queryId: { $in: queryIds } });
+        const mongoFilters = { addmission: true };
 
-        // Step 3: Fetch admin details for the user IDs in the queries
-        const userIds = queries.map((query) => query.userid).filter(Boolean); // Collect all user IDs
-        const adminDetails = await AdminModel.find({ _id: { $in: userIds } }).select("_id name");
+        const staffId = sanitizeId(searchParams.get("staffId"));
+        if (staffId) {
+            mongoFilters.userid = staffId;
+        }
 
-        // Create a map of admin ID to name for quick lookup
-        const adminMap = adminDetails.reduce((map, admin) => {
-            map[admin._id.toString()] = admin.name;
-            return map;
+        const assignedToId = sanitizeId(searchParams.get("assignedToId"));
+        if (assignedToId) {
+            mongoFilters.assignedTo = assignedToId;
+        }
+
+        const studentName = searchParams.get("studentName");
+        if (studentName) {
+            mongoFilters.studentName = { $regex: studentName.trim(), $options: "i" };
+        }
+
+        const phoneNumber = searchParams.get("phoneNumber");
+        if (phoneNumber) {
+            mongoFilters["studentContact.phoneNumber"] = { $regex: phoneNumber.trim(), $options: "i" };
+        }
+
+        const courseId = sanitizeId(searchParams.get("courseId"));
+        if (courseId) {
+            mongoFilters.courseInterest = courseId;
+        }
+
+        const referenceId = searchParams.get("referenceId");
+        if (referenceId) {
+            mongoFilters.referenceid = referenceId;
+        }
+
+        const suboption = searchParams.get("suboption");
+        if (suboption) {
+            mongoFilters.suboption = suboption;
+        }
+
+        const branch = searchParams.get("branch");
+        if (branch) {
+            mongoFilters.branch = branch;
+        }
+
+        const city = searchParams.get("city");
+        if (city) {
+            mongoFilters["studentContact.city"] = city;
+        }
+
+        const finalFees = searchParams.get("finalFees");
+        if (finalFees) {
+            const parsed = Number(finalFees);
+            if (!Number.isNaN(parsed)) {
+                mongoFilters.finalfees = parsed;
+            }
+        }
+
+        const dateRange = buildDateRange(searchParams.get("fromDate"), searchParams.get("toDate"));
+        if (dateRange) {
+            mongoFilters.addmissiondate = dateRange;
+        }
+
+        const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+        const limit = Math.min(500, Math.max(10, parseInt(searchParams.get("limit") || "50", 10)));
+        const skip = (page - 1) * limit;
+
+        const [allCourses, allAdmins, allReferences, total] = await Promise.all([
+            CourseModel.find().select("_id course_name fees").lean(),
+            AdminModel.find().select("_id name").lean(),
+            ReferenceModel.find().lean(),
+            QueryModel.countDocuments(mongoFilters),
+        ]);
+
+        const courseMap = allCourses.reduce((acc, course) => {
+            acc[course._id.toString()] = {
+                name: course.course_name,
+                fees: course.fees,
+            };
+            return acc;
         }, {});
 
-        
-        const queriesWithDetails = queries.map((query) => {
-            // Find the corresponding audit log
-            const log = auditLogs.find((log) => log.queryId === query._id.toString());
+        const adminMap = allAdmins.reduce((acc, admin) => {
+            acc[admin._id.toString()] = admin.name;
+            return acc;
+        }, {});
 
-         
-            const admissionupdate = log?.history?.find((entry) => entry.oflinesubStatus === "admission");
+        const queries = await QueryModel.find(mongoFilters)
+            .sort({ addmissiondate: -1, createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean();
 
-            
+        const queryIds = queries.map((query) => query._id.toString());
+
+        const auditLogs = queryIds.length
+            ? await AuditModel.find({ queryId: { $in: queryIds } }).lean()
+            : [];
+
+        const formatted = queries.map((query) => {
+            const queryIdStr = query._id.toString();
+            const log = auditLogs.find((l) => l.queryId === queryIdStr);
+
+            const admissionEntry = log?.history?.find(
+                (entry) => entry.oflinesubStatus === "admission"
+            );
+
+            const courseData = courseMap[query.courseInterest] || null;
+            const totalFees = courseData?.fees ?? query.finalfees ?? null;
+
+            const finalFeesUsed =
+                query.finalfees === 0 || query.finalfees == null
+                    ? courseData?.fees ?? null
+                    : query.finalfees;
+
+            const remainingFees =
+                finalFeesUsed != null && query.total != null
+                    ? finalFeesUsed - query.total
+                    : null;
+
+            const getAdminName = (id) => {
+                if (!id) return "Not Assigned";
+                if (!/^[0-9a-fA-F]{24}$/.test(id)) return "Not Assigned";
+                return adminMap[id] || "Not Assigned";
+            };
+
             return {
-                ...query.toObject(),
-                admissionupdatedate: admissionupdate?.actionDate || null,
-                staffName: adminMap[query.userid] || null, // Get the user name or null if not found
+                ...query,
+                courseName: courseData?.name || "Not_Provided",
+                totalFees,
+                finalFeesUsed,
+                remainingFees,
+                staffName: getAdminName(query.userid),
+                assignedToName: getAdminName(query.assignedTo),
+                admissionupdatedate: admissionEntry?.actionDate || null,
             };
         });
 
-        // Step 5: Structure the response
         return Response.json(
             {
-                message: "All data fetched!",
+                message: "Admission data fetched successfully",
                 success: true,
-                fetch: queriesWithDetails,
+                fetch: formatted,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    totalPages: Math.max(1, Math.ceil(total / limit)),
+                },
+                allAdmins,
+                allCourses,
+                allReferences,
             },
             { status: 200 }
         );
     } catch (error) {
         console.log("Error on getting data list:", error);
+
         return Response.json(
             {
                 message: "Error on getting data list!",
