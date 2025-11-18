@@ -3,7 +3,7 @@ export const preferredRegion = ["bom1"];
 
 import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
-
+export const dynamic = "force-dynamic"; 
 export const GET = async (request) => {
     await dbConnect();
 
