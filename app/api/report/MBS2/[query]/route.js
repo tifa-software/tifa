@@ -1,5 +1,5 @@
 export const runtime = "nodejs";
-export const preferredRegion = ["bom1"]; 
+export const preferredRegion = ["bom1"];
 import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
 import AdminModel from "@/model/Admin";
@@ -8,81 +8,92 @@ export const GET = async () => {
     await dbConnect();
 
     try {
-        // Fetch all queries and admins
-        const queries = await QueryModel.find({});
+        // FETCH LIMITED FIELDS ONLY
+        const queries = await QueryModel.find({}, {
+            studentName: 1,
+            assignedDate: 1,
+            assignedsenthistory: 1,
+            assignedreceivedhistory: 1
+        });
+
         const admins = await AdminModel.find({}, { _id: 1, name: 1, branch: 1 });
 
-        // Create a map of admin IDs to names
+        // ADMIN ID → NAME
         const adminIdToName = admins.reduce((map, admin) => {
             map[admin._id.toString()] = admin.name;
             return map;
         }, {});
 
-        // Calculate sent and received counts along with query details
-        const sentReceivedCounts = admins.reduce((counts, admin) => {
-            const adminId = admin._id.toString();
-            counts[adminId] = {
+        // INITIALIZE COUNTERS
+        const sentReceivedCounts = {};
+        admins.forEach(admin => {
+            const id = admin._id.toString();
+            sentReceivedCounts[id] = {
                 sent: 0,
                 received: 0,
                 sentQueryDetails: [],
                 receivedQueryDetails: []
             };
+        });
 
-            queries.forEach(query => {
-                // Check if the admin is in the sent history
+        // PROCESS EACH QUERY
+        queries.forEach(query => {
+            admins.forEach(admin => {
+                const adminId = admin._id.toString();
+
+                // SENT HISTORY MATCH
                 if (query.assignedsenthistory.includes(adminId)) {
-                    counts[adminId].sent++;
-                    counts[adminId].sentQueryDetails.push({
-                        queryId: query._id,
-                        queryDetails: {
-                            ...query._doc,
-                            assignedsenthistory: query.assignedsenthistory.map(id => adminIdToName[id] || id),
-                            assignedreceivedhistory: query.assignedreceivedhistory.map(id => adminIdToName[id] || id)
-                        }
+                    sentReceivedCounts[adminId].sent++;
+
+                    sentReceivedCounts[adminId].sentQueryDetails.push({
+                        studentName: query.studentName,
+                        assignedDate: query.assignedDate,
+                        assignedsenthistory: query.assignedsenthistory.map(id => adminIdToName[id] || id),
+                        assignedreceivedhistory: query.assignedreceivedhistory.map(id => adminIdToName[id] || id)
                     });
                 }
 
-                // Check if the admin is in the received history
+                // RECEIVED HISTORY MATCH
                 if (query.assignedreceivedhistory.includes(adminId)) {
-                    counts[adminId].received++;
-                    counts[adminId].receivedQueryDetails.push({
-                        queryId: query._id,
-                        queryDetails: {
-                            ...query._doc,
-                            assignedsenthistory: query.assignedsenthistory.map(id => adminIdToName[id] || id),
-                            assignedreceivedhistory: query.assignedreceivedhistory.map(id => adminIdToName[id] || id)
-                        }
+                    sentReceivedCounts[adminId].received++;
+
+                    sentReceivedCounts[adminId].receivedQueryDetails.push({
+                        studentName: query.studentName,
+                        assignedDate: query.assignedDate,
+                        assignedsenthistory: query.assignedsenthistory.map(id => adminIdToName[id] || id),
+                        assignedreceivedhistory: query.assignedreceivedhistory.map(id => adminIdToName[id] || id)
                     });
                 }
             });
+        });
 
-            return counts;
-        }, {});
-
-        // Prepare user activity report including full query details
+        // FINAL REPORT
         const userActivityReport = admins.map(admin => {
-            const adminId = admin._id.toString();
+            const id = admin._id.toString();
             return {
                 userName: admin.name,
                 branch: admin.branch,
-                sentQueries: sentReceivedCounts[adminId]?.sent || 0,
-                receivedQueries: sentReceivedCounts[adminId]?.received || 0,
-                sentQueryDetails: sentReceivedCounts[adminId]?.sentQueryDetails || [],
-                receivedQueryDetails: sentReceivedCounts[adminId]?.receivedQueryDetails || [],
+                sentQueries: sentReceivedCounts[id].sent,
+                receivedQueries: sentReceivedCounts[id].received,
+                sentQueryDetails: sentReceivedCounts[id].sentQueryDetails,
+                receivedQueryDetails: sentReceivedCounts[id].receivedQueryDetails
             };
         });
 
-        return Response.json({
-            message: "Enhanced audit log analysis fetched successfully!",
-            success: true,
-            data: { userActivityReport },
-        }, { status: 200 });
+        return Response.json(
+            {
+                message: "Report fetched successfully!",
+                success: true,
+                data: { userActivityReport }
+            },
+            { status: 200 }
+        );
 
     } catch (error) {
-        console.error("Error fetching data:", error);
-        return Response.json({
-            message: "Error fetching report!",
-            success: false,
-        }, { status: 500 });
+        console.error("Error:", error);
+        return Response.json(
+            { message: "Error fetching report!", success: false },
+            { status: 500 }
+        );
     }
 };
