@@ -355,7 +355,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
   return (
     <div className="container lg:w-[95%] mx-auto py-5">
       {/* Filters + Actions */}
-      <div className="flex justify-between items-center mb-4 gap-3">
+      <div className="flex justify-between items-center mb-4 gap-1">
         <div className="relative w-1/3">
           <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             <Search size={14} />
@@ -467,7 +467,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
                   disabled={isBootLoading || isExporting}
                 >
                   <Download size={16} />
-                  {isExporting ? "Exporting..." : "Export"}
+                  {isExporting ? "Exporting..." : ""}
                 </button>
               </div>
             </div>
@@ -475,7 +475,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
         )}
 
         {/* Desktop Filters */}
-        <div className="hidden lg:flex flex-wrap space-x-3">
+        <div className="hidden lg:flex flex-wrap space-x-2">
           <select
             className="border px-3 py-2 focus:outline-none text-sm"
             value={filterCourse}
@@ -548,15 +548,15 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
             )}
           </div>
 
-          <Link href={"/main/page/importquery"}>
+          {/* <Link href={"/main/page/importquery"}>
             <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
               <CirclePlus size={16} className="me-1" /> Import Query
             </button>
-          </Link>
+          </Link> */}
 
           <Link href={"/main/page/addquery"}>
-            <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
-              <CirclePlus size={16} className="me-1" /> Add Query
+            <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-3 ">
+              <CirclePlus size={16} className="me-1" />
             </button>
           </Link>
 
@@ -582,7 +582,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
             disabled={isBootLoading || isExporting}
           >
             <Download size={16} />
-            {isExporting ? "Exporting..." : "Export"}
+            {isExporting ? "Exporting..." : ""}
           </button>
 
           {isModalOpen && (

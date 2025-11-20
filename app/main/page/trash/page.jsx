@@ -286,7 +286,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
                   onChange={(e) => setDeadlineFilter(e.target.value)}
                 >
                   <option value="" disabled>
-                    Deadline
+                    Trash Date
                   </option>
                   <option value="">All</option>
                   <option value="today">Today</option>
@@ -324,7 +324,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
                   </div>
                 )}
 
-                <Link href={"/main/page/importquery"}>
+                {/* <Link href={"/main/page/importquery"}>
                   <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
                     <CirclePlus size={16} className="me-1" /> Import Query
                   </button>
@@ -333,7 +333,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
                   <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2">
                     <CirclePlus size={16} className="me-1" /> Add Query
                   </button>
-                </Link>
+                </Link> */}
 
                 <button
                   className="text-red-500 rounded-md border border-red-500 px-3 py-2"
@@ -380,7 +380,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
               onChange={(e) => setDeadlineFilter(e.target.value)}
             >
               <option value="" disabled>
-                Deadline
+                Trash Date
               </option>
               <option value="">All</option>
               <option value="today">Today</option>
@@ -421,7 +421,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
             )}
           </div>
 
-          <Link href={"/main/page/importquery"}>
+          {/* <Link href={"/main/page/importquery"}>
             <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
               <CirclePlus size={16} className="me-1" /> Import Query
             </button>
@@ -431,7 +431,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
             <button className="bg-[#29234b] rounded-md flex items-center text-white text-sm px-4 py-2 ">
               <CirclePlus size={16} className="me-1" /> Add Query
             </button>
-          </Link>
+          </Link> */}
 
           <button
             className="text-red-500 rounded-md border border-red-500 px-3 py-2"
@@ -441,13 +441,13 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
             <Trash2 size={16} />
           </button>
 
-          <button
+          {/* <button
             className="text-blue-500 rounded-md border border-blue-500 hover:bg-blue-200 duration-150 cursor-pointer px-3 py-2"
             onClick={handleBulkAssign}
             disabled={selectedqueries.length === 0}
           >
             <Send size={16} />
-          </button>
+          </button> */}
 
           {isModalOpen && (
             <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30">
@@ -510,7 +510,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
               <th scope="col" className="px-4 font-medium capitalize py-2">Grade</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Assigned from</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Assigned To</th>
-              <th scope="col" className="px-4 font-medium capitalize py-2">DeadLine</th>
+              <th scope="col" className="px-4 font-medium capitalize py-2">Trash Date</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Address</th>
             </tr>
           </thead>
@@ -607,8 +607,8 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
 
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
                         {(() => {
-                          const d = new Date(querie.deadline);
-                          if (isNaN(d.getTime())) return querie.deadline || "";
+                          const d = new Date(querie.updatedAt);
+                          if (isNaN(d.getTime())) return querie.updatedAt || "";
                           const dd = String(d.getDate()).padStart(2, "0");
                           const mm = String(d.getMonth() + 1).padStart(2, "0");
                           const yy = String(d.getFullYear()).slice(-2);
