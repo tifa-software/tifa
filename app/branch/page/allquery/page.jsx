@@ -8,7 +8,7 @@ import Loader from "@/components/Loader/Loader";
 import BulkAssign from "@/components/BulkAssign/BulkAssign";
 import { ArrowLeft, ArrowRight, Search, Trash2, CirclePlus, Filter, X, Send, XCircleIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
-
+import Image from "next/image";
 // Utility: build API URL with query params
 function buildApiUrl({ branchname, userid, page = 1, deadlineFilter = "", grade = "", search = "", customDate = "", rangeStart = "", rangeEnd = "", assignedFrom = "" }) {
   const params = new URLSearchParams();
@@ -113,8 +113,8 @@ export default function AllQuery() {
       deadlineFilter === "custom" && !customDate
         ? ""
         : deadlineFilter === "dateRange" && (!startDate || !endDate)
-        ? ""
-        : deadlineFilter;
+          ? ""
+          : deadlineFilter;
 
     try {
       const url = buildApiUrl({
@@ -167,8 +167,8 @@ export default function AllQuery() {
       deadlineFilter === "custom" && !customDate
         ? ""
         : deadlineFilter === "dateRange" && (!startDate || !endDate)
-        ? ""
-        : deadlineFilter;
+          ? ""
+          : deadlineFilter;
 
     try {
       const nextPage = page + 1;
@@ -553,9 +553,11 @@ export default function AllQuery() {
       </div>
 
       {/* Table */}
-      <div className="relative overflow-x-auto shadow-md bg-white border border-gray-200">
+      <div className="relative max-h-[600px] overflow-y-auto shadow-md bg-white border border-gray-200">
+
         <table className="w-full text-sm text-left rtl:text-right text-gray-600 font-sans">
-          <thead className="bg-[#29234b] text-white uppercase">
+          <thead className="bg-[#29234b] text-white uppercase sticky top-0 z-20">
+
             <tr>
               <th scope="col" className="px-4 font-medium capitalize py-2">N/O</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Staff Name</th>
@@ -637,7 +639,18 @@ export default function AllQuery() {
                       </td>
 
                       <td className="px-4 py-2 font-semibold text-sm whitespace-nowrap" onClick={() => handleRowClick(querie._id)}>
-                        {querie.studentName} <span className="text-xs">({querie.referenceid})</span>
+                        {querie.studentName} 
+                         <span className="text-xs">
+                          (
+                          {querie.referenceid === "JOB" ? (
+                            <span className="bg-green-200 text-green-700 px-2 py-[1px] rounded-full font-bold">
+                              Job Require
+                            </span>
+                          ) : (
+                            querie.referenceid
+                          )}
+                          )
+                        </span>
                       </td>
 
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
@@ -648,8 +661,17 @@ export default function AllQuery() {
                         {querie?.studentContact?.phoneNumber}
                       </td>
 
-                      <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
+                      <td
+                        onClick={() => handleRowClick(querie._id)}
+                        className="px-4 py-2 text-[12px] flex gap-2 items-center"
+                      >
                         {querie.lastgrade}
+
+                        {querie.lastgrade === "A" && (
+                          <span className="inline-flex items-center">
+                            <Image src="/image/images.jpeg" alt="Grade A" width={24} height={24} className="rounded-full" />
+                          </span>
+                        )}
                       </td>
 
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
@@ -678,7 +700,7 @@ export default function AllQuery() {
                       <span className="absolute right-0 top-0 bottom-0 flex items-center">
                         {!querie.addmission &&
                           (new Date(querie.lastDeadline) < new Date() &&
-                          new Date(querie.lastDeadline).toDateString() !== new Date().toDateString() ? (
+                            new Date(querie.lastDeadline).toDateString() !== new Date().toDateString() ? (
                             <span className="inline-flex items-center px-2 text-[10px] font-semibold text-red-600 bg-red-200 rounded-full shadow-md">
                               ✖️ Today Update
                             </span>
