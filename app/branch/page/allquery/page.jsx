@@ -42,6 +42,7 @@ const formatDeadlineValue = (value) => {
 export default function AllQuery() {
   const router = useRouter();
   const { data: session } = useSession();
+  const [user, setuser] = useState([]);
 
   // ---- Admin data state ----
   const [adminData, setAdminData] = useState(null);
@@ -78,7 +79,21 @@ export default function AllQuery() {
 
   const handleRowClick = (id) => router.push(`/branch/page/allquery/${id}`);
   const toggleFilterPopup = () => setIsFilterOpen((v) => !v);
+  useEffect(() => {
+    const fetchuserData = async () => {
+      try {
+        const branch = adminData?.branch;
+        const response = await axios.get(`/api/admin/fetchall-bybranch/${branch}`);
+        setuser(response.data.fetch);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
+    fetchuserData();
+  }, [adminData]);
   // Fetch admin data
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -418,26 +433,11 @@ export default function AllQuery() {
                   onChange={(e) => setFilterAssignedFrom(e.target.value)}
                 >
                   <option value="">All Assigned</option>
-                  {Array.from(
-                    new Set(
-                      queries
-                        .flatMap((querie) => {
-                          const history = querie.assignedreceivedhistory;
-                          return Array.isArray(history) ? history : history ? [history] : [];
-                        })
-                        .filter((id) => id)
-                    )
-                  )
-                    .map((assignedFrom) => {
-                      const adminName = findAdminNameById(assignedFrom);
-                      return adminName ? { id: assignedFrom, name: adminName } : null;
-                    })
-                    .filter((option) => option !== null)
-                    .map((option, index) => (
-                      <option key={index} value={option.id}>
-                        {option.name}
-                      </option>
-                    ))}
+                  {user.map((admin) => (
+                    <option key={admin.id} value={admin._id}>
+                      {admin.name}
+                    </option>
+                  ))}
                 </select>
 
                 <select
@@ -524,26 +524,11 @@ export default function AllQuery() {
             onChange={(e) => setFilterAssignedFrom(e.target.value)}
           >
             <option value="">All Assigned</option>
-            {Array.from(
-              new Set(
-                queries
-                  .flatMap((querie) => {
-                    const history = querie.assignedreceivedhistory;
-                    return Array.isArray(history) ? history : history ? [history] : [];
-                  })
-                  .filter((id) => id)
-              )
-            )
-              .map((assignedFrom) => {
-                const adminName = findAdminNameById(assignedFrom);
-                return adminName ? { id: assignedFrom, name: adminName } : null;
-              })
-              .filter((option) => option !== null)
-              .map((option, index) => (
-                <option key={index} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
+            {user.map((admin) => (
+              <option key={admin.id} value={admin._id}>
+                {admin.name}
+              </option>
+            ))}
           </select>
 
           <select
@@ -777,8 +762,8 @@ export default function AllQuery() {
                       </td>
 
                       <td className="px-4 py-2 font-semibold text-sm whitespace-nowrap" onClick={() => handleRowClick(querie._id)}>
-                        {querie.studentName} 
-                         <span className="text-xs">
+                        {querie.studentName}
+                        <span className="text-xs">
                           (
                           {querie.referenceid === "JOB" ? (
                             <span className="bg-green-200 text-green-700 px-2 py-[1px] rounded-full font-bold">
