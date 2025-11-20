@@ -112,8 +112,8 @@ export default function AllQuery() {
       deadlineFilter === "custom" && !customDate
         ? ""
         : deadlineFilter === "dateRange" && (!startDate || !endDate)
-        ? ""
-        : deadlineFilter;
+          ? ""
+          : deadlineFilter;
 
     try {
       const url = buildApiUrl({
@@ -165,8 +165,8 @@ export default function AllQuery() {
       deadlineFilter === "custom" && !customDate
         ? ""
         : deadlineFilter === "dateRange" && (!startDate || !endDate)
-        ? ""
-        : deadlineFilter;
+          ? ""
+          : deadlineFilter;
 
     try {
       const nextPage = page + 1;
@@ -549,10 +549,9 @@ export default function AllQuery() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="relative overflow-x-auto shadow-md bg-white border border-gray-200">
+      {/* Table */}   <div className="relative max-h-[600px] overflow-y-auto shadow-md bg-white border border-gray-200">
         <table className="w-full text-sm text-left rtl:text-right text-gray-600 font-sans">
-          <thead className="bg-[#29234b] text-white uppercase">
+          <thead className="bg-[#29234b] text-white uppercase sticky top-0 z-20">
             <tr>
               <th scope="col" className="px-4 font-medium capitalize py-2">N/O</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Staff Name</th>
@@ -675,7 +674,7 @@ export default function AllQuery() {
                       <span className="absolute right-0 top-0 bottom-0 flex items-center">
                         {!querie.addmission &&
                           (new Date(querie.lastDeadline) < new Date() &&
-                          new Date(querie.lastDeadline).toDateString() !== new Date().toDateString() ? (
+                            new Date(querie.lastDeadline).toDateString() !== new Date().toDateString() ? (
                             <span className="inline-flex items-center px-2 text-[10px] font-semibold text-red-600 bg-red-200 rounded-full shadow-md">
                               ✖️ Today Update
                             </span>

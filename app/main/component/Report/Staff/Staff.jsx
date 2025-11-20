@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Loader from '@/components/Loader/Loader';
 import { useRouter } from 'next/navigation';
-import StaffData from '../StaffData/StaffData';
+
 import StaffDatanew from '../StaffDatanew/StaffDatanew';
 import { ArrowLeft, ArrowRight, Search, Trash2, CirclePlus, Filter, X } from "lucide-react";
 import Link from 'next/link';

@@ -120,6 +120,16 @@ export default function Sidebar({ onToggleSidebar }) {
                   Under Visit Query
                 </li>
               </Link>
+
+               <Link href="/staff/page/dailyactivity" onClick={handleLinkClick}>
+                <li
+                  className={`cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md ${isActiveLink("") ? "bg-[#6cb049] text-white" : "hover:bg-gray-100 text-gray-700"
+                    }`}
+                >
+                  <ListTodo size={18} />
+                  Self Daily Activity
+                </li>
+              </Link>
             </ul>
 
             <ul className="flex h-full flex-col relative xl:hidden overflow-y-auto" style={{ maxHeight: "calc(100vh - 120px)" }}>

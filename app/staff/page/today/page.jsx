@@ -155,8 +155,8 @@ export default function AllQuery() {
       deadlineFilter === "custom" && !customDate
         ? ""
         : deadlineFilter === "dateRange" && (!startDate || !endDate)
-        ? ""
-        : deadlineFilter;
+          ? ""
+          : deadlineFilter;
 
     try {
       const url = buildApiUrl({
@@ -208,8 +208,8 @@ export default function AllQuery() {
       deadlineFilter === "custom" && !customDate
         ? ""
         : deadlineFilter === "dateRange" && (!startDate || !endDate)
-        ? ""
-        : deadlineFilter;
+          ? ""
+          : deadlineFilter;
 
     try {
       const nextPage = page + 1;
@@ -381,7 +381,7 @@ export default function AllQuery() {
   return (
     <div className="container lg:w-[95%] mx-auto py-5">
       {/* Filters + Actions */}
-      <div className="flex justify-between items-center mb-4 gap-3">
+      <div className="flex justify-between items-center mb-4 gap-2">
         <div className="relative w-1/3">
           <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             <Search size={14} />
@@ -399,14 +399,7 @@ export default function AllQuery() {
           <button className="lg:hidden text-gray-600 px-3 py-2 border rounded-md" onClick={toggleFilterPopup}>
             <Filter size={16} />
           </button>
-          <button
-            className="text-green-600 border border-green-600 px-3 py-2 rounded-md text-sm flex items-center gap-1 disabled:opacity-60"
-            onClick={handleExportAllQueries}
-            disabled={isBootLoading || isExporting}
-          >
-            <Download size={16} />
-            <span className="hidden sm:inline">{isExporting ? "Exporting..." : "Export"}</span>
-          </button>
+
         </div>
 
         {/* Mobile Filters */}
@@ -515,7 +508,7 @@ export default function AllQuery() {
                   disabled={isBootLoading || isExporting}
                 >
                   <Download size={16} />
-                  {isExporting ? "Exporting..." : "Export"}
+                  {isExporting ? "Exporting..." : ""}
                 </button>
               </div>
             </div>
@@ -645,7 +638,7 @@ export default function AllQuery() {
             disabled={isBootLoading || isExporting}
           >
             <Download size={16} />
-            {isExporting ? "Exporting..." : "Export"}
+            {isExporting ? "Exporting..." : ""}
           </button>
 
           {isModalOpen && (
@@ -700,7 +693,7 @@ export default function AllQuery() {
       <div className="relative max-h-[600px] overflow-y-auto shadow-md bg-white border border-gray-200">
 
         <table className="w-full text-sm text-left rtl:text-right text-gray-600 font-sans">
-        <thead className="bg-[#29234b] text-white uppercase sticky top-0 z-20">
+          <thead className="bg-[#29234b] text-white uppercase sticky top-0 z-20">
 
             <tr>
               <th scope="col" className="px-4 font-medium capitalize py-2">N/O</th>
@@ -784,7 +777,7 @@ export default function AllQuery() {
 
                       <td className="px-4 py-2 font-semibold text-sm whitespace-nowrap" onClick={() => handleRowClick(querie._id)}>
                         {querie.studentName}
-                         <span className="text-xs">
+                        <span className="text-xs">
                           (
                           {querie.referenceid === "JOB" ? (
                             <span className="bg-green-200 text-green-700 px-2 py-[1px] rounded-full font-bold">
@@ -805,18 +798,18 @@ export default function AllQuery() {
                         {querie?.studentContact?.phoneNumber}
                       </td>
 
-                       <td
-                                             onClick={() => handleRowClick(querie._id)}
-                                             className="px-4 py-2 text-[12px] flex gap-2 items-center"
-                                           >
-                                             {querie.lastgrade}
-                     
-                                             {querie.lastgrade === "A" && (
-                                               <span className="inline-flex items-center">
-                                                 <Image src="/image/images.jpeg" alt="Grade A" width={24} height={24} className="rounded-full" />
-                                               </span>
-                                             )}
-                                           </td>
+                      <td
+                        onClick={() => handleRowClick(querie._id)}
+                        className="px-4 py-2 text-[12px] flex gap-2 items-center"
+                      >
+                        {querie.lastgrade}
+
+                        {querie.lastgrade === "A" && (
+                          <span className="inline-flex items-center">
+                            <Image src="/image/images.jpeg" alt="Grade A" width={24} height={24} className="rounded-full" />
+                          </span>
+                        )}
+                      </td>
 
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
                         {matchedassignedsenderUser}
@@ -844,7 +837,7 @@ export default function AllQuery() {
                       <span className="absolute right-0 top-0 bottom-0 flex items-center">
                         {!querie.addmission &&
                           (new Date(querie.lastDeadline) < new Date() &&
-                          new Date(querie.lastDeadline).toDateString() !== new Date().toDateString() ? (
+                            new Date(querie.lastDeadline).toDateString() !== new Date().toDateString() ? (
                             <span className="inline-flex items-center px-2 text-[10px] font-semibold text-red-600 bg-red-200 rounded-full shadow-md">
                               ✖️ Today Update
                             </span>

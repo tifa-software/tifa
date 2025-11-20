@@ -5,6 +5,8 @@ import { PhoneCall, CheckCircle, Navigation, XCircle, Loader } from "lucide-reac
 import { useReactToPrint } from "react-to-print";
 import { useRef } from "react";
 import * as XLSX from "xlsx";
+import { useSession } from "next-auth/react";
+
 import Link from "next/link";
 export default function StaffDatanew({ staffid }) {
     const [userData, setUserData] = useState(null);
@@ -18,6 +20,7 @@ export default function StaffDatanew({ staffid }) {
     const today = new Date().toISOString().split("T")[0];
     const contentRef = useRef(null);
     const reactToPrintFn = useReactToPrint({ contentRef });
+    const { data: session } = useSession();
 
 
     const [user, setUser] = useState([]);
@@ -34,7 +37,7 @@ export default function StaffDatanew({ staffid }) {
     useEffect(() => {
         const fetchAdminData = async () => {
             try {
-                const response = await axios.get(`/api/admin/find-admin-byemail/${staffid}`);
+                const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
                 setUserData(response.data);
                 setAdminData(response.data._id);
             } catch (err) {
@@ -44,8 +47,8 @@ export default function StaffDatanew({ staffid }) {
             }
         };
 
-        if (staffid) fetchAdminData();
-    }, [staffid]);
+        if (session?.user?.email) fetchAdminData();
+    }, [session]);
 
     useEffect(() => {
         const fetchQueryData = async () => {
@@ -508,17 +511,17 @@ export default function StaffDatanew({ staffid }) {
                                                             .map((query, index) => (
                                                                 <tr key={index}>
                                                                     <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        <Link href={`/main/page/allquery/${query._id}`} key={index}>{index + 1}</Link>
+                                                                        <Link href={`/staff/page/allquery/${query._id}`} key={index}>{index + 1}</Link>
 
                                                                     </td>
                                                                     <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                         <Link href={`/main/page/allquery/${query._id}`} key={index}>  {query.studentName}</Link>
-                                                                      
+                                                                        <Link href={`/staff/page/allquery/${query._id}`} key={index}>  {query.studentName}</Link>
+
                                                                     </td>
                                                                     <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                         <Link href={`/main/page/allquery/${query._id}`} key={index}>    {query.studentContact.phoneNumber}</Link>
+                                                                        <Link href={`/staff/page/allquery/${query._id}`} key={index}>    {query.studentContact.phoneNumber}</Link>
 
-                                                                     
+
                                                                     </td>
                                                                     <td className="px-4 py-2 text-[12px] font-semibold">
                                                                         {query.referenceid !== "null" &&

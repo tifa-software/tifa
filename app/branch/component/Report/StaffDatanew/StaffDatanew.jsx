@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { PhoneCall, CheckCircle, Navigation, XCircle, Loader } from "lucide-react";
-
+import Link from "next/link";
 export default function StaffDatanew({ staffid }) {
     const [userData, setUserData] = useState(null);
     const [adminData, setAdminData] = useState(null);
@@ -20,7 +20,7 @@ export default function StaffDatanew({ staffid }) {
     const [selectedYear, setSelectedYear] = useState("");
     const [selectedMonth, setSelectedMonth] = useState("");
     const [filteredDates, setFilteredDates] = useState([]);
-    
+
     const [startDate, setStartDate] = useState(today);
     const [endDate, setEndDate] = useState(today);
 
@@ -468,98 +468,106 @@ export default function StaffDatanew({ staffid }) {
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {activity.queries.map((query, index) => (
-                                                            <tr key={index}>
-                                                                <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                    {index + 1}
-                                                                </td>
-                                                                <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                    {query.studentName}
-                                                                </td>
-                                                                <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                    {query.studentContact.phoneNumber}
-                                                                </td>
-                                                                <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                    {query.referenceid !== "null" &&
-                                                                        query.referenceid !== null
-                                                                        ? query.referenceid
-                                                                        : "Not Provided"}
-                                                                    {query.suboption !== "null" && <>{query.suboption}</>}
-                                                                </td>
-                                                                <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                    {query.studentContact.city}
-                                                                </td>
-                                                                <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                    {query.studentContact.address}
-                                                                </td>
-                                                                <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                    {query.assignedsenthistory &&
-                                                                        query.assignedsenthistory.length > 0
-                                                                        ? query.assignedsenthistory
-                                                                            .map((id) => getUserName(id))
-                                                                            .join(", ")
-                                                                        : "Not Assigned"}
-                                                                </td>
-                                                                <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                    {query.assignedreceivedhistory &&
-                                                                        query.assignedreceivedhistory.length > 0
-                                                                        ? query.assignedreceivedhistory
-                                                                            .map((id) => getUserName(id))
-                                                                            .join(", ")
-                                                                        : "Not Assigned"}
-                                                                </td>
-                                                                <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                    {new Date(query.createdAt).toLocaleDateString("en-GB", {
-                                                                        day: "2-digit",
-                                                                        month: "2-digit",
-                                                                        year: "numeric",
-                                                                    })}
-                                                                </td>
-                                                                <td className="px-4 py-2 text-[12px] font-semibold">
+                                                        {activity.queries
+                                                            .filter((q, i, arr) =>
+                                                                i === arr.findIndex(
+                                                                    (x) => x?.studentContact?.phoneNumber === q?.studentContact?.phoneNumber
+                                                                )
+                                                            )
+                                                            .map((query, index) => (
+                                                                <tr key={index}>
                                                                     <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        {query.addmission ? "Enroll" : "Not Enroll"}
+                                                                        <Link href={`/branch/page/allquery/${query._id}`} key={index}>{index + 1}</Link>
                                                                     </td>
-                                                                </td>
-                                                                <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                    {query.connectionStatus && query.connectionStatus.length > 0 ? (
-                                                                        Object.entries(
-                                                                            query.connectionStatus.reduce((acc, statusEntry) => {
-                                                                                const statusLabel =
-                                                                                    statusEntry.status === "no_connected" ? "No Connected" :
-                                                                                        statusEntry.status === "not_lifting" ? "Not Lifting" :
-                                                                                            statusEntry.status === "connected" ? "Connected" : "Unknown";
-
-                                                                                if (!acc[statusLabel]) {
-                                                                                    acc[statusLabel] = { count: 0, time: statusEntry.time, subStatus: {} };
-                                                                                }
-
-                                                                                acc[statusLabel].count++;
-
-                                                                                if (statusEntry.subStatus) {
-                                                                                    acc[statusLabel].subStatus[statusEntry.subStatus] =
-                                                                                        (acc[statusLabel].subStatus[statusEntry.subStatus] || 0) + 1;
-                                                                                }
-
-                                                                                return acc;
-                                                                            }, {})
-                                                                        ).map(([status, data], index) => (
-                                                                            <div key={index} className="flex flex-col">
-                                                                                <span className="text-gray-700">{status} ({data.count})</span>
-                                                                                {Object.entries(data.subStatus).map(([sub, count], subIndex) => (
-                                                                                    <span key={subIndex} className="text-gray-500 ml-2">
-                                                                                        {sub}: {count}
-                                                                                    </span>
-                                                                                ))}
-                                                                            </div>
-                                                                        ))
-                                                                    ) : (
-                                                                        <span className="text-gray-500">No Status</span>
-                                                                    )}
-                                                                </td>
+                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                        <Link href={`/branch/page/allquery/${query._id}`} key={index}> {query.studentName}</Link>
+                                                                    </td>
+                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                        <Link href={`/branch/page/allquery/${query._id}`} key={index}>   {query.studentContact.phoneNumber}</Link>
 
 
-                                                            </tr>
-                                                        ))}
+                                                                    </td>
+                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                        {query.referenceid !== "null" &&
+                                                                            query.referenceid !== null
+                                                                            ? query.referenceid
+                                                                            : "Not Provided"}
+                                                                        {query.suboption !== "null" && <>{query.suboption}</>}
+                                                                    </td>
+                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                        {query.studentContact.city}
+                                                                    </td>
+                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                        {query.studentContact.address}
+                                                                    </td>
+                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                        {query.assignedsenthistory &&
+                                                                            query.assignedsenthistory.length > 0
+                                                                            ? query.assignedsenthistory
+                                                                                .map((id) => getUserName(id))
+                                                                                .join(", ")
+                                                                            : "Not Assigned"}
+                                                                    </td>
+                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                        {query.assignedreceivedhistory &&
+                                                                            query.assignedreceivedhistory.length > 0
+                                                                            ? query.assignedreceivedhistory
+                                                                                .map((id) => getUserName(id))
+                                                                                .join(", ")
+                                                                            : "Not Assigned"}
+                                                                    </td>
+                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                        {new Date(query.createdAt).toLocaleDateString("en-GB", {
+                                                                            day: "2-digit",
+                                                                            month: "2-digit",
+                                                                            year: "numeric",
+                                                                        })}
+                                                                    </td>
+                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                        <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                            {query.addmission ? "Enroll" : "Not Enroll"}
+                                                                        </td>
+                                                                    </td>
+                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                        {query.connectionStatus && query.connectionStatus.length > 0 ? (
+                                                                            Object.entries(
+                                                                                query.connectionStatus.reduce((acc, statusEntry) => {
+                                                                                    const statusLabel =
+                                                                                        statusEntry.status === "no_connected" ? "No Connected" :
+                                                                                            statusEntry.status === "not_lifting" ? "Not Lifting" :
+                                                                                                statusEntry.status === "connected" ? "Connected" : "Unknown";
+
+                                                                                    if (!acc[statusLabel]) {
+                                                                                        acc[statusLabel] = { count: 0, time: statusEntry.time, subStatus: {} };
+                                                                                    }
+
+                                                                                    acc[statusLabel].count++;
+
+                                                                                    if (statusEntry.subStatus) {
+                                                                                        acc[statusLabel].subStatus[statusEntry.subStatus] =
+                                                                                            (acc[statusLabel].subStatus[statusEntry.subStatus] || 0) + 1;
+                                                                                    }
+
+                                                                                    return acc;
+                                                                                }, {})
+                                                                            ).map(([status, data], index) => (
+                                                                                <div key={index} className="flex flex-col">
+                                                                                    <span className="text-gray-700">{status} ({data.count})</span>
+                                                                                    {Object.entries(data.subStatus).map(([sub, count], subIndex) => (
+                                                                                        <span key={subIndex} className="text-gray-500 ml-2">
+                                                                                            {sub}: {count}
+                                                                                        </span>
+                                                                                    ))}
+                                                                                </div>
+                                                                            ))
+                                                                        ) : (
+                                                                            <span className="text-gray-500">No Status</span>
+                                                                        )}
+                                                                    </td>
+
+
+                                                                </tr>
+                                                            ))}
                                                     </tbody>
                                                 </table>
                                             </div>
