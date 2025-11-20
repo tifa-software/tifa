@@ -164,85 +164,70 @@ export const GET = async (request, context) => {
       }
     }
 
+     const deadlineSource = autoclosedStatus === "close" ? "$updatedAt" : "$deadline";
+
+    // Universal parser (string / date)
     const parsedDeadlineExpression = {
       $let: {
         vars: {
-          deadlineStr: {
-            $cond: {
-              if: { $eq: [{ $type: "$deadline" }, "string"] },
-              then: "$deadline",
-              else: { $toString: { $ifNull: ["$deadline", ""] } },
-            },
-          },
+          deadlineVal: deadlineSource
         },
+
         in: {
           $switch: {
             branches: [
+              // Case: null or Not_Provided
               {
                 case: {
                   $or: [
-                    { $eq: ["$$deadlineStr", ""] },
-                    { $eq: ["$$deadlineStr", "Not_Provided"] },
-                  ],
+                    { $eq: ["$$deadlineVal", null] },
+                    { $eq: ["$$deadlineVal", ""] },
+                    { $eq: ["$$deadlineVal", "Not_Provided"] }
+                  ]
                 },
-                then: null,
+                then: null
               },
+
+              // Case: already a DATE (Mongo Date object)
+              {
+                case: { $eq: [{ $type: "$$deadlineVal" }, "date"] },
+                then: {
+                  $dateTrunc: {
+                    date: "$$deadlineVal",
+                    unit: "day"
+                  }
+                }
+              },
+
+              // Case: ISO string YYYY-MM-DD
               {
                 case: {
                   $regexMatch: {
-                    input: "$$deadlineStr",
-                    regex: "^\\d{4}-\\d{2}-\\d{2}",
-                  },
+                    input: "$$deadlineVal",
+                    regex: "^\\d{4}-\\d{2}-\\d{2}"
+                  }
                 },
                 then: {
                   $dateTrunc: {
                     date: {
                       $dateFromString: {
-                        dateString: { $substr: ["$$deadlineStr", 0, 10] },
+                        dateString: { $substr: ["$$deadlineVal", 0, 10] },
                         format: "%Y-%m-%d",
-                        onError: null,
-                        onNull: null,
-                      },
+                        onError: null
+                      }
                     },
-                    unit: "day",
-                  },
-                },
+                    unit: "day"
+                  }
+                }
               },
+
+              // Case: dd-mm-yyyy
               {
                 case: {
                   $regexMatch: {
-                    input: "$$deadlineStr",
-                    regex: "^\\d{2}-\\d{2}-\\d{4}$",
-                  },
-                },
-                then: {
-                  $dateTrunc: {
-                    date: {
-                      $dateFromString: {
-                        dateString: {
-                          $concat: [
-                            { $substr: ["$$deadlineStr", 6, 4] },
-                            "-",
-                            { $substr: ["$$deadlineStr", 3, 2] },
-                            "-",
-                            { $substr: ["$$deadlineStr", 0, 2] },
-                          ],
-                        },
-                        format: "%Y-%m-%d",
-                        onError: null,
-                        onNull: null,
-                      },
-                    },
-                    unit: "day",
-                  },
-                },
-              },
-              {
-                case: {
-                  $regexMatch: {
-                    input: "$$deadlineStr",
-                    regex: "^\\d{2}-\\d{2}-\\d{2}$",
-                  },
+                    input: "$$deadlineVal",
+                    regex: "^\\d{2}-\\d{2}-\\d{4}$"
+                  }
                 },
                 then: {
                   $dateTrunc: {
@@ -250,39 +235,38 @@ export const GET = async (request, context) => {
                       $dateFromString: {
                         dateString: {
                           $concat: [
-                            "20",
-                            { $substr: ["$$deadlineStr", 6, 2] },
+                            { $substr: ["$$deadlineVal", 6, 4] },
                             "-",
-                            { $substr: ["$$deadlineStr", 3, 2] },
+                            { $substr: ["$$deadlineVal", 3, 2] },
                             "-",
-                            { $substr: ["$$deadlineStr", 0, 2] },
-                          ],
+                            { $substr: ["$$deadlineVal", 0, 2] }
+                          ]
                         },
                         format: "%Y-%m-%d",
-                        onError: null,
-                        onNull: null,
-                      },
+                        onError: null
+                      }
                     },
-                    unit: "day",
-                  },
-                },
-              },
+                    unit: "day"
+                  }
+                }
+              }
             ],
+
+            // Fallback
             default: {
               $dateTrunc: {
                 date: {
                   $dateFromString: {
-                    dateString: "$$deadlineStr",
-                    onError: null,
-                    onNull: null,
-                  },
+                    dateString: "$$deadlineVal",
+                    onError: null
+                  }
                 },
-                unit: "day",
-              },
-            },
-          },
-        },
-      },
+                unit: "day"
+              }
+            }
+          }
+        }
+      }
     };
 
     const pipeline = [
@@ -426,6 +410,7 @@ export const GET = async (request, context) => {
               lastactionby: 1,
               lastmessage: 1,
               notes: 1,
+              updatedAt: 1,
               "studentContact.phoneNumber": 1,
               "studentContact.address": 1,
             },

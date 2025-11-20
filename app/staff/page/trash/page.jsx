@@ -323,7 +323,7 @@ export default function AllQuery() {
                   onChange={(e) => setDeadlineFilter(e.target.value)}
                 >
                   <option value="" disabled>
-                    Deadline
+                    Trash Date
                   </option>
                   <option value="">All</option>
                   <option value="today">Today</option>
@@ -432,7 +432,7 @@ export default function AllQuery() {
               onChange={(e) => setDeadlineFilter(e.target.value)}
             >
               <option value="" disabled>
-                Deadline
+                Trash Date
               </option>
               <option value="">All</option>
               <option value="today">Today</option>
@@ -562,7 +562,7 @@ export default function AllQuery() {
               <th scope="col" className="px-4 font-medium capitalize py-2">Grade</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Assigned from</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Assigned To</th>
-              <th scope="col" className="px-4 font-medium capitalize py-2">DeadLine</th>
+              <th scope="col" className="px-4 font-medium capitalize py-2">Trash Date</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Address</th>
             </tr>
           </thead>
@@ -659,8 +659,8 @@ export default function AllQuery() {
 
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
                         {(() => {
-                          const d = new Date(querie.deadline);
-                          if (isNaN(d.getTime())) return querie.deadline || "";
+                          const d = new Date(querie.updatedAt);
+                          if (isNaN(d.getTime())) return querie.updatedAt || "";
                           const dd = String(d.getDate()).padStart(2, "0");
                           const mm = String(d.getMonth() + 1).padStart(2, "0");
                           const yy = String(d.getFullYear()).slice(-2);

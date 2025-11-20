@@ -32,6 +32,7 @@ function buildApiUrl({ branchname, userid, page = 1, deadlineFilter = "", grade 
 export default function AllQuery() {
   const router = useRouter();
   const { data: session } = useSession();
+  const [user, setuser] = useState([]);
 
   // ---- Admin data state ----
   const [adminData, setAdminData] = useState(null);
@@ -67,7 +68,21 @@ export default function AllQuery() {
 
   const handleRowClick = (id) => router.push(`/branch/page/allquery/${id}`);
   const toggleFilterPopup = () => setIsFilterOpen((v) => !v);
+  useEffect(() => {
+    const fetchuserData = async () => {
+      try {
+        const branch = adminData?.branch;
+        const response = await axios.get(`/api/admin/fetchall-bybranch/${branch}`);
+        setuser(response.data.fetch);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
+    fetchuserData();
+  }, [adminData]);
   // Fetch admin data
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -113,8 +128,8 @@ export default function AllQuery() {
       deadlineFilter === "custom" && !customDate
         ? ""
         : deadlineFilter === "dateRange" && (!startDate || !endDate)
-        ? ""
-        : deadlineFilter;
+          ? ""
+          : deadlineFilter;
 
     try {
       const url = buildApiUrl({
@@ -167,8 +182,8 @@ export default function AllQuery() {
       deadlineFilter === "custom" && !customDate
         ? ""
         : deadlineFilter === "dateRange" && (!startDate || !endDate)
-        ? ""
-        : deadlineFilter;
+          ? ""
+          : deadlineFilter;
 
     try {
       const nextPage = page + 1;
@@ -298,26 +313,11 @@ export default function AllQuery() {
                   onChange={(e) => setFilterAssignedFrom(e.target.value)}
                 >
                   <option value="">All Assigned</option>
-                  {Array.from(
-                    new Set(
-                      queries
-                        .flatMap((querie) => {
-                          const history = querie.assignedreceivedhistory;
-                          return Array.isArray(history) ? history : history ? [history] : [];
-                        })
-                        .filter((id) => id)
-                    )
-                  )
-                    .map((assignedFrom) => {
-                      const adminName = findAdminNameById(assignedFrom);
-                      return adminName ? { id: assignedFrom, name: adminName } : null;
-                    })
-                    .filter((option) => option !== null)
-                    .map((option, index) => (
-                      <option key={index} value={option.id}>
-                        {option.name}
-                      </option>
-                    ))}
+                  {user.map((admin) => (
+                    <option key={admin.id} value={admin._id}>
+                      {admin.name}
+                    </option>
+                  ))}
                 </select>
 
                 <select
@@ -326,7 +326,7 @@ export default function AllQuery() {
                   onChange={(e) => setDeadlineFilter(e.target.value)}
                 >
                   <option value="" disabled>
-                    Deadline
+                    Trash Date
                   </option>
                   <option value="">All</option>
                   <option value="today">Today</option>
@@ -374,7 +374,7 @@ export default function AllQuery() {
                     <CirclePlus size={16} className="me-1" /> Add Query
                   </button>
                 </Link> */}
-{/* 
+                {/* 
                 <button
                   className="text-red-500 rounded-md border border-red-500 px-3 py-2"
                   onClick={handleBulkDelete}
@@ -395,26 +395,11 @@ export default function AllQuery() {
             onChange={(e) => setFilterAssignedFrom(e.target.value)}
           >
             <option value="">All Assigned</option>
-            {Array.from(
-              new Set(
-                queries
-                  .flatMap((querie) => {
-                    const history = querie.assignedreceivedhistory;
-                    return Array.isArray(history) ? history : history ? [history] : [];
-                  })
-                  .filter((id) => id)
-              )
-            )
-              .map((assignedFrom) => {
-                const adminName = findAdminNameById(assignedFrom);
-                return adminName ? { id: assignedFrom, name: adminName } : null;
-              })
-              .filter((option) => option !== null)
-              .map((option, index) => (
-                <option key={index} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
+            {user.map((admin) => (
+              <option key={admin.id} value={admin._id}>
+                {admin.name}
+              </option>
+            ))}
           </select>
 
           <select
@@ -435,7 +420,7 @@ export default function AllQuery() {
               onChange={(e) => setDeadlineFilter(e.target.value)}
             >
               <option value="" disabled>
-                Deadline
+                Trash Date
               </option>
               <option value="">All</option>
               <option value="today">Today</option>
@@ -553,9 +538,9 @@ export default function AllQuery() {
       </div>
 
       {/* Table */}
-      <div className="relative overflow-x-auto shadow-md bg-white border border-gray-200">
+      <div className="relative max-h-[600px] overflow-y-auto shadow-md bg-white border border-gray-200">
         <table className="w-full text-sm text-left rtl:text-right text-gray-600 font-sans">
-          <thead className="bg-[#29234b] text-white uppercase">
+          <thead className="bg-[#29234b] text-white uppercase sticky top-0 z-20">
             <tr>
               <th scope="col" className="px-4 font-medium capitalize py-2">N/O</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Staff Name</th>
@@ -565,7 +550,7 @@ export default function AllQuery() {
               <th scope="col" className="px-4 font-medium capitalize py-2">Grade</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Assigned from</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Assigned To</th>
-              <th scope="col" className="px-4 font-medium capitalize py-2">DeadLine</th>
+              <th scope="col" className="px-4 font-medium capitalize py-2">Trash Date</th>
               <th scope="col" className="px-4 font-medium capitalize py-2">Address</th>
             </tr>
           </thead>
@@ -662,8 +647,8 @@ export default function AllQuery() {
 
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
                         {(() => {
-                          const d = new Date(querie.deadline);
-                          if (isNaN(d.getTime())) return querie.deadline || "";
+                          const d = new Date(querie.updatedAt);
+                          if (isNaN(d.getTime())) return querie.updatedAt || "";
                           const dd = String(d.getDate()).padStart(2, "0");
                           const mm = String(d.getMonth() + 1).padStart(2, "0");
                           const yy = String(d.getFullYear()).slice(-2);
@@ -678,7 +663,7 @@ export default function AllQuery() {
                       <span className="absolute right-0 top-0 bottom-0 flex items-center">
                         {!querie.addmission &&
                           (new Date(querie.lastDeadline) < new Date() &&
-                          new Date(querie.lastDeadline).toDateString() !== new Date().toDateString() ? (
+                            new Date(querie.lastDeadline).toDateString() !== new Date().toDateString() ? (
                             <span className="inline-flex items-center px-2 text-[10px] font-semibold text-red-600 bg-red-200 rounded-full shadow-md">
                               ✖️ Today Update
                             </span>

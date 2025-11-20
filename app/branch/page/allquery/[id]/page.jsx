@@ -106,12 +106,16 @@ export default function Page({ params }) {
                     <div className="flex flex-col">
                         {((query.assignedTo === "Not-Assigned" && query.userid === adminId) || query.assignedTo === adminId) ? (
                             <>
-                                <Link href={`/branch/page/update/${query._id}`}>
-                                    <Edit size={15} className=" mb-2 text-[#29234b]" />
-                                </Link>
+                                {query.autoclosed !== "close" && (
+                                    <Link href={`/branch/page/update/${query._id}`}>
+                                        <Edit size={15} className=" mb-2 text-[#29234b]" />
+                                    </Link>
+                                )}
                                 <button
                                     onClick={async () => {
                                         if (query.autoclosed === "close") {
+                                            const confirmRecover = confirm("Are you sure you want to recover this query?");
+                                            if (!confirmRecover) return;
                                             try {
                                                 // First API call: Update `autoclosed` to "open"
                                                 const newApiResponse = await axios.patch('/api/queries/update', {
@@ -152,8 +156,10 @@ export default function Page({ params }) {
                                 </button>
 
 
-                                <AssignedQuery refreshData={fetchBranchData} initialData={query} />
-                                <Fees id={query._id} />
+                                {query.autoclosed !== "close" && (
+                                    <AssignedQuery refreshData={fetchBranchData} initialData={query} />
+                                )}
+                                {query.autoclosed !== "close" && <Fees id={query._id} />}
                             </>) : (
                             <p className="text-red-500 text-center mt-4">
                                 You are Not assigned to update this.
