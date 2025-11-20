@@ -239,7 +239,7 @@ export default function Page() {
                                             icon={<Book size={15} />}
 
                                         />
-                                        {formData.suboptions.length > 1 && (
+                                        
                                             <button
                                                 type="button"
                                                 onClick={() => removeSuboption(index)}
@@ -247,7 +247,8 @@ export default function Page() {
                                             >
                                                 <Trash size={16} />
                                             </button>
-                                        )}
+                                        
+                                        
                                     </div>
                                 ))}
                                 <button

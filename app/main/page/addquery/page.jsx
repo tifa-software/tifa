@@ -974,6 +974,7 @@ export default function Page() {
 
                             </>
                         ) : (
+                            <>
                             <div className="sm:col-span-6 col-span-12">
                                 <label htmlFor="interestStatus" className="block text-[15px] text-gray-700">
                                     Status
@@ -995,6 +996,30 @@ export default function Page() {
                                     <option value="wrong_no">Wrong Number</option>
                                 </select>
                             </div>
+                             <div className="sm:col-span-6 col-span-12">
+                                    <label htmlFor="deadline" className="block text-[15px] text-gray-700">
+                                        Deadline
+                                    </label>
+                                    <div className=" relative">
+                                        <input
+                                            type="date"
+                                            name="deadline"
+                                            value={formData.deadline}
+                                            onChange={handleChange}
+
+                                            ref={(el) => (inputRefs.current[11] = el)} // Assign ref
+                                            onKeyDown={(e) => handleKeyDown(e, 11)}
+                                            className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
+                                        />
+                                        <span className="absolute top-0 left-0  bottom-0 flex items-center justify-center px-2 py-2 text-gray-500 bg-white border border-r-0  text-sm">
+                                            {displayDate ? displayDate : "select deadline"}
+                                        </span>
+                                    </div>
+                                    {errors.deadline && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.deadline}</p>
+                                    )}
+                                </div>
+                                </>
                         )}
 
                     </div>

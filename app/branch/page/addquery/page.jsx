@@ -97,7 +97,7 @@ export default function Page() {
 
     const [existingBranch, setExistingBranch] = useState("");
 
-     useEffect(() => {
+    useEffect(() => {
         if (!formData.studentContact.phoneNumber) return;
 
         let isMounted = true;
@@ -972,26 +972,52 @@ export default function Page() {
 
                             </>
                         ) : (
-                            <div className="sm:col-span-6 col-span-12">
-                                <label htmlFor="interestStatus" className="block text-[15px] text-gray-700">
-                                    Status
-                                </label>
-                                <select
-                                    id="interestStatus"
-                                    value={interestStatus}
-                                    onChange={handleInterestChange}
-                                    className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
-                                >
-                                    <option value="" disabled>Select Interest Status</option>
-                                    <option value="Interested">Interested</option>
-                                    <option value="Visited">Visited</option>
-                                    <option value="not_interested">Not Interested</option>
+                            <>
+                                <div className="sm:col-span-6 col-span-12">
+                                    <label htmlFor="interestStatus" className="block text-[15px] text-gray-700">
+                                        Status
+                                    </label>
+                                    <select
+                                        id="interestStatus"
+                                        value={interestStatus}
+                                        onChange={handleInterestChange}
+                                        className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
+                                    >
+                                        <option value="" disabled>Select Interest Status</option>
+                                        <option value="Interested">Interested</option>
+                                        <option value="Visited">Visited</option>
 
-                                    <option value="not_connected">Not Connected</option>
-                                    <option value="not_lifting">Not Lifting</option>
-                                    <option value="wrong_no">Wrong Number</option>
-                                </select>
-                            </div>
+                                        <option value="not_interested">Not Interested</option>
+
+                                        <option value="not_connected">Not Connected</option>
+                                        <option value="not_lifting">Not Lifting</option>
+                                        <option value="wrong_no">Wrong Number</option>
+                                    </select>
+                                </div>
+                                <div className="sm:col-span-6 col-span-12">
+                                    <label htmlFor="deadline" className="block text-[15px] text-gray-700">
+                                        Deadline
+                                    </label>
+                                    <div className=" relative">
+                                        <input
+                                            type="date"
+                                            name="deadline"
+                                            value={formData.deadline}
+                                            onChange={handleChange}
+
+                                            ref={(el) => (inputRefs.current[11] = el)} // Assign ref
+                                            onKeyDown={(e) => handleKeyDown(e, 11)}
+                                            className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
+                                        />
+                                        <span className="absolute top-0 left-0  bottom-0 flex items-center justify-center px-2 py-2 text-gray-500 bg-white border border-r-0  text-sm">
+                                            {displayDate ? displayDate : "select deadline"}
+                                        </span>
+                                    </div>
+                                    {errors.deadline && (
+                                        <p className="text-red-500 text-[8px] mt-1">{errors.deadline}</p>
+                                    )}
+                                </div>
+                            </>
                         )}
 
                     </div>
@@ -1000,10 +1026,12 @@ export default function Page() {
 
                     {/* Submit button */}
                     <div>
-                        <button
+                      <button
                             type="submit"
-                            disabled={!isFormValid || loading}
-                            className={`${!isFormValid || loading ? "bg-gray-400" : "bg-[#6cb049]"
+                            disabled={!isFormValid || loading || isPhoneNumberExist}
+                            className={`${!isFormValid || loading || isPhoneNumberExist
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-[#6cb049]"
                                 } text-white w-full font-bold py-2 px-4 rounded-md`}
                         >
                             {loading ? "Wait..." : "Add Query"}

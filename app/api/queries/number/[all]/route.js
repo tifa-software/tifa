@@ -9,7 +9,7 @@ export const GET = async (request) => {
 
   try {
     const { searchParams } = new URL(request.url);
-    const phoneNumber = searchParams.get("phoneNumber"); // Extract phone number from query param
+    let phoneNumber = searchParams.get("phoneNumber");
 
     if (!phoneNumber) {
       return Response.json(
@@ -18,10 +18,18 @@ export const GET = async (request) => {
       );
     }
 
-    // Fetch only one record with matching phone number
+    // Convert incoming to string always
+    phoneNumber = phoneNumber.toString().trim();
+
+    // Search for DB phoneNumber even if stored as number or string
     const existingRecord = await QueryModel.findOne({
       defaultdata: "query",
-      "studentContact.phoneNumber": phoneNumber,
+      $expr: {
+        $eq: [
+          { $toString: "$studentContact.phoneNumber" },
+          phoneNumber,
+        ],
+      },
     }).select("studentContact.phoneNumber branch");
 
     return Response.json(
@@ -33,6 +41,7 @@ export const GET = async (request) => {
       },
       { status: 200 }
     );
+
   } catch (error) {
     console.error("Error fetching phone number:", error);
     return Response.json(
