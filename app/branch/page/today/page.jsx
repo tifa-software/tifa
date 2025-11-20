@@ -6,9 +6,10 @@ import Link from "next/link";
 import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import BulkAssign from "@/components/BulkAssign/BulkAssign";
-import { ArrowLeft, ArrowRight, Search, Trash2, CirclePlus, Filter, X, Send, XCircleIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Search, Trash2, CirclePlus, Filter, X, Send, XCircleIcon, Download } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import * as XLSX from "xlsx";
 // Utility: build API URL with query params
 function buildApiUrl({ branchname, userid, page = 1, deadlineFilter = "", grade = "", search = "", customDate = "", rangeStart = "", rangeEnd = "", assignedFrom = "" }) {
   const params = new URLSearchParams();
@@ -29,6 +30,15 @@ function buildApiUrl({ branchname, userid, page = 1, deadlineFilter = "", grade 
   return `/api/queries/fetchall-bybranch/${encodeURIComponent(branchname)}?${params.toString()}`;
 }
 
+const formatDeadlineValue = (value) => {
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return value || "";
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${dd}-${mm}-${yy}`;
+};
+
 export default function AllQuery() {
   const router = useRouter();
   const { data: session } = useSession();
@@ -45,6 +55,7 @@ export default function AllQuery() {
   const [isBootLoading, setIsBootLoading] = useState(false);
   const [admins, setAdmins] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
+  const [isExporting, setIsExporting] = useState(false);
 
   // ---- UI state ----
   const [searchTerm, setSearchTerm] = useState("");
@@ -99,6 +110,37 @@ export default function AllQuery() {
       return found?.name || "";
     },
     [admins]
+  );
+
+  const mapQueryToExportRow = useCallback(
+    (querie, index) => {
+      const matchedUser = findAdminNameById(querie.userid) || "Tifa Admin";
+
+      const lastAssignedReceived = Array.isArray(querie.assignedreceivedhistory)
+        ? querie.assignedreceivedhistory[querie.assignedreceivedhistory.length - 1]
+        : querie.assignedreceivedhistory;
+      const lastAssignedSent = Array.isArray(querie.assignedsenthistory)
+        ? querie.assignedsenthistory[querie.assignedsenthistory.length - 1]
+        : querie.assignedsenthistory;
+
+      const matchedassignedUser = findAdminNameById(lastAssignedReceived) || "";
+      const matchedassignedsenderUser = findAdminNameById(lastAssignedSent) || "";
+
+      return {
+        "N/O": index + 1,
+        "Staff Name": matchedUser,
+        "Student Name": querie.studentName || "",
+        Reference: querie.referenceid === "JOB" ? "Job Require" : querie.referenceid || "",
+        Branch: Array.isArray(querie.branch) ? querie.branch.join(", ") : querie.branch || "",
+        "Phone Number": querie?.studentContact?.phoneNumber || "",
+        Grade: querie.lastgrade || "",
+        "Assigned From": matchedassignedsenderUser,
+        "Assigned To": matchedassignedUser,
+        Deadline: formatDeadlineValue(querie.deadline),
+        Address: querie?.studentContact?.address || "",
+      };
+    },
+    [findAdminNameById]
   );
 
   // --- Filter → (Re)load from server (page=1) ---
@@ -244,6 +286,82 @@ export default function AllQuery() {
 
   const handleremovebulk = () => setIsModalOpen(false);
 
+  const handleExportAllQueries = useCallback(async () => {
+    if (isExporting || !adminData?.branch || !adminData?._id) return;
+    setIsExporting(true);
+
+    const effectiveDeadlineFilter =
+      deadlineFilter === "custom" && !customDate
+        ? ""
+        : deadlineFilter === "dateRange" && (!startDate || !endDate)
+          ? ""
+          : deadlineFilter;
+
+    try {
+      const collected = [];
+      let currentPage = 1;
+      let totalPagesLocal = 1;
+
+      while (currentPage <= totalPagesLocal) {
+        const url = buildApiUrl({
+          branchname: adminData.branch,
+          userid: adminData._id,
+          page: currentPage,
+          deadlineFilter: effectiveDeadlineFilter,
+          customDate,
+          rangeStart: startDate,
+          rangeEnd: endDate,
+          grade: filterByGrade,
+          search: debouncedSearchTerm,
+          assignedFrom: filterAssignedFrom,
+        });
+
+        const res = await fetch(url, { cache: "no-store" });
+        const json = await res.json();
+        const newData = json?.data ?? [];
+        collected.push(...newData);
+
+        const serverTotalPages = json?.totalPages;
+        if (typeof serverTotalPages === "number" && serverTotalPages > 0) {
+          totalPagesLocal = serverTotalPages;
+        } else if (!newData.length) {
+          break;
+        }
+
+        currentPage += 1;
+      }
+
+      if (!collected.length) {
+        alert("No queries available to export.");
+        return;
+      }
+
+      const rows = collected.map((querie, index) => mapQueryToExportRow(querie, index));
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Queries");
+      const today = new Date().toISOString().split("T")[0];
+      const branchSlug = adminData.branch?.replace(/\s+/g, "-").toLowerCase() || "branch";
+      XLSX.writeFile(workbook, `${branchSlug}-today-queries-${today}.xlsx`);
+    } catch (error) {
+      console.error("Failed to export all queries:", error);
+      alert("Failed to export queries. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  }, [
+    isExporting,
+    adminData,
+    deadlineFilter,
+    customDate,
+    startDate,
+    endDate,
+    filterByGrade,
+    debouncedSearchTerm,
+    filterAssignedFrom,
+    mapQueryToExportRow,
+  ]);
+
   if (adminLoading) {
     return (
       <div className="container lg:w-[95%] mx-auto py-5">
@@ -265,7 +383,7 @@ export default function AllQuery() {
   return (
     <div className="container lg:w-[95%] mx-auto py-5">
       {/* Filters + Actions */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4 gap-3">
         <div className="relative w-1/3">
           <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             <Search size={14} />
@@ -279,9 +397,11 @@ export default function AllQuery() {
           />
         </div>
 
-        <button className="lg:hidden text-gray-600 px-3 py-2 border rounded-md" onClick={toggleFilterPopup}>
-          <Filter size={16} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button className="lg:hidden text-gray-600 px-3 py-2 border rounded-md" onClick={toggleFilterPopup}>
+            <Filter size={16} />
+          </button>
+        </div>
 
         {/* Mobile Filters */}
         {isFilterOpen && (
@@ -381,6 +501,15 @@ export default function AllQuery() {
                   disabled={selectedqueries.length === 0}
                 >
                   <Trash2 size={16} />
+                </button>
+
+                <button
+                  className="text-green-600 border border-green-600 rounded-md px-3 py-2 flex items-center justify-center gap-1 text-sm disabled:opacity-60"
+                  onClick={handleExportAllQueries}
+                  disabled={isBootLoading || isExporting}
+                >
+                  <Download size={16} />
+                  {isExporting ? "Exporting..." : "Export"}
                 </button>
               </div>
             </div>
@@ -502,6 +631,15 @@ export default function AllQuery() {
             disabled={selectedqueries.length === 0}
           >
             <Send size={16} />
+          </button>
+
+          <button
+            className="text-green-600 rounded-md border border-green-600 hover:bg-green-100 duration-150 cursor-pointer px-3 py-2 flex items-center gap-1 text-sm disabled:opacity-60"
+            onClick={handleExportAllQueries}
+            disabled={isBootLoading || isExporting}
+          >
+            <Download size={16} />
+            {isExporting ? "Exporting..." : "Export"}
           </button>
 
           {isModalOpen && (
