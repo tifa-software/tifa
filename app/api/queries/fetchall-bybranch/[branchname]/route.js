@@ -104,8 +104,8 @@ export const GET = async (request, context) => {
       $and: [
         {
           $or: [
-            // { assignedTo: userid },
-            { userid: { $in: staffIds }},
+            { assignedTo: userid },
+            // { userid: { $in: staffIds }},
             { branch: branchname, assignedTo: "Not-Assigned" },
           ],
         },
