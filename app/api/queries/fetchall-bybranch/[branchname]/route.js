@@ -86,17 +86,26 @@ export const GET = async (request, context) => {
   const gradeFilter = searchParams.get("grade") || "";
   const searchTerm = searchParams.get("search") || "";
   const assignedFromFilter = searchParams.get("assignedFrom") || "";
+  
+  const branchStaffIds = await AdminModel.find({ branch: branchname })
+    .select("_id")
+    .lean();
 
+  const staffIds = branchStaffIds.map((u) => String(u._id));
+  
+  
   try {
-    // Build base query for branch admin - only their branch and assigned queries
+    
     const baseQuery = {
       autoclosed: autoclosedStatus,
       addmission: false,
       demo: false,
+     
       $and: [
         {
           $or: [
             { assignedTo: userid },
+            { userid: { $in: staffIds }},
             { branch: branchname, assignedTo: "Not-Assigned" },
           ],
         },
@@ -164,7 +173,7 @@ export const GET = async (request, context) => {
       }
     }
 
-     const deadlineSource = autoclosedStatus === "close" ? "$updatedAt" : "$deadline";
+    const deadlineSource = autoclosedStatus === "close" ? "$updatedAt" : "$deadline";
 
     // Universal parser (string / date)
     const parsedDeadlineExpression = {

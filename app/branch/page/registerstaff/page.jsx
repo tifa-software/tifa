@@ -6,9 +6,12 @@ import toast, { Toaster } from 'react-hot-toast';
 import { User, Mail, Lock, MapPin, Shield } from "lucide-react";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
+import { useSession } from "next-auth/react";
 
 export default function Page() {
     const [branches, setBranches] = useState([]);
+      const { data: session } = useSession();
+    
     const [formData, setFormData] = useState({
         name: '',
         mobile: '',
@@ -20,21 +23,23 @@ export default function Page() {
     const [loading, setLoading] = useState(false);
     const [branchLoading, setBranchLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchBranchData = async () => {
-            try {
-                const response = await axios.get('/api/branch/fetchall/branch');
-                setBranches(response.data.fetch);
-            } catch (error) {
-                console.error('Error fetching branch data:', error);
-                toast.error('Error fetching branch data');
-            } finally {
-                setBranchLoading(false);
-            }
-        };
+      useEffect(() => {
+    const fetchAdminData = async () => {
+      try {
+        const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
+        setBranches(response.data.branch);
+        
+      } catch (err) {
+        console.error("Error fetching admin data:", err);
+      } finally {
+        setBranchLoading(false);
+      }
+    };
 
-        fetchBranchData();
-    }, []);
+    if (session?.user?.email) fetchAdminData();
+  }, [session]);
+
+ 
 
     const handleInputChange = (e) => {
         setFormData({
@@ -143,9 +148,9 @@ export default function Page() {
                                 className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                                 required
                             >
-                                <option value="" disabled>Select Roll</option>
+                                
 
-                                <option value="0">Staff</option>
+                                <option value="0" selected>Staff</option>
                              
 
                             </select>
@@ -164,10 +169,8 @@ export default function Page() {
                                 className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                                 required
                             >
-                                <option value="" disabled>Select a Branch</option>
-                                {!branchLoading && branches.map((branch) => (
-                                    <option key={branch._id} value={branch.branch_name}>{branch.branch_name}</option>
-                                ))}
+                                <option value={branches} selected>{branches}</option>
+                                
                             </select>
                         </div>
 

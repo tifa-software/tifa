@@ -3,7 +3,6 @@ import AdminModel from "./Admin";
 const querySchema = new Schema({
     userid: {
         type: String,
-
         default: "null"
     },
     referenceid: {
