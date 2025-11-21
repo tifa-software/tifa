@@ -4,7 +4,6 @@ import QueryModel from "@/model/Query";
 import AdminModel from "@/model/Admin";
 import DailyTaskModel from "@/model/DailyTaskModel";
 
-
 export const runtime = "nodejs";
 
 const parseDeadlineToDate = (deadlineStr) => {
