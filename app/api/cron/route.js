@@ -2,14 +2,17 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-export async function GET(req) {
-  // Authorization check (Required by Vercel Cron)
-  if (req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized Tifa" }, { status: 401 });
+export async function GET(request) {
+  const authHeader = request.headers.get("authorization");
+
+  console.log("🔎 AUTH HEADER RECEIVED:", authHeader);
+  console.log("🔐 EXPECTED:", `Bearer ${process.env.CRON_SECRET}`);
+
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // ⭐ Your scheduled task logic here
-  console.log("Cron job executed automatically at 2:46 PM");
+  console.log("✅ CRON JOB AUTHORIZED & RUNNING");
 
-  return NextResponse.json({ ok: true, time: "2:46 PM job executed" });
+  return NextResponse.json({ ok: true });
 }
