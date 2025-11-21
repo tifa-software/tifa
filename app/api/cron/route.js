@@ -3,7 +3,7 @@ import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
 import AdminModel from "@/model/Admin";
 import DailyTaskModel from "@/model/DailyTaskModel";
-import mongoose from "mongoose";
+
 
 export const runtime = "nodejs";
 
