@@ -373,7 +373,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
           <button className="lg:hidden text-gray-600 px-3 py-2 border rounded-md" onClick={toggleFilterPopup}>
             <Filter size={16} />
           </button>
-         
+
         </div>
 
         {/* Mobile Filters */}
@@ -720,8 +720,8 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
                       </td>
 
                       <td className="px-4 py-2 font-semibold text-sm whitespace-nowrap" onClick={() => handleRowClick(querie._id)}>
-                        {querie.studentName} 
-                         <span className="text-xs">
+                        {querie.studentName}
+                        <span className="text-xs">
                           (
                           {querie.referenceid === "JOB" ? (
                             <span className="bg-green-200 text-green-700 px-2 py-[1px] rounded-full font-bold">
@@ -749,8 +749,8 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
                         {querie.lastgrade}
 
                         {querie.lastgrade === "A" && (
-                          <span className="inline-flex items-center bg-white">
-                            <Image src="/image/images.jpeg" alt="Grade A" width={24} height={24} className="rounded-full" />
+                          <span className="inline-flex items-center ">
+                            <Image src="/image/images.jpeg" alt="Grade A" width={44} height={44} className="rounded-full" />
                           </span>
                         )}
                       </td>

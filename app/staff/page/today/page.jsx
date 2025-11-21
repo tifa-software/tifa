@@ -805,8 +805,8 @@ export default function AllQuery() {
                         {querie.lastgrade}
 
                         {querie.lastgrade === "A" && (
-                          <span className="inline-flex items-center bg-white">
-                            <Image src="/image/images.jpeg" alt="Grade A" width={24} height={24} className="rounded-full" />
+                          <span className="inline-flex items-center ">
+                            <Image src="/image/images.jpeg" alt="Grade A" width={44} height={44} className="rounded-full" />
                           </span>
                         )}
                       </td>
