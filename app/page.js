@@ -10,7 +10,7 @@ export default function Home() {
         
         <div className="relative z-10 flex flex-col items-center justify-center text-center px-4 md:px-8">
           <h1 className="text-3xl mb-5 sm:mb-0 sm:text-5xl lg:text-6xl font-extrabold text-yellow-400 tracking-wide drop-shadow-md animate-fade-in-up">
-            Welcome to Tifa Portal
+            Welcome to Tifa Portal .
           </h1>
           <p className="text-base hidden md:block text-gray-700 mt-4 mb-8 sm:mb-12 max-w-2xl mx-auto">
             Your one-stop platform for managing staff, branch, and Tiffa access. Select your login option below.
