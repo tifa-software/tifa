@@ -27,7 +27,7 @@ export default function Assigned() {
     const fetchBranches = async () => {
       try {
         const { data } = await axios.get("/api/branch/fetchall/s");
-       setAllBranches(data.fetch || []);
+        setAllBranches(data.fetch || []);
       } catch (error) {
         console.log("Branch fetch error:", error);
       }
@@ -67,7 +67,7 @@ export default function Assigned() {
   return (
     <div className="container mx-auto p-5">
       <div className="flex flex-col lg:flex-row justify-between space-y-6 lg:space-y-0 lg:space-x-6">
-        
+
         {/* LIST */}
         <div className="w-full lg:w-2/3">
           <div className="shadow-lg rounded-lg bg-white mb-6 relative">
@@ -90,34 +90,73 @@ export default function Assigned() {
                         <th className="px-6 py-4">Branch</th>
                         <th className="px-6 py-4">Deadline</th>
                         <th className="px-6 py-4">Status</th>
+                        <th className="px-6 py-4">Fees</th>
                       </tr>
                     </thead>
 
                     <tbody>
-                      {queries.length > 0 ? (
-                        queries.map((q, index) => (
-                          <tr
-                            key={q._id}
-                            className="border-b cursor-pointer hover:bg-gray-100"
-                            onClick={() => handleRowClick(q._id)}
-                          >
-                            <td className="px-6 py-1 font-semibold">
-                              {(currentPage - 1) * 10 + (index + 1)}
-                            </td>
-                            <td className="px-6 py-1">{q.studentName}</td>
-                            <td className="px-6 py-1">{q.branch}</td>
-                            <td className="px-6 py-1">
-                              {new Date(q.deadline).toLocaleDateString()}
-                            </td>
-                            <td className="px-6 py-1">
-                              {q.addmission ? "Enroll" : "Pending"}
-                            </td>
-                          </tr>
-                        ))
+                      {loading ? (
+                        <tr>
+                          <td colSpan="4" className="px-6 py-4 text-center">
+                            <div className="flex items-center justify-center h-full">
+                              <Loader />
+                            </div>
+                          </td>
+                        </tr>
+                      ) : queries.length > 0 ? (
+                        queries.map((query, index) => {
+                          const deadline = new Date(query.deadline);
+                          const isToday = deadline.toDateString() === new Date().toDateString();
+                          const isPastDeadline = deadline < new Date();
+                          const isIn24Hours =
+                            deadline.toDateString() ===
+                            new Date(Date.now() + 24 * 60 * 60 * 1000).toDateString();
+                          const isIn48Hours =
+                            deadline.toDateString() ===
+                            new Date(Date.now() + 48 * 60 * 60 * 1000).toDateString();
+
+                          const hasTotal = query.total > 0; // 👈 CHECK TOTAL CONDITION
+
+                          // Row color logic
+                          const rowClass =
+                            query.addmission
+                              ? "bg-[#6cb049] text-white"
+                              : isToday
+                                ? "bg-red-500 text-white"
+                                : isPastDeadline
+                                  ? "bg-gray-800 text-white animate-blink"
+                                  : isIn24Hours
+                                    ? "bg-[#fcccba] text-black"
+                                    : isIn48Hours
+                                      ? "bg-[#ffe9bf] text-black"
+                                      : "";
+
+                          return (
+                            <tr
+                              key={query._id}
+                              className={`border-b cursor-pointer transition-colors duration-200 hover:opacity-90 ${rowClass} ${hasTotal
+                                ? "relative after:content-[''] after:absolute after:inset-y-0 after:right-0 after:w-[12px] after:bg-green-100 after:rounded-sm"
+                                : ""}
+`}
+                              onClick={() => handleRowClick(query._id)}
+                            >
+                              <td className="px-6 py-1 font-semibold">{index + 1}</td>
+                              <td className="px-6 py-1 font-semibold">{query.studentName}</td>
+                              <td className="px-6 py-1">{query.branch}</td>
+                              <td className="px-6 py-1">{deadline.toLocaleDateString()}</td>
+                              <td className="px-6 py-1">
+                                {query.addmission ? "Enroll" : "Pending"}
+                              </td>
+                              <td className="px-6 py-1">
+                                {query.total}
+                              </td>
+                            </tr>
+                          );
+                        })
                       ) : (
                         <tr>
-                          <td colSpan="5" className="text-center py-4">
-                            No data found
+                          <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                            No queries available
                           </td>
                         </tr>
                       )}
@@ -125,6 +164,7 @@ export default function Assigned() {
                   </table>
                 )}
               </div>
+
 
               {/* Pagination */}
               <div className="absolute bottom-0 left-0 right-0 bg-gray-100 py-2 px-4 flex justify-between">
