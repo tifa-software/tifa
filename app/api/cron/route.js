@@ -3,6 +3,7 @@ import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
 import AdminModel from "@/model/Admin";
 import DailyTaskModel from "@/model/DailyTaskModel";
+import mongoose from "mongoose";
 
 export const runtime = "nodejs";
 
@@ -36,17 +37,104 @@ const parseDeadlineToDate = (deadlineStr) => {
   return null;
 };
 
+async function handleOpenDay() {
+  await dbConnect();
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  
+  // Update or create a daily task entry with open status
+  await DailyTaskModel.findOneAndUpdate(
+    { date: todayStr, dayStatus: { $ne: 'open' } },
+    { 
+      $set: { 
+        dayStatus: 'open',
+        dayOpenedAt: new Date(),
+        // Initialize empty arrays if this is a new entry
+        $setOnInsert: {
+          todayQueries: [],
+          pastDueQueries: [],
+          completedQueries: [],
+          pendingTodayQueries: []
+        }
+      } 
+    },
+    { upsert: true, new: true }
+  );
+  
+  console.log('Day opened at:', new Date());
+  return { success: true, message: 'Day opened successfully' };
+}
+
+async function handleCloseDay() {
+  await dbConnect();
+  const today = new Date();
+  const todayStr = today.toISOString().split('T')[0];
+  
+  // Update the daily task entry with close status
+  const result = await DailyTaskModel.findOneAndUpdate(
+    { date: todayStr, dayStatus: { $ne: 'closed' } },
+    { 
+      $set: { 
+        dayStatus: 'closed',
+        dayClosedAt: new Date()
+      } 
+    }
+  );
+  
+  if (!result) {
+    console.log('No open day found to close, or day already closed');
+    return { success: true, message: 'No open day found or already closed' };
+  }
+  
+  console.log('Day closed at:', new Date());
+  return { success: true, message: 'Day closed successfully' };
+}
+
 export async function GET(request) {
   const authHeader = request.headers.get("authorization");
+  const { searchParams } = new URL(request.url);
+  const action = searchParams.get('action');
 
   console.log("🔎 AUTH HEADER RECEIVED:", authHeader);
   console.log("🔐 EXPECTED:", process.env.CRON_SECRET);
+  console.log("🕒 Action:", action);
 
+  // Verify authorization
   if (
     authHeader !== process.env.CRON_SECRET &&
     authHeader !== `Bearer ${process.env.CRON_SECRET}`
   ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  
+  // Handle different actions
+  try {
+    let result;
+    
+    switch (action) {
+      case 'open_day':
+        result = await handleOpenDay();
+        break;
+        
+      case 'close_day':
+        result = await handleCloseDay();
+        break;
+        
+      default:
+        return NextResponse.json(
+          { error: "Invalid action specified" }, 
+          { status: 400 }
+        );
+    }
+    
+    return NextResponse.json(result);
+    
+  } catch (error) {
+    console.error('Error in cron job:', error);
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' }, 
+      { status: 500 }
+    );
   }
 
   console.log("✅ CRON JOB AUTHORIZED & RUNNING");

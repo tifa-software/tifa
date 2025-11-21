@@ -9,7 +9,19 @@ const DailyTaskSchema = new Schema(
     },
     date: { 
       type: String, 
-      required: true 
+      required: true,
+      index: true
+    },
+    dayStatus: {
+      type: String,
+      enum: ['open', 'closed'],
+      default: 'open'
+    },
+    dayOpenedAt: {
+      type: Date
+    },
+    dayClosedAt: {
+      type: Date
     },
     completedCount: { 
       type: Number, 
@@ -91,9 +103,11 @@ DailyTaskSchema.virtual('completionPercentage').get(function() {
   return total > 0 ? Math.round((this.completedQueries.length / total) * 100) : 0;
 });
 
-// Compound index for faster queries
+// Compound indexes for faster queries
 DailyTaskSchema.index({ userId: 1, date: 1 }, { unique: true });
 DailyTaskSchema.index({ branch: 1, date: 1 });
+// Index for day status queries
+DailyTaskSchema.index({ date: 1, dayStatus: 1 });
 
 const DailyTaskModel =
   mongoose.models.DailyTask || mongoose.model("DailyTask", DailyTaskSchema);
