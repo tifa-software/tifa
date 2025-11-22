@@ -15,7 +15,7 @@ const DailyTaskSchema = new Schema(
     dayStatus: {
       type: String,
       enum: ['open', 'closed'],
-      default: 'open'
+      default: 'closed'
     },
     dayOpenedAt: {
       type: Date

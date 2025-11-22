@@ -54,17 +54,7 @@ export async function GET(request) {
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const today = todayStart.toISOString().split("T")[0];
 
-    // Mark day as closed
-    await DailyTaskModel.findOneAndUpdate(
-      { date: today },
-      {
-        $set: {
-          dayStatus: "closed",
-          dayClosedAt: new Date()
-        }
-      },
-      { upsert: true }
-    );
+    
 
     const admins = await AdminModel.find({ status: true })
       .select("_id name branch")
