@@ -798,17 +798,23 @@ export default function AllQuery() {
                         {querie?.studentContact?.phoneNumber}
                       </td>
 
-                      <td
+                     <td
                         onClick={() => handleRowClick(querie._id)}
-                        className="px-4 py-2 text-[12px] flex gap-2 items-center"
+                        className="px-4 py-2 text-[12px]"
                       >
-                        {querie.lastgrade}
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <span>{querie.lastgrade}</span>
 
-                        {querie.lastgrade === "A" && (
-                          <span className="inline-flex items-center ">
-                            <Image src="/image/images.jpeg" alt="Grade A" width={44} height={44} className="rounded-full" />
-                          </span>
-                        )}
+                          {querie.lastgrade === "A" && (
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-[2px] text-[10px] font-bold
+        bg-gradient-to-r from-yellow-300 to-yellow-500 text-yellow-900
+        rounded-full shadow-sm border border-yellow-600 uppercase tracking-wide"
+                            >
+                              ⭐ Important
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
