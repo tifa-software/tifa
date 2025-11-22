@@ -16,12 +16,13 @@ const parseDeadlineToDate = (deadlineStr) => {
 
   const ddmmyyyy = /^(\d{2})-(\d{2})-(\d{4})$/;
   const ddmmyy = /^(\d{2})-(\d{2})-(\d{2})$/;
-
   let m;
+
   if ((m = deadlineStr.match(ddmmyyyy))) {
     const [_, dd, mm, yyyy] = m;
     return new Date(parseInt(yyyy), parseInt(mm) - 1, parseInt(dd));
   }
+
   if ((m = deadlineStr.match(ddmmyy))) {
     const [_, dd, mm, yy] = m;
     const yyyy = 2000 + parseInt(yy);
@@ -36,117 +37,34 @@ const parseDeadlineToDate = (deadlineStr) => {
   return null;
 };
 
-async function handleOpenDay() {
-  await dbConnect();
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
-  
-  // Update or create a daily task entry with open status
-  await DailyTaskModel.findOneAndUpdate(
-    { date: todayStr, dayStatus: { $ne: 'open' } },
-    { 
-      $set: { 
-        dayStatus: 'open',
-        dayOpenedAt: new Date(),
-        // Initialize empty arrays if this is a new entry
-        $setOnInsert: {
-          todayQueries: [],
-          pastDueQueries: [],
-          completedQueries: [],
-          pendingTodayQueries: []
-        }
-      } 
-    },
-    { upsert: true, new: true }
-  );
-  
-  console.log('Day opened at:', new Date());
-  return { success: true, message: 'Day opened successfully' };
-}
-
-async function handleCloseDay() {
-  await dbConnect();
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
-  
-  // Update the daily task entry with close status
-  const result = await DailyTaskModel.findOneAndUpdate(
-    { date: todayStr, dayStatus: { $ne: 'closed' } },
-    { 
-      $set: { 
-        dayStatus: 'closed',
-        dayClosedAt: new Date()
-      } 
-    }
-  );
-  
-  if (!result) {
-    console.log('No open day found to close, or day already closed');
-    return { success: true, message: 'No open day found or already closed' };
-  }
-  
-  console.log('Day closed at:', new Date());
-  return { success: true, message: 'Day closed successfully' };
-}
-
 export async function GET(request) {
   const authHeader = request.headers.get("authorization");
-  const { searchParams } = new URL(request.url);
-  const action = searchParams.get('action');
 
-  console.log("🔎 AUTH HEADER RECEIVED:", authHeader);
-  console.log("🔐 EXPECTED:", process.env.CRON_SECRET);
-  console.log("🕒 Action:", action);
-
-  // Verify authorization
   if (
     authHeader !== process.env.CRON_SECRET &&
     authHeader !== `Bearer ${process.env.CRON_SECRET}`
   ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  
-  // Handle different actions
-  try {
-    let result;
-    
-    switch (action) {
-      case 'open_day':
-        result = await handleOpenDay();
-        break;
-        
-      case 'close_day':
-        result = await handleCloseDay();
-        break;
-        
-      default:
-        return NextResponse.json(
-          { error: "Invalid action specified" }, 
-          { status: 400 }
-        );
-    }
-    
-    return NextResponse.json(result);
-    
-  } catch (error) {
-    console.error('Error in cron job:', error);
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' }, 
-      { status: 500 }
-    );
-  }
-
-  console.log("✅ CRON JOB AUTHORIZED & RUNNING");
-
-  // ---------------------------
-  //   MAIN LOGIC STARTS HERE
-  // ---------------------------
 
   try {
     await dbConnect();
 
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const today = todayStart.toISOString().split("T")[0];
+
+    // Mark day as closed
+    await DailyTaskModel.findOneAndUpdate(
+      { date: today },
+      {
+        $set: {
+          dayStatus: "closed",
+          dayClosedAt: new Date()
+        }
+      },
+      { upsert: true }
+    );
 
     const admins = await AdminModel.find({ status: true })
       .select("_id name branch")
@@ -163,98 +81,71 @@ export async function GET(request) {
         demo: false,
         $or: [
           { userid: adminId, assignedTo: "Not-Assigned" },
-          { assignedTo: adminId },
-        ],
+          { assignedTo: adminId }
+        ]
       };
 
       const queries = await QueryModel.find(baseQuery)
         .select("_id deadline")
         .lean();
 
-      let todayQueries = [];
-      let pastDueQueries = [];
+      const todayQueries = [];
+      const pastDueQueries = [];
 
-      for (const query of queries) {
-        if (!query.deadline || query.deadline === "Not_Provided") continue;
+      for (const q of queries) {
+        if (!q.deadline || q.deadline === "Not_Provided") continue;
 
-        const deadlineDate = parseDeadlineToDate(query.deadline);
-        if (!deadlineDate) continue;
+        const d = parseDeadlineToDate(q.deadline);
+        if (!d) continue;
 
-        const queryDate = new Date(deadlineDate);
-        queryDate.setHours(0, 0, 0, 0);
+        const dMid = new Date(d);
+        dMid.setHours(0, 0, 0, 0);
 
-        const today = new Date(todayStart);
-        today.setHours(0, 0, 0, 0);
+        const tMid = new Date(todayStart);
+        tMid.setHours(0, 0, 0, 0);
 
-        if (queryDate.getTime() === today.getTime()) {
-          todayQueries.push(query._id.toString());
-        } else if (queryDate < today) {
-          pastDueQueries.push(query._id.toString());
+        if (dMid.getTime() === tMid.getTime()) {
+          todayQueries.push(q._id);
+        } else if (dMid < tMid) {
+          pastDueQueries.push(q._id);
         }
       }
 
-      const today = new Date().toISOString().split("T")[0];
-
       await DailyTaskModel.findOneAndUpdate(
-        {
-          userId: admin._id,
-          date: today,
-        },
+        { userId: admin._id, date: today },
         {
           $set: {
-            userId: admin._id,
-            date: today,
-            "stats.todayQueries": todayQueries.length,
-            "stats.pastDueQueries": pastDueQueries.length,
-            "stats.pendingToday": todayQueries.length,
-            "stats.pendingPastDue": pastDueQueries.length,
-            branch: admin.branch || "default",
+            'stats.todayQueries': todayQueries.length,
+            'stats.pastDueQueries': pastDueQueries.length,
+            branch: admin.branch || "default"
           },
           $addToSet: {
             todayQueries: { $each: todayQueries },
-            pastDueQueries: { $each: pastDueQueries },
-            pendingTodayQueries: { $each: todayQueries },
-            pendingPastDueQueries: { $each: pastDueQueries },
-          },
+            pastDueQueries: { $each: pastDueQueries }
+          }
         },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
+        { upsert: true }
       );
 
       results.push({
         adminId,
-        adminName: admin.name || "Unknown",
+        adminName: admin.name,
         todayQueriesCount: todayQueries.length,
-        pastDueQueriesCount: pastDueQueries.length,
-        totalAssigned: todayQueries.length + pastDueQueries.length,
-        todayQueries,
-        pastDueQueries,
+        pastDueQueriesCount: pastDueQueries.length
       });
     }
 
-    results.sort((a, b) => b.totalAssigned - a.totalAssigned);
-
-    const totalToday = results.reduce((s, r) => s + r.todayQueriesCount, 0);
-    const totalPastDue = results.reduce((s, r) => s + r.pastDueQueriesCount, 0);
-
     return NextResponse.json({
       success: true,
-      date: todayStart.toISOString().split("T")[0],
-      totalAdmins: results.length,
-      stats: {
-        totalTodayQueries: totalToday,
-        totalPastDueQueries: totalPastDue,
-        totalAssigned: totalToday + totalPastDue,
-      },
-      admins: results,
+      message: "Day closed successfully",
+      closedAt: new Date(),
+      results
     });
+
   } catch (error) {
-    console.error("Error in today-queries CRON API:", error);
+    console.error("❌ Error closing day:", error);
     return NextResponse.json(
-      {
-        success: false,
-        message: "Failed to compute today's queries",
-        error: error.message,
-      },
+      { success: false, message: "Failed to close day", error: error.message },
       { status: 500 }
     );
   }
