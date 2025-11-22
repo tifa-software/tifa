@@ -415,6 +415,7 @@ export default function QueryReport() {
                     className="w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
                   >
                     <option value="">All</option>
+                     <option value="H">Important</option>
                     <option value="A">A</option>
                     <option value="B">B</option>
                     <option value="C">C</option>

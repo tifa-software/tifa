@@ -551,6 +551,7 @@ export default function AllQuery() {
             className="px-2 py-1 border"
           >
             <option value="">All Grades</option>
+             <option value="H">Important</option>
             <option value="A">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
@@ -798,14 +799,14 @@ export default function AllQuery() {
                         {querie?.studentContact?.phoneNumber}
                       </td>
 
-                     <td
+                    <td
                         onClick={() => handleRowClick(querie._id)}
                         className="px-4 py-2 text-[12px]"
                       >
                         <div className="flex items-center gap-2 whitespace-nowrap">
                           <span>{querie.lastgrade}</span>
 
-                          {querie.lastgrade === "A" && (
+                          {querie.lastgrade === "H" && (
                             <span
                               className="inline-flex items-center gap-1 px-2 py-[2px] text-[10px] font-bold
         bg-gradient-to-r from-yellow-300 to-yellow-500 text-yellow-900

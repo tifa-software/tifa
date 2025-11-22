@@ -245,6 +245,7 @@ export default function UpdateQuery({ query, audit }) {
           className="block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#29234b] focus:border-[#29234b]"
         >
           <option value="Null">-- Select Grade --</option>
+          <option value="H">Important</option>
           <option value="A">Grade A (Student will visit in 1–2 days)</option>
           <option value="B">Grade B (Student will visit in 3–7 days)</option>
           <option value="C">Grade C (Student will visit beyond 7 days)</option>
