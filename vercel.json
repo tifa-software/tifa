@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron?action=close_day",
-      "schedule": "47 5 * * *"
+      "schedule": "0 6 * * *"
     }
   ]
 }
