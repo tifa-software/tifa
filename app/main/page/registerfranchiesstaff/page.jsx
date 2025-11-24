@@ -100,7 +100,7 @@ export default function Page() {
                 <Toaster />
                 <div className="bg-white shadow-lg   overflow-hidden border border-gray-200">
                     <div className="bg-[#29234b] text-white px-7 py-3 flex justify-between w-full">
-                        <h1 className="text-lg font-bold">Register Staff</h1>
+                        <h1 className="text-lg font-bold">Register Staff For Franchise</h1>
                     </div>
                     <form className="px-5 py-3 space-y-3" onSubmit={handleSubmit}>
                         <div className="grid grid-cols-12 gap-4">

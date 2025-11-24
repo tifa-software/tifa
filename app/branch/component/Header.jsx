@@ -17,6 +17,7 @@ export default function Header() {
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [showAlert, setShowAlert] = useState(false);
     const [adminId, setAdminId] = useState(null);
+    const [franchie, setFranchie] = useState(null);
     const { data: session } = useSession();
 
     const [loading, setLoading] = useState(true);
@@ -63,6 +64,7 @@ export default function Header() {
                 try {
                     const { data } = await axios.get(`/api/admin/find-admin-byemail/${session.user.email}`);
                     setAdminId(data._id);
+                    setFranchie(data._id)
                 } catch (error) {
                     console.error(error.message);
                 }
