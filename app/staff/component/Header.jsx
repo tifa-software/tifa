@@ -75,14 +75,14 @@ export default function Header() {
                 }
             }
         };
-    
+
         fetchQueryData(); // Initial fetch
-    
+
         const intervalId = setInterval(fetchQueryData, 60000); // Fetch every 60 seconds
-    
+
         return () => clearInterval(intervalId); // Cleanup on unmount
     }, [adminId]);
-    
+
 
     useEffect(() => {
         const handleResize = () => {
@@ -164,6 +164,12 @@ export default function Header() {
                                             <li
                                                 className='cursor-pointer hover:bg-gray-100 text-[14px] text-gray-700 rounded-md px-4 py-2 duration-150'>
                                                 Demo
+                                            </li>
+                                        </Link>
+                                        <Link href="/staff/page/important">
+                                            <li
+                                                className='cursor-pointer hover:bg-gray-100 text-[14px] text-gray-700 rounded-md px-4 py-2 duration-150'>
+                                                Important Query
                                             </li>
                                         </Link>
                                     </ul>

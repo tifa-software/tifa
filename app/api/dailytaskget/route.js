@@ -5,6 +5,7 @@ import dbConnect from "@/lib/dbConnect";
 import DailyTaskModel from "@/model/DailyTaskModel";
 import AdminModel from "@/model/Admin";
 import QueryModel from "@/model/Query";
+
 export async function GET(req) {
   try {
     await dbConnect();
@@ -56,29 +57,46 @@ export async function GET(req) {
       });
     }
 
-    const formatted = dailyTasks.map((task) => ({
-      _id: task._id,
-      date: task.date,
-      dayStatus: task.dayStatus,
-      dayOpenedAt: task.dayOpenedAt,
-      dayClosedAt: task.dayClosedAt,
-      user: {
-        _id: task.userId?._id,
-        name: task.userId?.name,
-        email: task.userId?.email,
-        branchName: task.userId?.branch?.branchName || "No Branch",
-      },
-      stats: {
-        completed: task.completedCount,
-        pending: task.pendingCount,
-        totalAssigned: task.stats?.totalAssigned || 0,
-        todayAssigned: task.stats?.todayQueries || 0,
-        pastDueAssigned: task.stats?.pastDueQueries || 0,
-      },
-      todayQueries: task.todayQueries || [],
-      pastDueQueries: task.pastDueQueries || [],
-      completedQueries: task.completedQueries || [],
-    }));
+    // === Group by user ===
+    const groupedData = {};
+
+    dailyTasks.forEach(task => {
+      const uid = task.userId?._id.toString();
+
+      if (!groupedData[uid]) {
+        groupedData[uid] = {
+          _id: uid,
+          user: {
+            _id: task.userId?._id,
+            name: task.userId?.name,
+            email: task.userId?.email,
+            branchName: task.userId?.branch?.branchName || "No Branch",
+          },
+          stats: {
+            totalAssigned: 0,
+            todayAssigned: 0,
+            pastDueAssigned: 0,
+          },
+          todayQueries: [],
+          pastDueQueries: [],
+        };
+      }
+
+      // Merge Stats
+      groupedData[uid].stats.totalAssigned += task.stats?.totalAssigned || 0;
+      groupedData[uid].stats.todayAssigned += task.stats?.todayAssigned || 0;
+      groupedData[uid].stats.pastDueAssigned += task.stats?.pastDueAssigned || 0;
+
+      // Merge Queries
+      if (Array.isArray(task.todayQueries)) {
+        groupedData[uid].todayQueries.push(...task.todayQueries);
+      }
+      if (Array.isArray(task.pastDueQueries)) {
+        groupedData[uid].pastDueQueries.push(...task.pastDueQueries);
+      }
+    });
+
+    const formatted = Object.values(groupedData);
 
     return NextResponse.json({
       success: true,
@@ -88,10 +106,13 @@ export async function GET(req) {
 
   } catch (error) {
     console.error(error);
-    return NextResponse.json({
-      success: false,
-      message: "Error fetching daily tasks",
-      error: error.message,
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Error fetching daily tasks",
+        error: error.message,
+      },
+      { status: 500 }
+    );
   }
 }
