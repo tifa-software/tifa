@@ -10,13 +10,19 @@ const AdminSchema = new Schema(
         branch: { type: String, required: true },
         status: { type: Boolean, required: true, default: true },
         usertype: { type: String, enum: ["0", "1", "2"], default: "0", required: true },
-        defaultdata: { type: String, required: true, default: "admin" }
+        franchisestaff: {
+            type: String,
+            enum: ["0", "1"],
+            required: true,
+            default: "0"
+        },
+        defaultdata: { type: String, required: true, default: "admin" },
 
     },
     { timestamps: true }
 );
 
 const AdminModel =
-    mongoose.models.admin2 || mongoose.model("admin2", AdminSchema);
+    mongoose.models.admin3 || mongoose.model("admin3", AdminSchema);
 
 export default AdminModel

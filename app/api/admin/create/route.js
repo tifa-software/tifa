@@ -1,5 +1,5 @@
 export const runtime = "nodejs";
-export const preferredRegion = ["bom1"]; 
+export const preferredRegion = ["bom1"];
 import AdminModel from "@/model/Admin";
 import dbConnect from "@/lib/dbConnect";
 import bcrypt from "bcryptjs";
@@ -8,9 +8,9 @@ export async function POST(req) {
     await dbConnect();
 
     try {
-        const { name, email, mobile, password, branch, usertype } = await req.json();
+        const { name, email, mobile, password, branch, usertype, franchisestaff } = await req.json();
 
-       
+
         const alreadyUser = await AdminModel.findOne({ email });
         if (alreadyUser) {
             return Response.json(
@@ -22,7 +22,7 @@ export async function POST(req) {
             );
         }
 
-        
+
         if (usertype === "1") {
             const branchExists = await AdminModel.findOne({ branch, usertype: "1" });
             if (branchExists) {
@@ -36,7 +36,7 @@ export async function POST(req) {
             }
         }
 
-       
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const createAdmin = await AdminModel.create({
@@ -45,7 +45,8 @@ export async function POST(req) {
             email,
             password: hashedPassword,
             branch,
-            usertype
+            usertype,
+            franchisestaff
         });
 
         return Response.json({

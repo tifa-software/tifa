@@ -7,11 +7,15 @@ export const GET = async (request) => {
     await dbConnect();
 
     try {
-        const { search, branch, usertype, page = 1, limit = 10 } =
+        const { search, branch, usertype, page = 1, limit = 10, franchisestaff } =
             Object.fromEntries(request.nextUrl.searchParams);
 
         const query = { defaultdata: "admin" };
-
+        if (franchisestaff === "true") {
+            query.franchisestaff = "1"; // franchise only
+        } else {
+            query.franchisestaff = { $ne: "1" }; // default & false → main only
+        }
         if (search) {
             query.$or = [
                 { name: { $regex: search, $options: "i" } },

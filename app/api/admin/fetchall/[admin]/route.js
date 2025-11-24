@@ -1,5 +1,5 @@
 export const runtime = "nodejs";
-export const preferredRegion = ["bom1"]; 
+export const preferredRegion = ["bom1"];
 import dbConnect from "@/lib/dbConnect";
 import AdminModel from "@/model/Admin";
 
@@ -7,7 +7,22 @@ export const GET = async (request) => {
     await dbConnect();
 
     try {
-        const fetch = await AdminModel.find({ defaultdata: "admin" });
+        const { searchParams } = new URL(request.url);
+        const franchiseParam = searchParams.get("franchisestaff");
+
+        let filter = { defaultdata: "branch" };
+
+        if (franchiseParam === "true") {
+            // Franchise only
+            filter.franchise = "1";
+        } else {
+            // Default + false → Main only (exclude franchise)
+            filter.franchise = { $ne: "1" };
+        }
+
+        const fetch = await AdminModel.find(filter);
+
+        
         return Response.json(
             {
                 message: "All data fetched!",
