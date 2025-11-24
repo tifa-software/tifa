@@ -23,6 +23,6 @@ const AdminSchema = new Schema(
 );
 
 const AdminModel =
-    mongoose.models.admin2 || mongoose.model("admin2", AdminSchema);
+    mongoose.models.admin3 || mongoose.model("admin3", AdminSchema);
 
 export default AdminModel
