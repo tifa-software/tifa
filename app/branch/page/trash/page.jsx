@@ -8,6 +8,7 @@ import Loader from "@/components/Loader/Loader";
 import BulkAssign from "@/components/BulkAssign/BulkAssign";
 import { ArrowLeft, ArrowRight, Search, Trash2, CirclePlus, Filter, X, Send, XCircleIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
+import Image from "next/image";
 
 // Utility: build API URL with query params
 function buildApiUrl({ branchname, userid, page = 1, deadlineFilter = "", grade = "", search = "", customDate = "", rangeStart = "", rangeEnd = "", assignedFrom = "" }) {

@@ -7,7 +7,7 @@ import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import BulkAssign from "@/components/BulkAssign/BulkAssign";
 import { ArrowLeft, ArrowRight, Search, Trash2, CirclePlus, Filter, X, Send, XCircleIcon } from "lucide-react";
-
+import Image from "next/image";
 // Utility: build API URL with query params
 function buildApiUrl({
   type = "close",
