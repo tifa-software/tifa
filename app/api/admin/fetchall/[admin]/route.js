@@ -10,14 +10,14 @@ export const GET = async (request) => {
         const { searchParams } = new URL(request.url);
         const franchiseParam = searchParams.get("franchisestaff");
 
-        let filter = { defaultdata: "branch" };
+        let filter = { defaultdata: "admin" };
 
         if (franchiseParam === "true") {
             // Franchise only
-            filter.franchise = "1";
+            filter.franchisestaff = "1";
         } else {
             // Default + false → Main only (exclude franchise)
-            filter.franchise = { $ne: "1" };
+            filter.franchisestaff = { $ne: "1" };
         }
 
         const fetch = await AdminModel.find(filter);
