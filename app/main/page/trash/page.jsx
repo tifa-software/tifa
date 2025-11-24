@@ -594,7 +594,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
                         {querie?.studentContact?.phoneNumber}
                       </td>
 
-                     <td
+                      <td
                         onClick={() => handleRowClick(querie._id)}
                         className="px-4 py-2 text-[12px]"
                       >
@@ -602,12 +602,8 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
                           <span>{querie.lastgrade}</span>
 
                           {querie.lastgrade === "H" && (
-                            <span
-                              className="inline-flex items-center gap-1 px-2 py-[2px] text-[10px] font-bold
-        bg-gradient-to-r from-yellow-300 to-yellow-500 text-yellow-900
-        rounded-full shadow-sm border border-yellow-600 uppercase tracking-wide"
-                            >
-                              ⭐ Important
+                            <span >
+                              <Image src="/image/images.jpeg" width={64.4} height={38.7} />
                             </span>
                           )}
                         </div>

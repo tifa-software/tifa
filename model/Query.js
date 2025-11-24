@@ -161,7 +161,7 @@ const querySchema = new Schema({
         type: Boolean,
         default: false
     },
-    addmissiondate:{
+    addmissiondate: {
         type: Date,
     },
     notes: {
@@ -176,6 +176,13 @@ const querySchema = new Schema({
     assigneddate: {
         type: Date,
         required: true
+    },
+
+    franchisestaff: {
+        type: String,
+        enum: ["0", "1"],
+        required: true,
+        default: "0"
     },
 }, { timestamps: true });
 

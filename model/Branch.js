@@ -17,6 +17,14 @@ const BranchSchema = new Schema(
         student_count: { type: String, required: true, default: "0" },
         staff_count: { type: String, required: true, default: "0" },
 
+        franchise: {
+            type: String,
+            enum: ["0", "1"],
+            required: true,
+            default: "0"
+        },
+
+
         defaultdata: { type: String, required: true, default: "branch" }
 
     },

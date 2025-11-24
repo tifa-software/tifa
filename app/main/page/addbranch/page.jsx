@@ -17,6 +17,7 @@ export default function Page() {
       state: "",
       zipCode: "",
     },
+    franchise: "0",
     contactInfo: {
       phoneNumber: "",
       email: "",
@@ -285,6 +286,21 @@ export default function Page() {
               <CirclePlus size={16} className="me-1" /> Add Course
             </button>
           </div>
+          <div className="sm:col-span-6 col-span-12">
+            <label className="block text-[12px] text-gray-700">Branch Type</label>
+            <select
+              name="franchise"
+              value={formData.franchise}
+              onChange={(e) =>
+                setFormData({ ...formData, franchise: e.target.value })
+              }
+              className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 focus:border-[#6cb049] focus:outline-none sm:text-sm"
+            >
+              <option value="0">Main Branch</option>
+              <option value="1">Franchise Branch</option>
+            </select>
+          </div>
+
 
 
           {/* Submit button */}

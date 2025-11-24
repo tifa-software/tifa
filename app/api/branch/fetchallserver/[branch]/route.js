@@ -7,10 +7,15 @@ export const GET = async (request) => {
     await dbConnect();
 
     try {
-        const { search, course, sort = "newest", page = 1, limit = 8 } =
+        const { search, course, sort = "newest", page = 1, limit = 8, franchise } =
             Object.fromEntries(request.nextUrl.searchParams);
 
         const query = { defaultdata: "branch" };
+        if (franchise === "true") {
+            query.franchise = "1"; // franchise only
+        } else {
+            query.franchise = { $ne: "1" }; // default & false → main only
+        }
 
         // 🔍 Search by branch_name
         if (search) {
