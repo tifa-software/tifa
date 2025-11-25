@@ -429,14 +429,26 @@ export default function StaffDatanew({ staffid }) {
                         <div></div>
                     ) : (
                         (() => {
-                            const grandTotal = filteredDates.reduce((total, [_, activity]) => total + activity.count[0], 0);
-                            return (
+                            // flatten all queries in all filteredDates
+                            const allQueries = filteredDates.flatMap(([_, activity]) => activity.queries);
 
-                                <div className="text-lg font-bold border  border-[#29234b] p-3 rounded">
-                                    Total Actions: {grandTotal}
+                            // filter unique by phone number
+                            const uniqueQueries = allQueries.filter(
+                                (q, i, arr) =>
+                                    i === arr.findIndex(
+                                        (x) => x?.studentContact?.phoneNumber === q?.studentContact?.phoneNumber
+                                    )
+                            );
+
+                            const grandTotal = uniqueQueries.length; // total unique queries
+
+                            return (
+                                <div className="text-lg font-bold border border-[#29234b] p-3 rounded">
+                                  Total Query: {grandTotal}
                                 </div>
                             );
                         })()
+
                     )}
 
                     {/* Display Daily Activity */}
@@ -458,7 +470,7 @@ export default function StaffDatanew({ staffid }) {
                                         {activeDay === day && (
                                             <div className="mt-2">
                                                 <p className="font-medium text-sm border px-2 bg-gray-50">
-                                                    Actions Taken: {activity.count[0]}
+                                                     Total Query: {activity.count[0]}
                                                 </p>
                                                 <table className="w-full text-sm text-left rtl:text-right text-gray-600 font-sans mt-2">
                                                     <thead className="bg-[#29234b] text-white uppercase">
@@ -512,13 +524,13 @@ export default function StaffDatanew({ staffid }) {
 
                                                                     </td>
                                                                     <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                         <Link href={`/main/page/allquery/${query._id}`} key={index}>  {query.studentName}</Link>
-                                                                      
+                                                                        <Link href={`/main/page/allquery/${query._id}`} key={index}>  {query.studentName}</Link>
+
                                                                     </td>
                                                                     <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                         <Link href={`/main/page/allquery/${query._id}`} key={index}>    {query.studentContact.phoneNumber}</Link>
+                                                                        <Link href={`/main/page/allquery/${query._id}`} key={index}>    {query.studentContact.phoneNumber}</Link>
 
-                                                                     
+
                                                                     </td>
                                                                     <td className="px-4 py-2 text-[12px] font-semibold">
                                                                         {query.referenceid !== "null" &&
