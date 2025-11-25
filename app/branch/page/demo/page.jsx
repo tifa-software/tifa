@@ -36,7 +36,7 @@ export default function Assigned() {
   useEffect(() => {
     if (adminbranch) {
       const fetchQueryData = async () => {
-        
+
         try {
           setLoading(true);
           const { data } = await axios.get(`/api/queries/demobybranch/${adminbranch}`);
@@ -132,6 +132,8 @@ export default function Assigned() {
                       <th className="px-6 py-4">Branch</th>
                       <th className="px-6 py-4">Deadline</th>
                       <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4">Fees</th>
+
                     </tr>
                   </thead>
                   <tbody>
@@ -155,23 +157,27 @@ export default function Assigned() {
                           deadline.toDateString() ===
                           new Date(Date.now() + 48 * 60 * 60 * 1000).toDateString();
 
-                        // Define the row class based on conditions
-                        const rowClass = query.addmission
-                          ? "bg-[#6cb049] text-white"
-                          : isToday
-                            ? "bg-red-500 text-white"
-                            : isPastDeadline
-                              ? "bg-gray-800 text-white animate-blink"
-                              : isIn24Hours
-                                ? "bg-[#fcccba] text-black"
-                                : isIn48Hours
-                                  ? "bg-[#ffe9bf] text-black"
-                                  : "";
+                        const hasTotal = query.total > 0; // 👈 CHECK TOTAL CONDITION
+
+                        // Row color logic
+                        const rowClass = hasTotal
+                          ? "bg-green-300 text-black" // 🔥 highest priority
+                          : query.addmission
+                            ? "bg-[#6cb049] text-white"
+                            : isToday
+                              ? "bg-red-500 text-white"
+                              : isPastDeadline
+                                ? "bg-gray-800 text-white animate-blink"
+                                : isIn24Hours
+                                  ? "bg-[#fcccba] text-black"
+                                  : isIn48Hours
+                                    ? "bg-[#ffe9bf] text-black"
+                                    : "";
 
                         return (
                           <tr
                             key={query._id}
-                            className={`border-b cursor-pointer transition-colors duration-200 hover:opacity-90 ${rowClass}`}
+                            className={`border-b cursor-pointer transition-colors duration-200 hover:opacity-90 ${rowClass} `}
                             onClick={() => handleRowClick(query._id)}
                           >
                             <td className="px-6 py-1 font-semibold">{indexOfFirstQuery + index + 1}</td>
@@ -182,6 +188,9 @@ export default function Assigned() {
                             </td>
                             <td className="px-6 py-1">
                               {query.addmission ? "Enroll" : "Pending"}
+                            </td>
+                            <td className="px-6 py-1">
+                              {query.total}
                             </td>
                           </tr>
                         );

@@ -21,21 +21,21 @@ export default function Assigned() {
   const router = useRouter();
 
 
-  
-    
+
+
   useEffect(() => {
     const fetchAdminData = async () => {
-        if (session?.user?.email) {
-            try {
-                const { data } = await axios.get(`/api/admin/find-admin-byemail/${session.user.email}`);
-                setAdminId(data._id);
-            } catch (error) {
-                console.error(error.message);
-            }
+      if (session?.user?.email) {
+        try {
+          const { data } = await axios.get(`/api/admin/find-admin-byemail/${session.user.email}`);
+          setAdminId(data._id);
+        } catch (error) {
+          console.error(error.message);
         }
+      }
     };
     fetchAdminData();
-}, [session]);
+  }, [session]);
 
 
   useEffect(() => {
@@ -69,7 +69,7 @@ export default function Assigned() {
         queryDeadline.toDateString() === new Date().toDateString()) ||
       (selectedDeadline === "Tomorrow" &&
         queryDeadline.toDateString() ===
-          new Date(Date.now() + 86400000).toDateString()) ||
+        new Date(Date.now() + 86400000).toDateString()) ||
       (selectedDeadline === "Past" &&
         queryDeadline < new Date() &&
         queryDeadline.toDateString() !== new Date().toDateString());
@@ -135,6 +135,8 @@ export default function Assigned() {
                       <th className="px-6 py-4">Branch</th>
                       <th className="px-6 py-4">Deadline</th>
                       <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4">Fees</th>
+
                     </tr>
                   </thead>
                   <tbody>
@@ -147,7 +149,7 @@ export default function Assigned() {
                         </td>
                       </tr>
                     ) : currentQueries.length > 0 ? (
-                      currentQueries.map((query,index) => {
+                      currentQueries.map((query, index) => {
                         const deadline = new Date(query.deadline);
                         const isToday = deadline.toDateString() === new Date().toDateString();
                         const isPastDeadline = deadline < new Date();
@@ -158,26 +160,30 @@ export default function Assigned() {
                           deadline.toDateString() ===
                           new Date(Date.now() + 48 * 60 * 60 * 1000).toDateString();
 
-                        // Define the row class based on conditions
-                        const rowClass = query.addmission
-                          ? "bg-[#6cb049] text-white"
-                          : isToday
-                          ? "bg-red-500 text-white"
-                          : isPastDeadline
-                          ? "bg-gray-800 text-white animate-blink"
-                          : isIn24Hours
-                          ? "bg-[#fcccba] text-black"
-                          : isIn48Hours
-                          ? "bg-[#ffe9bf] text-black"
-                          : "";
+                        const hasTotal = query.total > 0; // 👈 CHECK TOTAL CONDITION
+
+                        // Row color logic
+                        const rowClass = hasTotal
+                          ? "bg-green-300 text-black" // 🔥 highest priority
+                          : query.addmission
+                            ? "bg-[#6cb049] text-white"
+                            : isToday
+                              ? "bg-red-500 text-white"
+                              : isPastDeadline
+                                ? "bg-gray-800 text-white animate-blink"
+                                : isIn24Hours
+                                  ? "bg-[#fcccba] text-black"
+                                  : isIn48Hours
+                                    ? "bg-[#ffe9bf] text-black"
+                                    : "";
 
                         return (
                           <tr
                             key={query._id}
-                            className={`border-b cursor-pointer transition-colors duration-200 hover:opacity-90 ${rowClass}`}
+                            className={`border-b cursor-pointer transition-colors duration-200 hover:opacity-90 ${rowClass} `}
                             onClick={() => handleRowClick(query._id)}
                           >
-                               <td className="px-6 py-1 font-semibold">{indexOfFirstQuery + index + 1}</td>
+                            <td className="px-6 py-1 font-semibold">{indexOfFirstQuery + index + 1}</td>
                             <td className="px-6 py-1 font-semibold">{query.studentName}</td>
                             <td className="px-6 py-1">{query.branch}</td>
                             <td className="px-6 py-1">
@@ -185,6 +191,9 @@ export default function Assigned() {
                             </td>
                             <td className="px-6 py-1">
                               {query.addmission ? "Enroll" : "Pending"}
+                            </td>
+                            <td className="px-6 py-1">
+                              {query.total}
                             </td>
                           </tr>
                         );
@@ -232,9 +241,8 @@ export default function Assigned() {
             <div className="space-y-2">
               <button
                 onClick={() => setSelectedBranch("All")}
-                className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${
-                  selectedBranch === "All" ? "bg-gray-200 font-semibold" : "hover:bg-gray-100"
-                }`}
+                className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${selectedBranch === "All" ? "bg-gray-200 font-semibold" : "hover:bg-gray-100"
+                  }`}
               >
                 <span>All</span>
                 <span className="ml-2 text-gray-500">{selectedBranch === "All" ? "-" : "+"}</span>
@@ -245,9 +253,8 @@ export default function Assigned() {
                   <button
                     key={branch}
                     onClick={() => setSelectedBranch(branch)}
-                    className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${
-                      selectedBranch === branch ? "bg-gray-200 font-semibold" : "hover:bg-gray-100"
-                    }`}
+                    className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${selectedBranch === branch ? "bg-gray-200 font-semibold" : "hover:bg-gray-100"
+                      }`}
                   >
                     <span>
                       {branch} ({totalCount})
@@ -290,7 +297,7 @@ export default function Assigned() {
             </select>
           </div>
 
-          
+
         </div>
       </div>
     </div>

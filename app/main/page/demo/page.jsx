@@ -118,8 +118,9 @@ export default function Assigned() {
                           const hasTotal = query.total > 0; // 👈 CHECK TOTAL CONDITION
 
                           // Row color logic
-                          const rowClass =
-                            query.addmission
+                          const rowClass = hasTotal
+                            ? "bg-green-300 text-black" // 🔥 highest priority
+                            : query.addmission
                               ? "bg-[#6cb049] text-white"
                               : isToday
                                 ? "bg-red-500 text-white"
@@ -134,10 +135,7 @@ export default function Assigned() {
                           return (
                             <tr
                               key={query._id}
-                              className={`border-b cursor-pointer transition-colors duration-200 hover:opacity-90 ${rowClass} ${hasTotal
-                                ? "relative after:content-[''] after:absolute after:inset-y-0 after:right-0 after:w-[12px] after:bg-green-100 after:rounded-sm"
-                                : ""}
-`}
+                              className={`border-b cursor-pointer transition-colors duration-200 hover:opacity-90 ${rowClass} `}
                               onClick={() => handleRowClick(query._id)}
                             >
                               <td className="px-6 py-1 font-semibold">{index + 1}</td>
