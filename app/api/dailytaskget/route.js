@@ -70,7 +70,7 @@ export async function GET(req) {
             _id: task.userId?._id,
             name: task.userId?.name,
             email: task.userId?.email,
-            branchName: task.userId?.branch?.branchName || "No Branch",
+            branchName: task.userId?.branch || "No Branch",
           },
           stats: {
             totalAssigned: 0,
