@@ -9,6 +9,7 @@ export default function Assigned() {
   const router = useRouter();
 
   const [queries, setQueries] = useState([]);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [allBranches, setAllBranches] = useState([]);
@@ -49,6 +50,7 @@ export default function Assigned() {
 
       setQueries(data.fetch);
       setTotalPages(data.totalPages);
+      setData(data)
       setLoading(false);
     } catch (error) {
       console.log("Fetch error:", error);
@@ -251,7 +253,76 @@ export default function Assigned() {
           </div>
 
         </div>
+
       </div>
+      <div className="p-6 space-y-10">
+
+        {/* TOP STATS */}
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Overview</h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            {/* CARD */}
+            <div className="bg-white shadow-sm hover:shadow-md transition rounded-xl p-6 border border-gray-100">
+              <h3 className="text-gray-500 text-sm">Total Queries</h3>
+              <p className="text-3xl font-extrabold text-gray-800 mt-2">{data.totalCount}</p>
+            </div>
+
+            <div className="bg-white shadow-sm hover:shadow-md transition rounded-xl p-6 border border-gray-100">
+              <h3 className="text-gray-500 text-sm">Total Fees = 0</h3>
+              <p className="text-3xl font-extrabold text-blue-600 mt-2">{data.totalZeroCount}</p>
+            </div>
+
+            <div className="bg-white shadow-sm hover:shadow-md transition rounded-xl p-6 border border-gray-100">
+              <h3 className="text-gray-500 text-sm">Fees Greater Than 0</h3>
+              <p className="text-3xl font-extrabold text-green-600 mt-2">{data.totalGreaterCount}</p>
+            </div>
+
+            <div className="bg-white shadow-sm hover:shadow-md transition rounded-xl p-6 border border-gray-100">
+              <h3 className="text-gray-500 text-sm">Pending</h3>
+              <p className="text-3xl font-extrabold text-red-500 mt-2">{data.totalPending}</p>
+            </div>
+
+            <div className="bg-white shadow-sm hover:shadow-md transition rounded-xl p-6 border border-gray-100">
+              <h3 className="text-gray-500 text-sm">Enrolled</h3>
+              <p className="text-3xl font-extrabold text-purple-600 mt-2">{data.totalEnroll}</p>
+            </div>
+
+            <div className="bg-white shadow-sm hover:shadow-md transition rounded-xl p-6 border border-gray-100">
+              <h3 className="text-gray-500 text-sm">Total All Queries</h3>
+              <p className="text-3xl font-extrabold text-gray-800 mt-2">{data.totalAllQueries}</p>
+            </div>
+
+          </div>
+        </div>
+
+        {/* BRANCH WISE COUNTS */}
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Branch-wise Summary</h2>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+
+            {data?.branchWiseCounts &&
+              Object.entries(data.branchWiseCounts).map(([branch, count]) => (
+
+                <div
+                  key={branch}
+                  className="bg-white shadow-sm hover:shadow-md transition rounded-xl p-5 border border-gray-100"
+                >
+                  <h3 className="text-gray-600 text-sm">{branch}</h3>
+                  <p className="text-2xl font-bold text-indigo-600 mt-2">{count}</p>
+                </div>
+
+              ))
+            }
+
+          </div>
+        </div>
+
+      </div>
+
+
     </div>
   );
 }

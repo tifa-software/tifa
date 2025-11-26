@@ -19,52 +19,44 @@ export async function GET(req) {
     const deadline = searchParams.get("deadline") || "All";
     const status = searchParams.get("status") || "All";
 
-    // Base filter (non-deadline parts)
-    let queryFilter = {
+    // ------------------------------------
+    // BASE FILTER (same for all counts)
+    // ------------------------------------
+    let baseFilter = {
       demo: true,
       autoclosed: "open",
     };
 
-    if (branch !== "All") {
-      queryFilter.branch = branch;
-    }
+    if (branch !== "All") baseFilter.branch = branch;
 
-    if (status === "Enroll") queryFilter.addmission = true;
-    if (status === "Pending") queryFilter.addmission = false;
+    if (status === "Enroll") baseFilter.addmission = true;
+    if (status === "Pending") baseFilter.addmission = false;
 
-    // Prepare finalMongoFilter. We'll attach deadline constraint to this.
-    let finalMongoFilter = { ...queryFilter };
+    // Apply deadline filtering later using $expr
+    let finalMongoFilter = { ...baseFilter };
 
-    // --------------------------
-    // Deadline filter (IST boundaries, robust to string or Date field)
-    // --------------------------
+    // ------------------------------------
+    // DEADLINE FILTER
+    // ------------------------------------
     if (deadline !== "All") {
-      // IST offset minutes
-      const IST_OFFSET_MINUTES = 5.5 * 60; // 330
+      const IST_OFFSET_MINUTES = 5.5 * 60;
 
       const now = new Date();
-
-      // Convert now -> IST time
       const nowIST = new Date(now.getTime() + IST_OFFSET_MINUTES * 60 * 1000);
 
-      // Start of today in IST
       const startTodayIST = new Date(nowIST);
       startTodayIST.setHours(0, 0, 0, 0);
 
-      // Start of tomorrow/day after in IST
       const startTomorrowIST = new Date(startTodayIST);
       startTomorrowIST.setDate(startTomorrowIST.getDate() + 1);
 
       const startDayAfterIST = new Date(startTodayIST);
       startDayAfterIST.setDate(startDayAfterIST.getDate() + 2);
 
-      // Convert IST midnights back to UTC Date objects for comparison
       const startTodayUTC = new Date(startTodayIST.getTime() - IST_OFFSET_MINUTES * 60 * 1000);
       const startTomorrowUTC = new Date(startTomorrowIST.getTime() - IST_OFFSET_MINUTES * 60 * 1000);
       const startDayAfterUTC = new Date(startDayAfterIST.getTime() - IST_OFFSET_MINUTES * 60 * 1000);
 
-      // Build $expr comparison using $toDate so both string ISO and Date fields work.
-      // We'll put an $expr into finalMongoFilter that compares the converted date.
       if (deadline === "Today") {
         finalMongoFilter.$expr = {
           $and: [
@@ -72,60 +64,108 @@ export async function GET(req) {
             { $lt: [{ $toDate: "$deadline" }, startTomorrowUTC] },
           ],
         };
-      } else if (deadline === "Tomorrow") {
+      }
+
+      if (deadline === "Tomorrow") {
         finalMongoFilter.$expr = {
           $and: [
             { $gte: [{ $toDate: "$deadline" }, startTomorrowUTC] },
             { $lt: [{ $toDate: "$deadline" }, startDayAfterUTC] },
           ],
         };
-      } else if (deadline === "Past") {
+      }
+
+      if (deadline === "Past") {
         finalMongoFilter.$expr = {
           $lt: [{ $toDate: "$deadline" }, startTodayUTC],
         };
       }
     }
 
-    // --------------------------
-    // COUNT matching documents
-    // --------------------------
+    // ------------------------------------
+    // ALL COUNTS based ONLY on finalMongoFilter
+    // ------------------------------------
+
+    // Total filtered results
     const totalCount = await QueryModel.countDocuments(finalMongoFilter);
 
-    // --------------------------
-    // PAGINATION & FETCH
-    // --------------------------
+    // total === 0
+    const totalZeroCount = await QueryModel.countDocuments({
+      ...finalMongoFilter,
+      total: 0,
+    });
+
+    // total > 0
+    const totalGreaterCount = await QueryModel.countDocuments({
+      ...finalMongoFilter,
+      total: { $gt: 0 },
+    });
+
+    // Enrolled count (based on filter)
+    const totalEnroll = await QueryModel.countDocuments({
+      ...finalMongoFilter,
+      addmission: true,
+    });
+
+    // Pending count (based on filter)
+    const totalPending = await QueryModel.countDocuments({
+      ...finalMongoFilter,
+      addmission: false,
+    });
+
+    // Branch-wise (based on filter)
+    const branchCountsAgg = await QueryModel.aggregate([
+      { $match: finalMongoFilter },
+      {
+        $group: {
+          _id: "$branch",
+          total: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const branchWiseCounts = {};
+    branchCountsAgg.forEach((b) => {
+      branchWiseCounts[b._id] = b.total;
+    });
+
+    // Selected branch total (filtered)
+    const totalBranchQueries =
+      branch !== "All" ? branchWiseCounts[branch] || 0 : null;
+
+    // ------------------------------------
+    // PAGINATION RESULTS
+    // ------------------------------------
     const skip = (page - 1) * limit;
+
     const queries = await QueryModel.find(finalMongoFilter)
       .skip(skip)
       .limit(limit)
       .sort({ deadline: 1 });
 
-    // --------------------------
-    // AUDIT LOGS
-    // --------------------------
+    // ------------------------------------
+    // AUDIT + ADMIN MERGE
+    // ------------------------------------
     const queryIds = queries.map((q) => q._id.toString());
-    const auditLogs = queryIds.length ? await AuditModel.find({ queryId: { $in: queryIds } }) : [];
+    const auditLogs = queryIds.length
+      ? await AuditModel.find({ queryId: { $in: queryIds } })
+      : [];
 
-    // --------------------------
-    // ADMIN names
-    // --------------------------
     const userIds = queries.map((q) => q.userid).filter(Boolean);
-    const adminDetails = userIds.length
+    const adminList = userIds.length
       ? await AdminModel.find({ _id: { $in: userIds } }).select("_id name")
       : [];
 
-    const adminMap = adminDetails.reduce((acc, a) => {
+    const adminMap = adminList.reduce((acc, a) => {
       acc[a._id.toString()] = a.name;
       return acc;
     }, {});
 
-    // --------------------------
-    // Merge audit/admin info
-    // --------------------------
     const finalData = queries.map((q) => {
       const qObj = q.toObject();
       const log = auditLogs.find((l) => l.queryId === qObj._id.toString());
       const stage6Entry = log?.history?.find((h) => String(h.stage) === "5");
+
       return {
         ...qObj,
         stage6Date: stage6Entry?.actionDate || null,
@@ -133,18 +173,29 @@ export async function GET(req) {
       };
     });
 
+    // ------------------------------------
+    // RESPONSE
+    // ------------------------------------
     return Response.json(
       {
         success: true,
         fetch: finalData,
+
         totalCount,
         totalPages: Math.max(1, Math.ceil(totalCount / limit)),
         currentPage: page,
+
+        totalZeroCount,
+        totalGreaterCount,
+        totalEnroll,
+        totalPending,
+        branchWiseCounts,
+        totalBranchQueries,
       },
       { status: 200 }
     );
   } catch (err) {
-    console.error("demoserver GET error:", err);
+    console.error("demo GET error:", err);
     return Response.json({ success: false, message: "Server error" }, { status: 500 });
   }
 }
