@@ -95,10 +95,27 @@ export const GET = async (request) => {
             }
         }
 
-        const dateRange = buildDateRange(searchParams.get("fromDate"), searchParams.get("toDate"));
-        if (dateRange) {
-            mongoFilters.addmissiondate = dateRange;
+
+        //  const dateRange = buildDateRange(searchParams.get("fromDate"), searchParams.get("toDate"));
+        // if (dateRange) {
+        //     mongoFilters.addmissiondate = dateRange;
+        // }
+        //
+        const fromDate = searchParams.get("fromDate");
+        const toDate = searchParams.get("toDate");
+
+        if (fromDate || toDate) {
+            mongoFilters.fees = {
+                $elemMatch: {
+                    transactionDate: {
+                        ...(fromDate && { $gte: new Date(fromDate) }),
+                        ...(toDate && { $lte: new Date(`${toDate}T23:59:59.999Z`) }),
+                    },
+                },
+            };
         }
+        // 
+
 
         const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
         const limit = Math.min(500, Math.max(10, parseInt(searchParams.get("limit") || "50", 10)));
@@ -124,11 +141,45 @@ export const GET = async (request) => {
             return acc;
         }, {});
 
-        const queries = await QueryModel.find(mongoFilters)
-            .sort({ addmissiondate: -1, createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .lean();
+        // const queries = await QueryModel.find(mongoFilters)
+        //     .sort({ addmissiondate: -1, createdAt: -1 })
+        //     .skip(skip)
+        //     .limit(limit)
+        //     .lean();
+        const queries = await QueryModel.aggregate([
+            { $match: mongoFilters },
+
+            // Add a field for the FIRST fee date
+            {
+                $addFields: {
+                    firstFeeDate: {
+                        $let: {
+                            vars: {
+                                sortedFees: {
+                                    $sortArray: {
+                                        input: "$fees",
+                                        sortBy: { transactionDate: 1 }
+                                    }
+                                }
+                            },
+                            in: { $arrayElemAt: ["$$sortedFees.transactionDate", 0] }
+                        }
+                    }
+                }
+            },
+
+            // Sorting priority: first fee date → createdAt
+            {
+                $sort: {
+                    firstFeeDate: -1, // Latest paid should come first
+                    createdAt: -1
+                }
+            },
+
+            { $skip: skip },
+            { $limit: limit }
+        ]);
+
 
         const queryIds = queries.map((query) => query._id.toString());
 

@@ -531,7 +531,7 @@ export default function AddmissionRegister() {
                                         <td className="px-4 py-3 text-[12px]">
                                             {query.studentContact?.city || "N/A"}
                                         </td>
-                                        <td className="px-4 py-3 text-[12px]">
+                                        {/* <td className="px-4 py-3 text-[12px]">
                                             {query.addmissiondate
                                                 ? new Intl.DateTimeFormat("en-GB", {
                                                     day: "numeric",
@@ -539,7 +539,25 @@ export default function AddmissionRegister() {
                                                     year: "numeric",
                                                 }).format(new Date(query.addmissiondate))
                                                 : "N/A"}
+                                        </td> */}
+                                        <td className="px-4 py-3 text-[12px]">
+                                            {query.fees && query.fees.length > 0 ? (
+                                                new Intl.DateTimeFormat("en-GB", {
+                                                    day: "numeric",
+                                                    month: "short",
+                                                    year: "numeric",
+                                                }).format(
+                                                    new Date(
+                                                        [...query.fees]
+                                                            .sort((a, b) => new Date(a.transactionDate) - new Date(b.transactionDate))[0]
+                                                            .transactionDate
+                                                    )
+                                                )
+                                            ) : (
+                                                "N/A"
+                                            )}
                                         </td>
+                                        
                                         <td className="px-4 py-3 text-[12px]">
                                             {query.totalFees != null ? `${query.totalFees} ₹` : "N/A"}
                                         </td>
