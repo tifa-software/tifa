@@ -56,6 +56,7 @@ export default function AllQuery() {
   const [admins, setAdmins] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
+  const [adminbranch, setAdminbranch] = useState(null);
 
   // ---- UI state ----
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,6 +69,7 @@ export default function AllQuery() {
   const [customDate, setCustomDate] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [user, setuser] = useState([]);
 
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -85,6 +87,8 @@ export default function AllQuery() {
       try {
         const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
         setAdminData(response.data._id);
+        setAdminbranch(response.data.branch);
+
       } catch (err) {
         console.error("Error fetching admin data:", err);
       } finally {
@@ -275,6 +279,32 @@ export default function AllQuery() {
     }
   };
 
+  useEffect(() => {
+    if (!session || !session.user) return; // wait for session to load
+    if (!adminbranch) return; // wait for adminbranch
+
+    const fetchUserData = async () => {
+      setAdminLoading(true);
+      try {
+        let response;
+
+
+        if (session.user.franchisestaff === "1") {
+          response = await axios.get(`/api/admin/fetchall-bybranch/${adminbranch}`);
+        } else {
+          response = await axios.get('/api/admin/fetchall/admin');
+        }
+
+        setuser(response.data.fetch);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setAdminLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [adminbranch, session]);
   const handleBulkAssign = () => {
     const ok = window.confirm("Are you sure you want to Assign these Queries?");
     if (!ok) return;
@@ -417,26 +447,9 @@ export default function AllQuery() {
                   onChange={(e) => setFilterAssignedFrom(e.target.value)}
                 >
                   <option value="">All Assigned</option>
-                  {Array.from(
-                    new Set(
-                      queries
-                        .flatMap((querie) => {
-                          const history = querie.assignedreceivedhistory;
-                          return Array.isArray(history) ? history : history ? [history] : [];
-                        })
-                        .filter((id) => id)
-                    )
-                  )
-                    .map((assignedFrom) => {
-                      const adminName = findAdminNameById(assignedFrom);
-                      return adminName ? { id: assignedFrom, name: adminName } : null;
-                    })
-                    .filter((option) => option !== null)
-                    .map((option, index) => (
-                      <option key={index} value={option.id}>
-                        {option.name}
-                      </option>
-                    ))}
+                  {user.map((item) => (
+                    <option key={item.id} value={item._id}>{item.name}</option>
+                  ))}
                 </select>
 
                 <select
@@ -523,26 +536,9 @@ export default function AllQuery() {
             onChange={(e) => setFilterAssignedFrom(e.target.value)}
           >
             <option value="">All Assigned</option>
-            {Array.from(
-              new Set(
-                queries
-                  .flatMap((querie) => {
-                    const history = querie.assignedreceivedhistory;
-                    return Array.isArray(history) ? history : history ? [history] : [];
-                  })
-                  .filter((id) => id)
-              )
-            )
-              .map((assignedFrom) => {
-                const adminName = findAdminNameById(assignedFrom);
-                return adminName ? { id: assignedFrom, name: adminName } : null;
-              })
-              .filter((option) => option !== null)
-              .map((option, index) => (
-                <option key={index} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
+            {user.map((item) => (
+              <option key={item.id} value={item._id}>{item.name}</option>
+            ))}
           </select>
 
           <select
@@ -551,7 +547,7 @@ export default function AllQuery() {
             className="px-2 py-1 border"
           >
             <option value="">All Grades</option>
-             <option value="H">Important</option>
+            <option value="H">Important</option>
             <option value="A">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
@@ -799,21 +795,21 @@ export default function AllQuery() {
                         {querie?.studentContact?.phoneNumber}
                       </td>
 
-                   
-                                         <td
-                                           onClick={() => handleRowClick(querie._id)}
-                                           className="px-4 py-2 text-[12px]"
-                                         >
-                                           <div className="flex items-center gap-2 whitespace-nowrap">
-                                             <span>{querie.lastgrade}</span>
-                   
-                                             {querie.lastgrade === "H" && (
-                                               <span >
-                                                 <Image src="/image/images.jpeg" width={64.4} height={38.7} />
-                                               </span>
-                                             )}
-                                           </div>
-                                         </td>
+
+                      <td
+                        onClick={() => handleRowClick(querie._id)}
+                        className="px-4 py-2 text-[12px]"
+                      >
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <span>{querie.lastgrade}</span>
+
+                          {querie.lastgrade === "H" && (
+                            <span >
+                              <Image src="/image/images.jpeg" width={64.4} height={38.7} />
+                            </span>
+                          )}
+                        </div>
+                      </td>
 
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
                         {matchedassignedsenderUser}

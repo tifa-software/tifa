@@ -10,7 +10,6 @@ export default function Assigned() {
     const [branches, setBranches] = useState([]);
     const [loading, setLoading] = useState(true);
     const [adminId, setAdminId] = useState(null);
-    const [adminBranch, setAdminBranch] = useState(null);
     const { data: session } = useSession();
     const router = useRouter();
     const [user, setuser] = useState([]);
@@ -24,12 +23,37 @@ export default function Assigned() {
     const [selectedQuery, setSelectedQuery] = useState(null);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [adminData, setAdminData] = useState(null);
+
+
+    useEffect(() => {
+        const fetchAdminData = async () => {
+            try {
+                const response = await axios.get(
+                    `/api/admin/find-admin-byemail/${session?.user?.email}`
+                );
+                setAdminData(response.data.branch);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (session?.user?.email) fetchAdminData();
+    }, [session]);
 
     useEffect(() => {
         const fetchuserData = async () => {
             try {
-                const response = await axios.get('/api/admin/fetchall/admin');
+                let response;
+                if (session?.user?.franchisestaff === "1") {
+                    response = await axios.get(`/api/admin/fetchall-bybranch/${adminData}`);
+                } else {
+                    response = await axios.get('/api/admin/fetchall/admin');
+                }
                 setuser(response.data.fetch);
+
             } catch (error) {
                 console.error('Error fetching user data:', error);
             } finally {
@@ -38,12 +62,15 @@ export default function Assigned() {
         };
 
         fetchuserData();
-    }, []);
+    }, [adminData]);
+
+
+
     const handleAcceptQuery = async () => {
         if (!selectedQuery) return;
 
         try {
-            const data = { id: selectedQuery._id, assignedTo: adminId, assignedTostatus: false, branch: adminBranch };
+            const data = { id: selectedQuery._id, assignedTo: adminId, assignedTostatus: false }; // Update status to "Accepted"
             const response = await axios.patch('/api/queries/update', data);
 
             if (response.status === 200) {
@@ -67,7 +94,6 @@ export default function Assigned() {
                 try {
                     const { data } = await axios.get(`/api/admin/find-admin-byemail/${session.user.email}`);
                     setAdminId(data._id);
-                    setAdminBranch(data.branch)
                 } catch (error) {
                     console.error(error.message);
                 }
@@ -79,6 +105,7 @@ export default function Assigned() {
     useEffect(() => {
         const fetchBranchData = async () => {
             try {
+
                 const response = await axios.get('/api/branch/fetchall/branch');
                 setBranches(response.data.fetch);
             } catch (error) {
@@ -86,14 +113,14 @@ export default function Assigned() {
             }
         };
         fetchBranchData();
-    }, []);
+    }, [session]);
 
     useEffect(() => {
         const fetchQueryData = async () => {
             if (adminId) {
                 try {
                     setLoading(true);
-                    const { data } = await axios.get(`/api/queries/assignedreq/${adminId}?autoclosed=open`);
+                       const { data } = await axios.get(`/api/queries/assignedreq/${adminId}?autoclosed=open`);
                     setQueries(data.fetch);
                 } catch (error) {
                     console.error('Error fetching query data:', error);
@@ -110,7 +137,7 @@ export default function Assigned() {
     };
 
     const branchDetails = branches.reduce((acc, branch) => {
-        const branchQueries = queries.filter(query => query.lastbranch === branch.branch_name);
+        const branchQueries = queries.filter(query => query.branch === branch.branch_name);
         acc[branch.branch_name] = {
             count: branchQueries.length,
             Enrolls: branchQueries.filter(query => query.addmission).length,
@@ -131,7 +158,7 @@ export default function Assigned() {
 
     const filteredQueries = queries
         .filter(query => {
-            const matchesBranch = selectedBranch === 'All' || query.lastbranch === selectedBranch;
+            const matchesBranch = selectedBranch === 'All' || query.branch === selectedBranch;
             const queryDeadline = new Date(query.deadline);
             const queryAssignedDate = new Date(query.assigneddate);
 
@@ -155,6 +182,7 @@ export default function Assigned() {
             const matchesDateRange =
                 (!start || (queryAssignedDate && queryAssignedDate >= start)) &&
                 (!end || (queryAssignedDate && queryAssignedDate <= end));
+
 
             return matchesBranch && matchesDeadline && matchesEnrollStatus && matchesDateRange;
         })
@@ -203,7 +231,11 @@ export default function Assigned() {
         <div className="container mx-auto p-5">
             <div className="flex flex-col lg:flex-row justify-between space-y-6 lg:space-y-0 lg:space-x-6">
                 {/* Queries List */}
-                <div className="w-full lg:w-2/3">
+                <div
+                    className={`w-full ${session?.user?.franchisestaff === "1" ? "" : "lg:w-2/3"
+                        }`}
+                >
+
                     <div className="shadow-lg rounded-lg bg-white mb-6 relative">
                         <div className="p-4">
 
@@ -271,7 +303,9 @@ export default function Assigned() {
                                 </div>
 
                             </div>
-                            <p className="text-sm text-gray-600 mb-4">Total Requests: <span className="font-bold">{totalRequests}</span></p>
+                            <p className="text-sm text-gray-600 mb-4">Total Requests: <span className="font-bold">{
+                                session?.user?.franchisestaff === "1" ? `${currentQueries.length}` : `${totalRequests}`
+                            }</span></p>
                             <div className="relative overflow-y-auto" style={{ height: '500px' }}>
                                 <table className="min-w-full text-xs text-left text-gray-600 font-sans">
                                     <thead className="bg-[#29234b] text-white uppercase">
@@ -280,7 +314,7 @@ export default function Assigned() {
                                             <th className="px-1 py-4">Student Name</th>
                                             <th className="px-1 py-4">Contact No</th>
                                             <th className="px-1 py-4">Assigned Date</th>
-                                            <th className="px-1 py-4">Assigned From</th>
+                                            <th className="px-1 py-4">Assigned To</th>
                                             <th className="px-1 py-4">Deadline</th>
                                             <th className="px-1 py-4">Status</th>
                                         </tr>
@@ -317,7 +351,7 @@ export default function Assigned() {
                                                                 : isIn24Hours ? 'bg-[#fcccba] text-black'
                                                                     : isIn48Hours ? 'bg-[#ffe9bf] text-black'
                                                                         : '';
-                                                    const matchedUser = user.find((u) => u._id == query.assignedsenthistory);
+                                                    const matchedUser = user.find((u) => u._id == query.assignedreceivedhistory);
                                                     return (
                                                         <tr
                                                             key={query._id}
@@ -336,13 +370,7 @@ export default function Assigned() {
                                                             <td className="px-2 py-1">{deadline.toLocaleDateString()}</td>
                                                             <td
                                                                 className="px-2 py-1 text-blue-500 cursor-pointer"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    if (query.assignedTostatus) {
-                                                                        setSelectedQuery(query);
-                                                                        setShowPopup(true);
-                                                                    }
-                                                                }}
+
                                                             >
                                                                 {query.assignedTostatus ? 'Pending' : 'Accepted'}
                                                             </td>
@@ -356,28 +384,7 @@ export default function Assigned() {
                                                 </td>
                                             </tr>
                                         )}
-                                        {showPopup && (
-                                            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                                                <div className="bg-white rounded-lg p-6 text-center">
-                                                    <h2 className="text-lg font-semibold mb-4">Accept Query</h2>
-                                                    <p>Are you sure you want to accept this query?</p>
-                                                    <div className="mt-4 flex justify-center space-x-4">
-                                                        <button
-                                                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                                                            onClick={handleAcceptQuery}
-                                                        >
-                                                            Accept
-                                                        </button>
-                                                        <button
-                                                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                                                            onClick={() => setShowPopup(false)}
-                                                        >
-                                                            Ignore
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
+
                                     </tbody>
 
 
@@ -406,65 +413,56 @@ export default function Assigned() {
                     </div>
                 </div>
 
-                {/* Filters */}
-                <div className="w-full lg:w-1/3 space-y-6">
-                    {/* Branch Filter */}
-                    <div className="shadow-lg rounded-lg bg-white p-4">
-                        <h2 className="text-xl font-semibold mb-4 text-gray-800">Branch Statistics</h2>
-                        <h2 className=" bg-gray-800 mb-4 p-1 text-white">
-                            Total Queries Received = {filteredQueries.length}
-                        </h2>
-                        <ul className="space-y-2 text-sm">
-                            {branches.map(branch => {
-                                // Filter the queries for the specific branch based on the date filter
-                                const filteredBranchQueries = filteredQueries.filter(
-                                    query => query.lastbranch === branch.branch_name
-                                );
+                {session?.user?.franchisestaff !== "1" && (<>
+                    <div className="w-full lg:w-1/3 space-y-6">
+                        {/* Branch Filter */}
+                        <div className="shadow-lg rounded-lg bg-white p-4">
+                            <h2 className="text-xl font-semibold mb-4 text-gray-800">Branch Statistics</h2>
+                            <h2 className=" bg-gray-800 mb-4 p-1 text-white">
+                                Total Queries Send = {filteredQueries.length}
+                            </h2>
+                            <ul className="space-y-2 text-sm">
 
-                                // Calculate total count of Enrolls and Pending for this branch
-                                const totalCount = filteredBranchQueries.reduce(
-                                    (acc, query) => {
-                                        if (query.addmission) acc.Enrolls += 1;
-                                        else acc.pending += 1;
-                                        return acc;
-                                    },
-                                    { Enrolls: 0, pending: 0 }
-                                );
+                                {branches.map(branch => {
+                                    // Filter queries specific to the branch
+                                    const branchQueries = filteredQueries.filter(query => query.branch === branch.branch_name);
 
-                                return (
-                                    <li key={branch._id}>
-                                        <button
-                                            onClick={() => toggleBranchDetails(branch.branch_name)}
-                                            className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${selectedBranch === branch.branch_name ? 'bg-gray-200 font-semibold' : 'hover:bg-gray-100'}`}
-                                        >
-                                            {/* Show branch name with total count in parentheses */}
-                                            <span>
-                                                {branch.branch_name} ({totalCount.Enrolls + totalCount.pending})
-                                            </span>
-                                            <span className="ml-2 text-gray-500">
-                                                {selectedBranch === branch.branch_name ? '-' : '+'}
-                                            </span>
-                                        </button>
+                                    // Calculate total counts dynamically from filtered queries
+                                    const enrollsCount = branchQueries.filter(query => query.addmission).length;
+                                    const pendingCount = branchQueries.filter(query => !query.addmission).length;
+                                    const totalCount = enrollsCount + pendingCount;
 
-                                        {openBranchDetails === branch.branch_name && (
-                                            <div className="pl-4 py-2 bg-gray-100 rounded mt-2 space-y-2 transition-all duration-300 ease-in-out">
-                                                <p className="text-gray-700">
-                                                    Enrolls: <span className="font-semibold">{totalCount.Enrolls}</span>
-                                                </p>
-                                                <p className="text-gray-700">
-                                                    Visited: <span className="font-semibold">{totalCount.Enrolls}</span>
-                                                </p>
-                                                <p className="text-gray-700">
-                                                    Pending: <span className="font-semibold">{totalCount.pending}</span>
-                                                </p>
-                                            </div>
-                                        )}
-                                    </li>
-                                );
-                            })}
-                        </ul>
+                                    return (
+                                        <li key={branch._id}>
+                                            <button
+                                                onClick={() => toggleBranchDetails(branch.branch_name)}
+                                                className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${selectedBranch === branch.branch_name ? 'bg-gray-200 font-semibold' : 'hover:bg-gray-100'}`}
+                                            >
+                                                {/* Show branch name with total count in parentheses */}
+                                                <span>
+                                                    {branch.branch_name} ({totalCount})
+                                                </span>
+                                                <span className="ml-2 text-gray-500">
+                                                    {selectedBranch === branch.branch_name ? '-' : '+'}
+                                                </span>
+                                            </button>
+
+                                            {openBranchDetails === branch.branch_name && (
+                                                <div className="pl-4 py-2 bg-gray-100 rounded mt-2 space-y-2 transition-all duration-300 ease-in-out">
+                                                    <p className="text-gray-700">Enrolls: <span className="font-semibold">{enrollsCount}</span></p>
+                                                    <p className="text-gray-700">Visited: <span className="font-semibold">{enrollsCount}</span></p>
+                                                    <p className="text-gray-700">Pending: <span className="font-semibold">{pendingCount}</span></p>
+                                                </div>
+                                            )}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
                     </div>
-                </div>
+                </>)}
+
+
             </div>
         </div>
     );

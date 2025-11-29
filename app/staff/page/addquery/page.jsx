@@ -61,7 +61,7 @@ export default function Page() {
 
     const [existingBranch, setExistingBranch] = useState("");
 
-     useEffect(() => {
+    useEffect(() => {
         if (!formData.studentContact.phoneNumber) return;
 
         let isMounted = true;
@@ -96,7 +96,7 @@ export default function Page() {
             isMounted = false;
         };
     }, [formData.studentContact.phoneNumber]);
-    
+
 
     // const today = new Date().toISOString().split('T')[0];
     const currentYear = new Date().getFullYear();
@@ -195,19 +195,32 @@ export default function Page() {
     }, []);
 
     useEffect(() => {
-        const fetchuserData = async () => {
+        if (!session || !session.user) return; // wait for session to load
+        if (!adminbranch) return; // wait for adminbranch
+
+        const fetchUserData = async () => {
+            setLoading(true);
             try {
-                const response = await axios.get('/api/admin/fetchall/admin');
+                let response;
+
+
+                if (session.user.franchisestaff === "1") {
+                    response = await axios.get(`/api/admin/fetchall-bybranch/${adminbranch}`);
+                } else {
+                    response = await axios.get('/api/admin/fetchall/admin');
+                }
+
                 setuser(response.data.fetch);
             } catch (error) {
-                console.error('Error fetching user data:', error);
+                console.error("Error fetching user data:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchuserData();
-    }, []);
+        fetchUserData();
+    }, [adminbranch, session]);
+
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -501,7 +514,7 @@ export default function Page() {
                                     Reference SubOption
                                 </label>
                                 <select name="suboption" value={formData.suboption} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
-                                    <option value=""  selected>Select Reference name</option>
+                                    <option value="" selected>Select Reference name</option>
                                     {referenceData
                                         .find(data => data.referencename === formData.referenceid)?.suboptions
                                         .map((suboption, subIndex) => (
@@ -710,7 +723,7 @@ export default function Page() {
                                     Select Grade
                                 </option>
                                 <option value="Null">Not Defined</option>
-                                 <option value="H">Important</option>
+                                <option value="H">Important</option>
                                 <option value="A">A</option>
                                 <option value="B">B</option>
                                 <option value="C">C</option>
@@ -974,29 +987,29 @@ export default function Page() {
 
                             </>
                         ) : (
-                             <>
-                            <div className="sm:col-span-6 col-span-12">
-                                <label htmlFor="interestStatus" className="block text-[15px] text-gray-700">
-                                    Status
-                                </label>
-                                <select
-                                    id="interestStatus"
-                                    value={interestStatus}
-                                    onChange={handleInterestChange}
-                                    className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
-                                >
-                                    <option value="" disabled>Select Interest Status</option>
-                                    <option value="Interested">Interested</option>
-                                    <option value="Visited">Visited</option>
+                            <>
+                                <div className="sm:col-span-6 col-span-12">
+                                    <label htmlFor="interestStatus" className="block text-[15px] text-gray-700">
+                                        Status
+                                    </label>
+                                    <select
+                                        id="interestStatus"
+                                        value={interestStatus}
+                                        onChange={handleInterestChange}
+                                        className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
+                                    >
+                                        <option value="" disabled>Select Interest Status</option>
+                                        <option value="Interested">Interested</option>
+                                        <option value="Visited">Visited</option>
 
-                                    <option value="not_interested">Not Interested</option>
+                                        <option value="not_interested">Not Interested</option>
 
-                                    <option value="not_connected">Not Connected</option>
-                                    <option value="not_lifting">Not Lifting</option>
-                                    <option value="wrong_no">Wrong Number</option>
-                                </select>
-                            </div>
-                             <div className="sm:col-span-6 col-span-12">
+                                        <option value="not_connected">Not Connected</option>
+                                        <option value="not_lifting">Not Lifting</option>
+                                        <option value="wrong_no">Wrong Number</option>
+                                    </select>
+                                </div>
+                                <div className="sm:col-span-6 col-span-12">
                                     <label htmlFor="deadline" className="block text-[15px] text-gray-700">
                                         Deadline
                                     </label>
@@ -1019,7 +1032,7 @@ export default function Page() {
                                         <p className="text-red-500 text-[8px] mt-1">{errors.deadline}</p>
                                     )}
                                 </div>
-                                </>
+                            </>
                         )}
 
                     </div>
@@ -1028,12 +1041,12 @@ export default function Page() {
 
                     {/* Submit button */}
                     <div>
-                       <button
+                        <button
                             type="submit"
                             disabled={!isFormValid || loading || isPhoneNumberExist}
                             className={`${!isFormValid || loading || isPhoneNumberExist
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-[#6cb049]"
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-[#6cb049]"
                                 } text-white w-full font-bold py-2 px-4 rounded-md`}
                         >
                             {loading ? "Wait..." : "Add Query"}

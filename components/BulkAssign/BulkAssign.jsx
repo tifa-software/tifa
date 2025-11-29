@@ -17,6 +17,7 @@ export default function BulkAssign({ initialData, data }) {
   const { data: session } = useSession();
   const [adminid, setadminid] = useState(null);
   const [adminbranch, setAdminbranch] = useState(null);
+  const [adminData, setAdminData] = useState(null);
 
   useEffect(() => {
     const fetchAdminData = async () => {
@@ -38,10 +39,41 @@ export default function BulkAssign({ initialData, data }) {
   }, [session]);
 
   useEffect(() => {
+    const fetchAdminData = async () => {
+      try {
+        const response = await axios.get(
+          `/api/admin/find-admin-byemail/${session?.user?.email}`
+        );
+        setAdminData(response.data.branch);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (session?.user?.email) fetchAdminData();
+  }, [session]);
+
+  useEffect(() => {
     const fetchUserData = async () => {
       setLoading(true);
+
+      if (!adminData) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await axios.get('/api/admin/fetchall/admin');
+        let response;
+
+        // Condition based on franchisestaff
+        if (session?.user?.franchisestaff === "1") {
+          response = await axios.get(`/api/admin/fetchall-bybranch/${adminData}`);
+        } else {
+          response = await axios.get('/api/admin/fetchall/admin');
+        }
+
         const allUsers = response.data.fetch;
 
         setUsers(allUsers);
@@ -52,6 +84,7 @@ export default function BulkAssign({ initialData, data }) {
 
         setAssignedUserDetails(matchedUser || null);
         setMatchorignaluser(matchOriginalUser || null);
+
       } catch (error) {
         console.error('Error fetching user data:', error);
         setError('Failed to fetch user data');
@@ -61,7 +94,8 @@ export default function BulkAssign({ initialData, data }) {
     };
 
     fetchUserData();
-  }, [initialData.assignedToreq, initialData.userid]);
+  }, [adminData, session?.user?.franchisestaff]);
+
 
   const handleUpdate = async () => {
     setLoading(true);

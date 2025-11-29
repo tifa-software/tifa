@@ -52,6 +52,27 @@ export default function Profilepic() {
                     className="absolute right-5 mt-2 w-64 rounded-md shadow-sm border bg-white z-50"
                 >
                     <div className="flex flex-col gap-3 p-4">
+                        {session?.user?.franchisestaff === "1" && (
+                            <div className="group flex items-center gap-3 p-3 rounded-xl cursor-pointer
+                    transition-all duration-300 ease-in-out
+                    hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100 
+                    shadow-sm hover:shadow-md">
+                                <div className="p-2 rounded-full bg-blue-100 text-blue-600 group-hover:bg-blue-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                        fill="none" viewBox="0 0 24 24"
+                                        strokeWidth={1.8} stroke="currentColor"
+                                        className="w-5 h-5">
+                                        <path strokeLinecap="round" strokeLinejoin="round"
+                                            d="M3 7.5l9-4.5 9 4.5-9 4.5-9-4.5zm0 8l9 4.5 
+                    9-4.5m-18 0l9-4.5 9 4.5" />
+                                    </svg>
+                                </div>
+
+                                <span className="text-gray-700 font-semibold text-sm group-hover:text-blue-700">
+                                    Franchise Branch
+                                </span>
+                            </div>
+                        )}
                         <div className="flex items-center gap-3">
                             <div className="flex-shrink-0">
                                 <Image

@@ -106,7 +106,7 @@ export default function Page({ params }) {
     if (isConfirmed) {
       try {
         await axios.delete(`/api/branch/delete/${branchid}`);
-        router.push("/main/page/branch");
+      router.back();
         toast.success("Branch deleted successfully!");
       } catch (error) {
         console.error('Error deleting branch:', error);

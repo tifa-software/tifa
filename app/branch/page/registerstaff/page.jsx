@@ -9,37 +9,43 @@ import 'react-phone-input-2/lib/style.css';
 import { useSession } from "next-auth/react";
 
 export default function Page() {
-    const [branches, setBranches] = useState([]);
-      const { data: session } = useSession();
-    
+    const [branches, setBranches] = useState("");
+
+    const { data: session } = useSession();
+
     const [formData, setFormData] = useState({
         name: '',
         mobile: '',
         email: '',
         password: '',
         branch: '',
-        usertype: ''
+        usertype: '0',
+        franchisestaff: session?.user?.franchisestaff === "1" ? "1" : "0"
     });
     const [loading, setLoading] = useState(false);
     const [branchLoading, setBranchLoading] = useState(true);
 
-      useEffect(() => {
-    const fetchAdminData = async () => {
-      try {
-        const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
-        setBranches(response.data.branch);
-        
-      } catch (err) {
-        console.error("Error fetching admin data:", err);
-      } finally {
-        setBranchLoading(false);
-      }
-    };
+    useEffect(() => {
+        const fetchAdminData = async () => {
+            try {
+                const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
+                setBranches(response.data.branch);
+            } catch (err) {
+                console.error("Error fetching admin data:", err);
+            } finally {
+                setBranchLoading(false);
+            }
+        };
 
-    if (session?.user?.email) fetchAdminData();
-  }, [session]);
+        if (session?.user?.email) fetchAdminData();
+    }, [session]);
 
- 
+    useEffect(() => {
+        if (branches) {
+            setFormData(prev => ({ ...prev, branch: branches }));
+        }
+    }, [branches]);
+
 
     const handleInputChange = (e) => {
         setFormData({
@@ -148,10 +154,10 @@ export default function Page() {
                                 className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                                 required
                             >
-                                
+
 
                                 <option value="0" selected>Staff</option>
-                             
+
 
                             </select>
                         </div>
@@ -161,18 +167,23 @@ export default function Page() {
                             <label htmlFor="branch" className="px-2 absolute h-full flex items-center text-green-500">
                                 <MapPin size={15} />
                             </label>
+
                             <select
                                 name="branch"
                                 id="branch"
-                                value={formData.branch}
+                                value={formData.branch || branches} // ensure it selects branch once loaded
                                 onChange={handleInputChange}
                                 className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                                 required
                             >
-                                <option value={branches} selected>{branches}</option>
-                                
+                                {branchLoading ? (
+                                    <option value="">Loading...</option>
+                                ) : (
+                                    <option value={branches}>{branches}</option>
+                                )}
                             </select>
                         </div>
+
 
                         <div className="mt-4">
                             <button

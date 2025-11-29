@@ -23,12 +23,37 @@ export default function Assigned() {
     const [selectedQuery, setSelectedQuery] = useState(null);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [adminData, setAdminData] = useState(null);
+
+
+    useEffect(() => {
+        const fetchAdminData = async () => {
+            try {
+                const response = await axios.get(
+                    `/api/admin/find-admin-byemail/${session?.user?.email}`
+                );
+                setAdminData(response.data.branch);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (session?.user?.email) fetchAdminData();
+    }, [session]);
 
     useEffect(() => {
         const fetchuserData = async () => {
             try {
-                const response = await axios.get('/api/admin/fetchall/admin');
+                let response;
+                if (session?.user?.franchisestaff === "1") {
+                    response = await axios.get(`/api/admin/fetchall-bybranch/${adminData}`);
+                } else {
+                    response = await axios.get('/api/admin/fetchall/admin');
+                }
                 setuser(response.data.fetch);
+
             } catch (error) {
                 console.error('Error fetching user data:', error);
             } finally {
@@ -37,7 +62,10 @@ export default function Assigned() {
         };
 
         fetchuserData();
-    }, []);
+    }, [adminData]);
+
+
+
     const handleAcceptQuery = async () => {
         if (!selectedQuery) return;
 
@@ -77,6 +105,7 @@ export default function Assigned() {
     useEffect(() => {
         const fetchBranchData = async () => {
             try {
+
                 const response = await axios.get('/api/branch/fetchall/branch');
                 setBranches(response.data.fetch);
             } catch (error) {
@@ -84,7 +113,7 @@ export default function Assigned() {
             }
         };
         fetchBranchData();
-    }, []);
+    }, [session]);
 
     useEffect(() => {
         const fetchQueryData = async () => {
@@ -202,7 +231,11 @@ export default function Assigned() {
         <div className="container mx-auto p-5">
             <div className="flex flex-col lg:flex-row justify-between space-y-6 lg:space-y-0 lg:space-x-6">
                 {/* Queries List */}
-                <div className="w-full lg:w-2/3">
+                <div
+                    className={`w-full ${session?.user?.franchisestaff === "1" ? "" : "lg:w-2/3"
+                        }`}
+                >
+
                     <div className="shadow-lg rounded-lg bg-white mb-6 relative">
                         <div className="p-4">
 
@@ -270,7 +303,9 @@ export default function Assigned() {
                                 </div>
 
                             </div>
-                            <p className="text-sm text-gray-600 mb-4">Total Requests: <span className="font-bold">{totalRequests}</span></p>
+                            <p className="text-sm text-gray-600 mb-4">Total Requests: <span className="font-bold">{
+                                session?.user?.franchisestaff === "1" ? `${currentQueries.length}` : `${totalRequests}`
+                            }</span></p>
                             <div className="relative overflow-y-auto" style={{ height: '500px' }}>
                                 <table className="min-w-full text-xs text-left text-gray-600 font-sans">
                                     <thead className="bg-[#29234b] text-white uppercase">
@@ -378,53 +413,55 @@ export default function Assigned() {
                     </div>
                 </div>
 
-                {/* Filters */}
-                <div className="w-full lg:w-1/3 space-y-6">
-                    {/* Branch Filter */}
-                    <div className="shadow-lg rounded-lg bg-white p-4">
-                        <h2 className="text-xl font-semibold mb-4 text-gray-800">Branch Statistics</h2>
-                        <h2 className=" bg-gray-800 mb-4 p-1 text-white">
-                            Total Queries Send = {filteredQueries.length}
-                        </h2>
-                        <ul className="space-y-2 text-sm">
+                {session?.user?.franchisestaff !== "1" && (<>
+                    <div className="w-full lg:w-1/3 space-y-6">
+                        {/* Branch Filter */}
+                        <div className="shadow-lg rounded-lg bg-white p-4">
+                            <h2 className="text-xl font-semibold mb-4 text-gray-800">Branch Statistics</h2>
+                            <h2 className=" bg-gray-800 mb-4 p-1 text-white">
+                                Total Queries Send = {filteredQueries.length}
+                            </h2>
+                            <ul className="space-y-2 text-sm">
 
-                            {branches.map(branch => {
-                                // Filter queries specific to the branch
-                                const branchQueries = filteredQueries.filter(query => query.branch === branch.branch_name);
+                                {branches.map(branch => {
+                                    // Filter queries specific to the branch
+                                    const branchQueries = filteredQueries.filter(query => query.branch === branch.branch_name);
 
-                                // Calculate total counts dynamically from filtered queries
-                                const enrollsCount = branchQueries.filter(query => query.addmission).length;
-                                const pendingCount = branchQueries.filter(query => !query.addmission).length;
-                                const totalCount = enrollsCount + pendingCount;
+                                    // Calculate total counts dynamically from filtered queries
+                                    const enrollsCount = branchQueries.filter(query => query.addmission).length;
+                                    const pendingCount = branchQueries.filter(query => !query.addmission).length;
+                                    const totalCount = enrollsCount + pendingCount;
 
-                                return (
-                                    <li key={branch._id}>
-                                        <button
-                                            onClick={() => toggleBranchDetails(branch.branch_name)}
-                                            className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${selectedBranch === branch.branch_name ? 'bg-gray-200 font-semibold' : 'hover:bg-gray-100'}`}
-                                        >
-                                            {/* Show branch name with total count in parentheses */}
-                                            <span>
-                                                {branch.branch_name} ({totalCount})
-                                            </span>
-                                            <span className="ml-2 text-gray-500">
-                                                {selectedBranch === branch.branch_name ? '-' : '+'}
-                                            </span>
-                                        </button>
+                                    return (
+                                        <li key={branch._id}>
+                                            <button
+                                                onClick={() => toggleBranchDetails(branch.branch_name)}
+                                                className={`w-full py-2 px-4 text-left rounded flex justify-between items-center ${selectedBranch === branch.branch_name ? 'bg-gray-200 font-semibold' : 'hover:bg-gray-100'}`}
+                                            >
+                                                {/* Show branch name with total count in parentheses */}
+                                                <span>
+                                                    {branch.branch_name} ({totalCount})
+                                                </span>
+                                                <span className="ml-2 text-gray-500">
+                                                    {selectedBranch === branch.branch_name ? '-' : '+'}
+                                                </span>
+                                            </button>
 
-                                        {openBranchDetails === branch.branch_name && (
-                                            <div className="pl-4 py-2 bg-gray-100 rounded mt-2 space-y-2 transition-all duration-300 ease-in-out">
-                                                <p className="text-gray-700">Enrolls: <span className="font-semibold">{enrollsCount}</span></p>
-                                                <p className="text-gray-700">Visited: <span className="font-semibold">{enrollsCount}</span></p>
-                                                <p className="text-gray-700">Pending: <span className="font-semibold">{pendingCount}</span></p>
-                                            </div>
-                                        )}
-                                    </li>
-                                );
-                            })}
-                        </ul>
+                                            {openBranchDetails === branch.branch_name && (
+                                                <div className="pl-4 py-2 bg-gray-100 rounded mt-2 space-y-2 transition-all duration-300 ease-in-out">
+                                                    <p className="text-gray-700">Enrolls: <span className="font-semibold">{enrollsCount}</span></p>
+                                                    <p className="text-gray-700">Visited: <span className="font-semibold">{enrollsCount}</span></p>
+                                                    <p className="text-gray-700">Pending: <span className="font-semibold">{pendingCount}</span></p>
+                                                </div>
+                                            )}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
                     </div>
-                </div>
+                </>)}
+
 
             </div>
         </div>

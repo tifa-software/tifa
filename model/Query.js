@@ -161,7 +161,7 @@ const querySchema = new Schema({
         type: Boolean,
         default: false
     },
-    addmissiondate:{
+    addmissiondate: {
         type: Date,
     },
     notes: {

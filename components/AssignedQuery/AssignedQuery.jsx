@@ -19,6 +19,8 @@ export default function AssignedQuery({ initialData, refreshData }) {
     const { data: session } = useSession();
     const [adminid, setAdminid] = useState(null);
     const [adminbranch, setAdminbranch] = useState(null);
+    const [adminData, setAdminData] = useState(null);
+
     useEffect(() => {
         const fetchAdminData = async () => {
             try {
@@ -31,7 +33,7 @@ export default function AssignedQuery({ initialData, refreshData }) {
                 setAdminbranch(response.data.branch)
 
             } catch (err) {
-                
+
             } finally {
                 setLoading(false);  // Stop loading
             }
@@ -39,23 +41,55 @@ export default function AssignedQuery({ initialData, refreshData }) {
 
         if (session?.user?.email) fetchAdminData();
     }, [session]);
+
+    useEffect(() => {
+        const fetchAdminData = async () => {
+            try {
+                const response = await axios.get(
+                    `/api/admin/find-admin-byemail/${session?.user?.email}`
+                );
+                setAdminData(response.data.branch);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (session?.user?.email) fetchAdminData();
+    }, [session]);
+
+
     useEffect(() => {
         const fetchUserData = async () => {
             setLoading(true);
+
+            if (!adminData) {
+                setLoading(false);
+                return;
+            }
+
             try {
-                const response = await axios.get('/api/admin/fetchall/admin');
+                let response;
+
+                // Condition based on franchisestaff
+                if (session?.user?.franchisestaff === "1") {
+                    response = await axios.get(`/api/admin/fetchall-bybranch/${adminData}`);
+                } else {
+                    response = await axios.get('/api/admin/fetchall/admin');
+                }
+
                 const allUsers = response.data.fetch;
 
-                // Set user data and filtered users
                 setUsers(allUsers);
                 setFilteredUsers(allUsers);
 
-                // Find assigned user
                 const matchedUser = allUsers.find(user => user._id === initialData.assignedToreq);
                 const matchOriginalUser = allUsers.find(user => user._id === initialData.userid);
 
-                setAssignedUserDetails(matchedUser || null); // Set matched user or null
-                setMatchorignaluser(matchOriginalUser || null); // Set matchOriginalUser or null
+                setAssignedUserDetails(matchedUser || null);
+                setMatchorignaluser(matchOriginalUser || null);
+
             } catch (error) {
                 console.error('Error fetching user data:', error);
                 setError('Failed to fetch user data');
@@ -65,7 +99,8 @@ export default function AssignedQuery({ initialData, refreshData }) {
         };
 
         fetchUserData();
-    }, [initialData.assignedToreq, initialData.userid]);
+    }, [adminData, session?.user?.franchisestaff]);
+
     const displayName = matchorignaluser?.name || '...';
 
 
@@ -75,13 +110,13 @@ export default function AssignedQuery({ initialData, refreshData }) {
         setSuccess('');
 
         try {
-           
+
             const assignedUserId = assignedToreq; // The ID of the assigned user
 
             // Update query assignment with actionBy (who is performing the update)
             const queryResponse = await axios.patch('/api/queries/update', {
                 id: initialData._id,
-                lastbranch:adminbranch,
+                lastbranch: adminbranch,
                 assignedToreq,
                 assignedsenthistory: adminid,
                 assignedreceivedhistory: [assignedUserId], // Add assigned user ID to received history

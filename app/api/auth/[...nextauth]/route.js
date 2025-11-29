@@ -18,7 +18,6 @@ export const authOptions = {
 
         const admin = await AdminModel.findOne({ email }).lean();
         if (!admin) return null;
-
         const valid = await bcrypt.compare(password, admin.password);
         if (!valid) return null;
 
@@ -27,6 +26,7 @@ export const authOptions = {
           email: admin.email,
           name: admin.name,
           usertype: admin.usertype,
+          franchisestaff: admin.franchisestaff,
         };
       },
     }),
@@ -34,11 +34,15 @@ export const authOptions = {
   session: { strategy: "jwt" },
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.usertype = user.usertype;
+      if (user) {
+        token.usertype = user.usertype;
+        token.franchisestaff = user.franchisestaff; // ⬅️ Store in token
+      }
       return token;
     },
     async session({ session, token }) {
       session.user.usertype = token.usertype;
+      session.user.franchisestaff = token.franchisestaff;
       return session;
     },
   },

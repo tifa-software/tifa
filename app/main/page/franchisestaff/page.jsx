@@ -45,7 +45,7 @@ export default function User() {
     };
 
     const handleRowClick = (email) => {
-        router.push(`/main/page/user/${email}`);
+        router.push(`/main/page/franuser/${email}`);
     };
 
     return (

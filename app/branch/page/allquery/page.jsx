@@ -537,7 +537,7 @@ export default function AllQuery() {
             className="px-2 py-1 border"
           >
             <option value="">All Grades</option>
-             <option value="H">Important</option>
+            <option value="H">Important</option>
             <option value="A">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
@@ -785,21 +785,21 @@ export default function AllQuery() {
                         {querie?.studentContact?.phoneNumber}
                       </td>
 
-                     
-                                           <td
-                                             onClick={() => handleRowClick(querie._id)}
-                                             className="px-4 py-2 text-[12px]"
-                                           >
-                                             <div className="flex items-center gap-2 whitespace-nowrap">
-                                               <span>{querie.lastgrade}</span>
-                     
-                                               {querie.lastgrade === "H" && (
-                                                 <span >
-                                                   <Image src="/image/images.jpeg" width={64.4} height={38.7} />
-                                                 </span>
-                                               )}
-                                             </div>
-                                           </td>
+
+                      <td
+                        onClick={() => handleRowClick(querie._id)}
+                        className="px-4 py-2 text-[12px]"
+                      >
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <span>{querie.lastgrade}</span>
+
+                          {querie.lastgrade === "H" && (
+                            <span >
+                              <Image src="/image/images.jpeg" width={64.4} height={38.7} />
+                            </span>
+                          )}
+                        </div>
+                      </td>
 
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
                         {matchedassignedsenderUser}

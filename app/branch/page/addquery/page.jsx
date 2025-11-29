@@ -709,7 +709,7 @@ export default function Page() {
                                     Select Grade
                                 </option>
                                 <option value="Null">Not Defined</option>
-                                 <option value="H">Important</option>
+                                <option value="H">Important</option>
                                 <option value="A">A</option>
                                 <option value="B">B</option>
                                 <option value="C">C</option>
@@ -1027,12 +1027,12 @@ export default function Page() {
 
                     {/* Submit button */}
                     <div>
-                      <button
+                        <button
                             type="submit"
                             disabled={!isFormValid || loading || isPhoneNumberExist}
                             className={`${!isFormValid || loading || isPhoneNumberExist
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-[#6cb049]"
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-[#6cb049]"
                                 } text-white w-full font-bold py-2 px-4 rounded-md`}
                         >
                             {loading ? "Wait..." : "Add Query"}
