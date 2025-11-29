@@ -17,6 +17,13 @@ ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Title, T
 
 export default function Page() {
   const [lineData, setLineData] = useState({ labels: [], datasets: [] });
+  const [monthFilter, setMonthFilter] = useState("");
+  const [yearFilter, setYearFilter] = useState("");
+
+  const monthNames = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
 
   const options = {
     responsive: true,
@@ -32,50 +39,76 @@ export default function Page() {
     },
   };
 
+  const fetchData = async () => {
+    try {
+      const res = await axios.get("/api/Graph/Work/default");
+      let { dateWiseUpdates } = res.data.data;
+
+      // Filter by month/year if selected
+      if (monthFilter) dateWiseUpdates = dateWiseUpdates.filter(d => d.month === parseInt(monthFilter));
+      if (yearFilter) dateWiseUpdates = dateWiseUpdates.filter(d => d.year === parseInt(yearFilter));
+
+      const labels = dateWiseUpdates.map(
+        (item) => `${item.day} ${monthNames[item.month - 1]} ${item.year}`
+      );
+      const data = dateWiseUpdates.map((item) => item.updatedCount);
+
+      setLineData({
+        labels,
+        datasets: [
+          {
+            label: "Daily Updates",
+            data,
+            borderColor: "#6cb049",
+            backgroundColor: "rgba(108, 176, 73, 0.15)",
+            fill: true,
+            tension: 0.4,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+          },
+        ],
+      });
+    } catch (err) {
+      console.error("Error fetching chart data:", err);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axios.get("/api/Graph/Work/default");
-        const { dateWiseUpdates } = res.data.data;
-
-        const monthNames = [
-          "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-        ];
-
-        const labels = dateWiseUpdates.map(
-          (item) => `${monthNames[item.month - 1]} ${item.year} — Week ${item.week}`
-        );
-        const data = dateWiseUpdates.map((item) => item.updatedCount);
-
-        setLineData({
-          labels,
-          datasets: [
-            {
-              label: "Weekly Updates",
-              data,
-              borderColor: "#6cb049",
-              backgroundColor: "rgba(108, 176, 73, 0.15)",
-              fill: true,
-              tension: 0.4,
-              pointRadius: 3,
-              pointHoverRadius: 5,
-            },
-          ],
-        });
-      } catch (err) {
-        console.error("Error fetching chart data:", err);
-      }
-    };
-
     fetchData();
-  }, []);
+  }, [monthFilter, yearFilter]);
 
   return (
     <div className="p-4 bg-white/70 backdrop-blur-md shadow-xl rounded-xl">
       <h3 className="text-lg font-semibold text-center text-[#6cb049] mb-4">
-        Weekly Data Analysis
+        Daily Data Analysis
       </h3>
+
+      {/* Filters */}
+      <div className="flex justify-center gap-4 mb-4">
+        <select
+          value={monthFilter}
+          onChange={(e) => setMonthFilter(e.target.value)}
+          className="p-2 border rounded"
+        >
+          <option value="">All Months</option>
+          {monthNames.map((m, i) => (
+            <option key={i} value={i + 1}>{m}</option>
+          ))}
+        </select>
+
+        <select
+          value={yearFilter}
+          onChange={(e) => setYearFilter(e.target.value)}
+          className="p-2 border rounded"
+        >
+          <option value="">All Years</option>
+          {Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => 2024 + i).map((y) => (
+            <option key={y} value={y}>{y}</option>
+          ))}
+        </select>
+
+      </div>
+
       <div className="h-72 transition-all duration-500">
         <Line data={lineData} options={options} />
       </div>

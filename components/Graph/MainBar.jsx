@@ -27,15 +27,12 @@ export default function Page() {
     []
   );
 
+  // Chart options (stacked)
   const options = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
-    animation: {
-      duration: 600,
-      easing: "easeOutCubic",
-    },
     plugins: {
-      legend: { display: false },
+      legend: { position: "top" },
       tooltip: {
         backgroundColor: "#29234b",
         titleColor: "#fff",
@@ -43,15 +40,10 @@ export default function Page() {
       },
     },
     scales: {
-      x: {
-        grid: { display: false },
-        ticks: { color: "#29234b" },
-      },
-      y: {
-        grid: { color: "rgba(0,0,0,0.05)" },
-        ticks: { color: "#29234b" },
-      },
+      x: { stacked: true, grid: { display: false }, ticks: { color: "#29234b" } },
+      y: { stacked: true, grid: { color: "rgba(0,0,0,0.05)" }, ticks: { color: "#29234b" } },
     },
+    animation: { duration: 600, easing: "easeOutCubic" },
   }), []);
 
   useEffect(() => {
@@ -61,12 +53,25 @@ export default function Page() {
         const res = await axios.get(`/api/Graph/comequeries/default?year=${year}`);
         const result = res.data.data || [];
 
-        const formatted = monthNames.map((m, i) => {
-          const found = result.find((r) => r.month === i + 1);
-          return found ? found.totalQueries : 0;
-        });
+        // Get all unique references
+        const references = Array.from(new Set(result.map(r => r.referenceid)));
 
-        setData(formatted);
+        // Assign colors to references
+        const colors = ["#6cb049", "#f59e0b", "#3b82f6", "#ef4444", "#8b5cf6", "#d946ef", "#10b981"];
+
+        // Format datasets
+        const datasets = references.map((ref, idx) => ({
+          label: ref,
+          data: monthNames.map((_, monthIdx) => {
+            const found = result.find(d => d.month === monthIdx + 1 && d.referenceid === ref);
+            return found ? found.totalQueries : 0;
+          }),
+          backgroundColor: colors[idx % colors.length],
+          borderRadius: 6,
+          barPercentage: 0.6,
+        }));
+
+        setData(datasets);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -77,21 +82,18 @@ export default function Page() {
     fetchData();
   }, [year, monthNames]);
 
-  const chartData = useMemo(
-    () => ({
-      labels: monthNames,
-      datasets: [
-        {
-          label: `Queries (${year})`,
-          data,
-          backgroundColor: "#6cb049",
-          borderRadius: 6,
-          barPercentage: 0.6,
-        },
-      ],
-    }),
-    [data, year, monthNames]
-  );
+  const chartData = useMemo(() => ({
+    labels: monthNames,
+    datasets: data,
+  }), [data, monthNames]);
+
+  // Dynamic years for dropdown (from 2024 back to 5 years)
+  const years = useMemo(() => {
+    const current = new Date().getFullYear();
+    const arr = [];
+    for (let y = current; y >= 2024; y--) arr.push(y);
+    return arr;
+  }, []);
 
   return (
     <div className="p-4 bg-white/70 backdrop-blur-md shadow-xl rounded-xl transition-all duration-500">
@@ -105,10 +107,9 @@ export default function Page() {
           onChange={(e) => setYear(Number(e.target.value))}
           className="px-3 py-2 rounded-md border border-gray-200 text-gray-700 bg-white shadow-sm focus:border-[#6cb049] focus:ring-[#6cb049] outline-none"
         >
-          {[0, 1, 2].map((i) => {
-            const y = new Date().getFullYear() - i;
-            return <option key={y} value={y}>{y}</option>;
-          })}
+          {years.map((y) => (
+            <option key={y} value={y}>{y}</option>
+          ))}
         </select>
       </div>
 

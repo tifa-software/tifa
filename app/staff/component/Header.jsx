@@ -184,32 +184,37 @@ export default function Header() {
                         </div>
                     </div>
                     <div className="lg:col-span-3 sm:col-span-1 col-span-1">
-                        <div className='flex items-center justify-end gap-1 lg:gap-1'>
+                        <div className='flex items-center justify-end gap-1 lg:gap-1 relative'>
 
-                            {showAlert && count > 0 && (
-                                <div className="bg-yellow-400 text-black font-bold rounded-full px-4 py-2 text-sm shadow-lg relative inline-flex items-center animated-border">
-                                    <span className="absolute -top-1 -right-1 bg-red-800 text-white rounded-full h-4 w-4 flex items-center justify-center text-xs">
-                                        {count}
-                                    </span>
-                                    Urgent Attention Required!
-                                </div>
-                            )}
-
+                            
 
                             <div className='sm:block hidden'>
                                 <Smallbtn icon={Settings} href="/staff/page/profile" />
                             </div>
-                            <div onClick={toggleNotification}>
-                                <Smallbtn icon={Bell} href="javascript:void(0)" />
-                            </div>
-                            {isNotificationOpen && (
-                                <div className="absolute top-16 right-4 w-[300px] bg-white rounded-md shadow-sm border p-4 z-50 h-[70vh] overflow-y-auto">
-                                    <h4 className="text-lg font-semibold mb-2">Notifications</h4>
-                                    <ul className="space-y-2">
-                                        <li className="text-gray-700">No new notifications</li>
-                                    </ul>
+                           {/* Notification Icon */}
+                                <div onClick={toggleNotification} className='relative'>
+                                    <p className=' absolute top-0 right-0 bg-red-500 px-1 text-sm w-5 h-5 rounded-full text-white'>  {queriesnotification.length}</p>
+                                    <Smallbtn icon={Bell} href="javascript:void(0)" />
                                 </div>
-                            )}
+
+                                {/* Notification Dropdown */}
+                                {isNotificationOpen && (
+                                    <div className="absolute top-full right-0 mt-2 w-72 bg-white shadow-lg rounded-lg p-4 z-50 border border-gray-200">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h3 className="font-semibold text-gray-700 text-sm">
+                                                Assigned Requests
+                                            </h3>
+                                        </div>
+                                        <Link href="/staff/page/assigned">
+                                            {queriesnotification.length > 0 && (
+                                                <span className="bg-red-600 text-black font-bold rounded-full px-4 py-1 text-sm shadow-lg relative inline-flex items-center animated-border">
+                                                    <span className='mr-2 bg-white text-red-600 p-1 rounded-full'> {queriesnotification.length}</span>
+                                                    Assigned Request
+                                                </span>
+                                            )}
+                                        </Link>
+                                    </div>
+                                )}
                             <div className='sm:block hidden'>
                                 <Link href="/staff/page/addquery">
                                     <Btn1 title="New Query" />

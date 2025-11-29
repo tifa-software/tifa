@@ -120,7 +120,7 @@ export default function Assigned() {
             if (adminId) {
                 try {
                     setLoading(true);
-                       const { data } = await axios.get(`/api/queries/assignedreq/${adminId}?autoclosed=open`);
+                    const { data } = await axios.get(`/api/queries/assignedreq/${adminId}?autoclosed=open`);
                     setQueries(data.fetch);
                 } catch (error) {
                     console.error('Error fetching query data:', error);
@@ -211,7 +211,15 @@ export default function Assigned() {
         setSelectedBranch(prev => (prev === branchName ? 'All' : branchName));
     };
 
-    const sortedQueries = filteredQueries.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+     // Sort: Pending first, then by deadline
+    const sortedQueries = filteredQueries.sort((a, b) => {
+        // Pending (assignedTostatus = true) comes first
+        if (a.assignedTostatus && !b.assignedTostatus) return -1;
+        if (!a.assignedTostatus && b.assignedTostatus) return 1;
+
+        // If both have the same status, sort by deadline (earliest first)
+        return new Date(a.deadline) - new Date(b.deadline);
+    });
 
     // Pagination Logic
     const indexOfLastQuery = currentPage * itemsPerPage;
@@ -333,7 +341,16 @@ export default function Assigned() {
 
                                         ) : currentQueries.length > 0 ? (
                                             currentQueries
-                                                .sort((a, b) => new Date(a.deadline) - new Date(b.deadline)) // Sort by deadline
+                                                .sort((a, b) => {
+                                                    // Pending first
+                                                    if (a.assignedTostatus !== b.assignedTostatus) {
+                                                        return a.assignedTostatus ? -1 : 1;
+                                                    }
+
+                                                    // If both are same (pending or accepted), sort by deadline
+                                                    return new Date(a.deadline) - new Date(b.deadline);
+                                                })
+
                                                 .map((query, index) => {
 
                                                     const deadline = new Date(query.deadline);

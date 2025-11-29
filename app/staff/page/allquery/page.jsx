@@ -801,7 +801,9 @@ export default function AllQuery() {
                         className="px-4 py-2 text-[12px]"
                       >
                         <div className="flex items-center gap-2 whitespace-nowrap">
-                          <span>{querie.lastgrade}</span>
+                           {querie.lastgrade !== "H" && (
+                            <span>{querie.lastgrade}</span>
+                          )}
 
                           {querie.lastgrade === "H" && (
                             <span >

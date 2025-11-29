@@ -114,18 +114,7 @@ export default function Header() {
                             <div className='flex items-center justify-end gap-1 lg:gap-1'>
 
                                 <div className='sm:block hidden'><Smallbtn icon={Settings} href="/main/page/profile" /></div>
-                                <div onClick={toggleNotification}>
-                                    <Smallbtn icon={Bell} href="javascript:void(0)" />
-                                </div>
-                                {isNotificationOpen && (
-                                    <div className="absolute top-16 right-4 w-[300px] bg-white rounded-md shadow-sm  border p-4 z-50 h-[70vh] overflow-y-auto">
-                                        <h4 className="text-lg font-semibold mb-2">Notifications</h4>
-                                        <ul className="space-y-2">
-                                            <li className="text-gray-700">No new notifications</li>
-                                            {/* You can dynamically add notification items here */}
-                                        </ul>
-                                    </div>
-                                )}
+                              
                                 <div className='sm:block hidden'>
                                     <Link href="/main/page/addquery">
                                         <Btn1 title="New Query" />
