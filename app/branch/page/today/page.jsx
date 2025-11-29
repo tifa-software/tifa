@@ -95,21 +95,34 @@ export default function AllQuery() {
 
     if (session?.user?.email) fetchAdminData();
   }, [session]);
+ 
   useEffect(() => {
-    const fetchuserData = async () => {
+    if (!session || !session.user) return; // wait for session to load
+    if (!adminData) return; // wait for adminbranch
+
+    const fetchUserData = async () => {
+      setAdminLoading(true);
       try {
+        let response;
+
         const branch = adminData?.branch;
-        const response = await axios.get(`/api/admin/fetchall-bybranch/${branch}`);
+
+        if (session.user.franchisestaff === "1") {
+          response = await axios.get(`/api/admin/fetchall-bybranch/${branch}`);
+        } else {
+          response = await axios.get('/api/admin/fetchall/admin');
+        }
+
         setuser(response.data.fetch);
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error("Error fetching user data:", error);
       } finally {
-        setIsLoading(false);
+        setAdminLoading(false);
       }
     };
 
-    fetchuserData();
-  }, [adminData]);
+    fetchUserData();
+  }, [adminData, session]);
   // Debounce search term
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -537,7 +550,7 @@ export default function AllQuery() {
             className="px-2 py-1 border"
           >
             <option value="">All Grades</option>
-             <option value="H">Important</option>
+            <option value="H">Important</option>
             <option value="A">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
@@ -785,21 +798,21 @@ export default function AllQuery() {
                         {querie?.studentContact?.phoneNumber}
                       </td>
 
-                     
-                                           <td
-                                             onClick={() => handleRowClick(querie._id)}
-                                             className="px-4 py-2 text-[12px]"
-                                           >
-                                             <div className="flex items-center gap-2 whitespace-nowrap">
-                                               <span>{querie.lastgrade}</span>
-                     
-                                               {querie.lastgrade === "H" && (
-                                                 <span >
-                                                   <Image src="/image/images.jpeg" width={64.4} height={38.7} />
-                                                 </span>
-                                               )}
-                                             </div>
-                                           </td>
+
+                      <td
+                        onClick={() => handleRowClick(querie._id)}
+                        className="px-4 py-2 text-[12px]"
+                      >
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <span>{querie.lastgrade}</span>
+
+                          {querie.lastgrade === "H" && (
+                            <span >
+                              <Image src="/image/images.jpeg" width={64.4} height={38.7} />
+                            </span>
+                          )}
+                        </div>
+                      </td>
 
                       <td onClick={() => handleRowClick(querie._id)} className="px-4 py-2 text-[12px]">
                         {matchedassignedsenderUser}

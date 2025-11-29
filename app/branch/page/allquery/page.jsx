@@ -78,22 +78,37 @@ export default function AllQuery() {
   const sentinelRef = useRef(null);
 
   const handleRowClick = (id) => router.push(`/branch/page/allquery/${id}`);
+
   const toggleFilterPopup = () => setIsFilterOpen((v) => !v);
+  
   useEffect(() => {
-    const fetchuserData = async () => {
+    if (!session || !session.user) return; // wait for session to load
+    if (!adminData) return; // wait for adminbranch
+
+    const fetchUserData = async () => {
+      setAdminLoading(true);
       try {
+        let response;
+
         const branch = adminData?.branch;
-        const response = await axios.get(`/api/admin/fetchall-bybranch/${branch}`);
+
+        if (session.user.franchisestaff === "1") {
+          response = await axios.get(`/api/admin/fetchall-bybranch/${branch}`);
+        } else {
+          response = await axios.get('/api/admin/fetchall/admin');
+        }
+
         setuser(response.data.fetch);
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error("Error fetching user data:", error);
       } finally {
-        setIsLoading(false);
+        setAdminLoading(false);
       }
     };
 
-    fetchuserData();
-  }, [adminData]);
+    fetchUserData();
+  }, [adminData, session]);
+
   // Fetch admin data
   useEffect(() => {
     const fetchAdminData = async () => {

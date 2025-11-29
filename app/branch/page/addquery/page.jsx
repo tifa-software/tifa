@@ -193,20 +193,33 @@ export default function Page() {
         fetchBranchData();
     }, []);
 
+   
     useEffect(() => {
-        const fetchuserData = async () => {
+        if (!session || !session.user) return; // wait for session to load
+        if (!adminbranch) return; // wait for adminbranch
+
+        const fetchUserData = async () => {
+            setLoading(true);
             try {
-                const response = await axios.get('/api/admin/fetchall/admin');
+                let response;
+
+
+                if (session.user.franchisestaff === "1") {
+                    response = await axios.get(`/api/admin/fetchall-bybranch/${adminbranch}`);
+                } else {
+                    response = await axios.get('/api/admin/fetchall/admin');
+                }
+
                 setuser(response.data.fetch);
             } catch (error) {
-                console.error('Error fetching user data:', error);
+                console.error("Error fetching user data:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchuserData();
-    }, []);
+        fetchUserData();
+    }, [adminbranch, session]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
