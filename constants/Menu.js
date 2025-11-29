@@ -51,8 +51,14 @@ export const Menulist = [
         title: "Franchise",
         icon: Phone,
         submenu: [
-            { name: "Franchise Branch",icon: Gauge, href: "/main/page/franchise" },
-            { name: "Franchise Staff",icon: Gauge, href: "/main/page/franchisestaff" },
+            { name: "Franchise Branch", icon: Gauge, href: "/main/page/franchise" },
+            { name: "Franchise Staff", icon: Gauge, href: "/main/page/franchisestaff" },
+
+            { name: "Franchise All Query", icon: Gauge, href: "/main/page/fran/allquery" },
+            { name: "Franchise Today", icon: Gauge, href: "/main/page/fran/today" },
+            { name: "Franchise Important", icon: Gauge, href: "/main/page/fran/important" },
+            { name: "Franchise Trash", icon: Gauge, href: "/main/page/fran/trash" },
+            { name: "Franchise Report", icon: Gauge, href: "/main/page/fran/report" },
         ],
     }
 ];

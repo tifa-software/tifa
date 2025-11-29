@@ -74,7 +74,7 @@ export const GET = async (request, context) => {
   const gradeFilter = searchParams.get("grade") || ""; // A, B, C
   const branchFilter = searchParams.get("branch") || ""; // branch name
   const searchTerm = searchParams.get("search") || ""; // search term
-
+  const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   try {
     // Build search query
     const baseQuery = {
@@ -82,13 +82,17 @@ export const GET = async (request, context) => {
       addmission: false,
       demo: false,
       ...(gradeFilter ? { lastgrade: gradeFilter } : {}),
-       branch: { $not: /\(Franchise\)$/i },
-
-  // If user selects a specific branch, apply that exactly
-  ...(branchFilter
-    ? { branch: branchFilter }
-    : {}),
     };
+
+    // If user selected a branch, match that exact stored string (case-insensitive)
+    if (branchFilter) {
+      const safe = escapeRegex(branchFilter);
+      baseQuery.branch = { $regex: `^${safe}$`, $options: "i" };
+    } else {
+      // No branchFilter => include any branch that ends with (Franchise)
+      // This matches: "ashok-(Franchise)", "Ashok (Franchise)", "Kota(Franchise)", etc.
+      baseQuery.branch = { $regex: /\(Franchise\)$/, $options: "i" };
+    }
 
     // Add search conditions if search term exists
     if (searchTerm) {
@@ -405,8 +409,8 @@ export const GET = async (request, context) => {
 
     const [aggregationResult, branches, admins] = await Promise.all([
       QueryModel.aggregate(pipeline),
-      BranchModel.find({ defaultdata: "branch" }).select("branch_name").lean(),
-      AdminModel.find({ defaultdata: "admin" }).select("name _id").lean(),
+      BranchModel.find({ defaultdata: "branch", franchise: "1" }).select("branch_name").lean(),
+      AdminModel.find({ defaultdata: "admin", franchisestaff: "1" }).select("name _id").lean(),
     ]);
 
     const { data = [], total = 0 } = aggregationResult?.[0] || {};
