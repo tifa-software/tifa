@@ -5,6 +5,10 @@ const AdminSchema = new Schema(
     {
         name: { type: String, required: true },
         mobile: { type: Number, required: true },
+        dob: {
+            type: Date,
+            required: false,
+        },
         email: { type: String, required: true },
         password: { type: String, required: true },
         branch: { type: String, required: true },

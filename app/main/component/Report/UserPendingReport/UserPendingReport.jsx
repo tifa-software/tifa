@@ -233,6 +233,32 @@ export default function UserPendingReport() {
 
                           </tr>
                         ))}
+                        {(() => {
+                          const totalToday = groupedByBranch[branch].reduce(
+                            (sum, t) => sum + (t.todayQueries?.length || 0),
+                            0
+                          );
+
+                          const totalPast = groupedByBranch[branch].reduce(
+                            (sum, t) => sum + (t.pastDueQueries?.length || 0),
+                            0
+                          );
+
+                          return (
+                            <tr className="bg-gray-200 font-bold">
+                              <td className="px-6 py-4 text-lg">Total</td>
+                              <td></td>
+
+                              <td className="px-6 py-4 text-center text-blue-700">
+                                {totalToday}
+                              </td>
+
+                              <td className="px-6 py-4 text-center text-red-700">
+                                {totalPast}
+                              </td>
+                            </tr>
+                          );
+                        })()}
                       </tbody>
 
                     </table>

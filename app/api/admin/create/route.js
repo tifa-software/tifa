@@ -8,7 +8,7 @@ export async function POST(req) {
     await dbConnect();
 
     try {
-        const { name, email, mobile, password, branch, usertype, franchisestaff } = await req.json();
+        const { name, email, mobile, password, branch, usertype, franchisestaff, dob } = await req.json();
 
 
         const alreadyUser = await AdminModel.findOne({ email });
@@ -46,7 +46,8 @@ export async function POST(req) {
             password: hashedPassword,
             branch,
             usertype,
-            franchisestaff
+            franchisestaff,
+            dob
         });
 
         return Response.json({

@@ -16,7 +16,8 @@ export default function Page() {
         password: '',
         branch: '',
         usertype: '',
-        franchisestaff: '1'
+        franchisestaff: '1',
+        dob: ''
     });
     const [loading, setLoading] = useState(false);
     const [branchLoading, setBranchLoading] = useState(true);
@@ -151,6 +152,23 @@ export default function Page() {
                             />
                         </div>
                         <input type="hidden" name="franchisestaff" value="1" />
+                        {/* DOB FIELD */}
+                        <div className="relative">
+                            <label htmlFor="dob" className="px-2 absolute h-full flex items-center text-green-500">
+                                🎂
+                            </label>
+                            <input
+                                type="date"
+                                id="dob"
+                                name="dob"
+                                value={formData.dob}
+                                onChange={handleInputChange}
+                                ref={(el) => (inputRefs.current[3] = el)}
+                                onKeyDown={(e) => handleKeyDown(e, 3)}
+                                className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
+                                required
+                            />
+                        </div>
 
                         <div className='relative'>
                             <Input

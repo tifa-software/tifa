@@ -284,16 +284,6 @@ export default function Assigned() {
               <p className="text-3xl font-extrabold text-red-500 mt-2">{data.totalPending}</p>
             </div>
 
-            <div className="bg-white shadow-sm hover:shadow-md transition rounded-xl p-6 border border-gray-100">
-              <h3 className="text-gray-500 text-sm">Enrolled</h3>
-              <p className="text-3xl font-extrabold text-purple-600 mt-2">{data.totalEnroll}</p>
-            </div>
-
-            <div className="bg-white shadow-sm hover:shadow-md transition rounded-xl p-6 border border-gray-100">
-              <h3 className="text-gray-500 text-sm">Total All Queries</h3>
-              <p className="text-3xl font-extrabold text-gray-800 mt-2">{data.totalAllQueries}</p>
-            </div>
-
           </div>
         </div>
 
