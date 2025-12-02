@@ -232,12 +232,11 @@ export const GET = async (request) => {
             { $match: mongoFilters },
             {
                 $group: {
-                    _id: { userid: "$userid", branch: "$branch" },
+                    _id: { userid: "$userid", courseInterest: "$courseInterest", branch: "$branch" },
                     count: { $sum: 1 },
-                    queries: { $push: "$_id" }
+                    queries: { $push: "$_id" } // collect IDs
                 }
             }
-
         ]);
 
         // 2️⃣ Fetch FULL query details for ALL needed IDs in ONE request
@@ -250,9 +249,11 @@ export const GET = async (request) => {
                 userid: 1,
                 referenceid: 1,
                 suboption: 1,
+                branch: 1,
                 demo: 1,
                 studentName: 1,
                 gender: 1,
+                courseInterest: 1,
                 category: 1,
                 studentContact: 1,
             }
@@ -273,18 +274,43 @@ export const GET = async (request) => {
             const courseId = _id.courseInterest?.toString() || null;
 
             const staffName = adminMap[staffId] || "Not Assigned";
-
-          
-            const branch = _id.branch || "Not_Provided";
+            const courseName = courseMap[courseId]?.name || "Not_Provided";
 
             if (!userCourseCounts[staffName]) userCourseCounts[staffName] = {};
-            if (!userCourseCounts[staffName][branch]) userCourseCounts[staffName][branch] = {};
+            if (!userCourseCounts[staffName][courseName]) userCourseCounts[staffName][courseName] = {};
 
-            userCourseCounts[staffName][branch] = {
+            userCourseCounts[staffName][courseName] = {
                 count,
-                queries: queries.map(id => queryMap[id.toString()])
+                queries: queries.map(id => queryMap[id.toString()]) // FULL documents 🎯
             };
+        });
+        // 🔥 New: Group Course → Branch
+        const courseBranchCounts = {};
 
+        countsAgg.forEach(({ _id, queries }) => {
+            queries.forEach(queryId => {
+                const q = queryMap[queryId.toString()];
+                if (!q) return;
+
+                const courseId = q.courseInterest?.toString() || null;
+                const courseName = courseMap[courseId]?.name || "Not_Provided";
+
+                const branch = q.branch || "Not_Provided";
+
+                if (!courseBranchCounts[courseName]) {
+                    courseBranchCounts[courseName] = {};
+                }
+
+                if (!courseBranchCounts[courseName][branch]) {
+                    courseBranchCounts[courseName][branch] = {
+                        count: 0,
+                        queries: []
+                    };
+                }
+
+                courseBranchCounts[courseName][branch].count += 1;
+                courseBranchCounts[courseName][branch].queries.push(q);
+            });
         });
 
 
@@ -295,6 +321,7 @@ export const GET = async (request) => {
                 success: true,
                 fetch: formatted,
                 userCourseCounts,
+                courseBranchCounts,
                 pagination: {
                     page,
                     limit,
@@ -318,4 +345,4 @@ export const GET = async (request) => {
             { status: 500 }
         );
     }
-};
+};  
