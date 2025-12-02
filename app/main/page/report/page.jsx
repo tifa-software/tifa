@@ -13,6 +13,7 @@ import Staff from '../../component/Report/Staff/Staff';
 import LeadCount from '../../component/Report/LeadCount/LeadCount';
 import StaffReport from '../../component/Report/StaffReport/StaffReport';
 import UserPendingReport from '../../component/Report/UserPendingReport/UserPendingReport';
+import AdmissionBranchxlms from '../../component/Report/AdmissionBranchxlms/AdmissionBranchxlms';
 export default function BranchReportPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -134,7 +135,7 @@ export default function BranchReportPage() {
                             className="text-[#29234b] "
                             onClick={() => handleOpenModal(<Xlms />)}
                         >
-                            Visit XL Report
+                            Visit Counsellor Report
                         </button>
                     </div>
 
@@ -143,7 +144,15 @@ export default function BranchReportPage() {
                             className="text-[#29234b] "
                             onClick={() => handleOpenModal(<Admissionxlms />)}
                         >
-                            Addmission XL Report
+                            Addmission Counsellor  Report
+                        </button>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<AdmissionBranchxlms />)}
+                        >
+                            Addmission Branch  Report
                         </button>
                     </div>
                 </div>

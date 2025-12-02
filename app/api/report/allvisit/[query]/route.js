@@ -395,18 +395,19 @@ export const GET = async (request) => {
 
     // Fetch all matching queries (no skip/limit) but only fields required for counting
     // NOTE: queryFilter already includes _id: { $in: stageSixQueryIds }
-   const allMatchingQueries = await QueryModel.find(
-  { ...queryFilter },
-  { 
-    _id: 1,
-    userid: 1,
-    courseInterest: 1,
-    referenceid: 1,
-    suboption: 1,
-    studentContact: 1,
-    studentName: 1
-  }
-);
+    const allMatchingQueries = await QueryModel.find(
+      { ...queryFilter },
+      {
+        _id: 1,
+        userid: 1,
+        branch: 1,
+        courseInterest: 1,
+        referenceid: 1,
+        suboption: 1,
+        studentContact: 1,
+        studentName: 1
+      }
+    );
 
 
     // Filter only valid courseInterest ObjectIds for querying CourseModel
@@ -448,34 +449,33 @@ export const GET = async (request) => {
     }
 
     // Build the userCourseCounts object
-    const userCourseCounts = {};
+    const userBranchCounts = {};
 
     for (const q of allMatchingQueries) {
       const staffName = adminMap[q.userid?.toString()] || "Unassigned";
 
-      const ci = q.courseInterest ? q.courseInterest.toString() : null;
-      const courseName = ci && allCourseMap[ci] ? allCourseMap[ci] : (ci || "No Course");
+      const branchName = q.branch || "No Branch"; // <-- use branch instead of course
 
-      if (!userCourseCounts[staffName]) {
-        userCourseCounts[staffName] = {};
+      if (!userBranchCounts[staffName]) {
+        userBranchCounts[staffName] = {};
       }
 
-      if (!userCourseCounts[staffName][courseName]) {
-        userCourseCounts[staffName][courseName] = {
+      if (!userBranchCounts[staffName][branchName]) {
+        userBranchCounts[staffName][branchName] = {
           count: 0,
           queries: []
         };
       }
 
-      userCourseCounts[staffName][courseName].count++;
+      userBranchCounts[staffName][branchName].count++;
 
       // Push the full query info you want
-      userCourseCounts[staffName][courseName].queries.push({
+      userBranchCounts[staffName][branchName].queries.push({
         _id: q._id,
         userid: q.userid,
         referenceid: q.referenceid,
         suboption: q.suboption,
-        studentName:q.studentName,
+        studentName: q.studentName,
         studentContact: q.studentContact,
       });
     }
@@ -496,7 +496,7 @@ export const GET = async (request) => {
           count: c.count
         }))
       })),
-      userCourseCounts, // ⭐ NEW TOTAL COUNTS (NO PAGINATION)
+      userBranchCounts, // ⭐ NEW TOTAL COUNTS (NO PAGINATION)
       pagination: {
         total: totalQueries,
         page,

@@ -232,11 +232,12 @@ export const GET = async (request) => {
             { $match: mongoFilters },
             {
                 $group: {
-                    _id: { userid: "$userid", courseInterest: "$courseInterest" },
+                    _id: { userid: "$userid", branch: "$branch" },
                     count: { $sum: 1 },
-                    queries: { $push: "$_id" } // collect IDs
+                    queries: { $push: "$_id" }
                 }
             }
+
         ]);
 
         // 2️⃣ Fetch FULL query details for ALL needed IDs in ONE request
@@ -272,15 +273,18 @@ export const GET = async (request) => {
             const courseId = _id.courseInterest?.toString() || null;
 
             const staffName = adminMap[staffId] || "Not Assigned";
-            const courseName = courseMap[courseId]?.name || "Not_Provided";
+
+          
+            const branch = _id.branch || "Not_Provided";
 
             if (!userCourseCounts[staffName]) userCourseCounts[staffName] = {};
-            if (!userCourseCounts[staffName][courseName]) userCourseCounts[staffName][courseName] = {};
+            if (!userCourseCounts[staffName][branch]) userCourseCounts[staffName][branch] = {};
 
-            userCourseCounts[staffName][courseName] = {
+            userCourseCounts[staffName][branch] = {
                 count,
-                queries: queries.map(id => queryMap[id.toString()]) // FULL documents 🎯
+                queries: queries.map(id => queryMap[id.toString()])
             };
+
         });
 
 

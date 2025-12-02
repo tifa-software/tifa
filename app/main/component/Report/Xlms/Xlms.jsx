@@ -16,7 +16,7 @@ export default function Admissionxlms() {
       const response = await axios.get("/api/report/allvisit/query", {
         params: { fromDate, toDate },
       });
-      setAllquery(response.data.userCourseCounts || {});
+      setAllquery(response.data.userBranchCounts || {});
     } catch (error) {
       console.error("Error fetching filtered data:", error);
     } finally {
