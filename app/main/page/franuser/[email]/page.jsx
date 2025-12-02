@@ -84,6 +84,8 @@ export default function AdminData({ params }) {
         branch: updatedData.branch,
         usertype: updatedData.usertype,
         status: updatedData.status,
+        dob: updatedData.dob,
+
       };
 
 
@@ -122,7 +124,7 @@ export default function AdminData({ params }) {
 
   const handledelete = async () => {
     const isConfirmed = window.confirm("Are you sure you want to delete this User?");
-    
+
     if (isConfirmed) {
       try {
         await axios.delete(`/api/admin/delete/${user}`);
@@ -134,7 +136,7 @@ export default function AdminData({ params }) {
       }
     }
   };
-  
+
 
   if (loading) {
     return (
@@ -225,7 +227,63 @@ export default function AdminData({ params }) {
                 </div>
               </div>
 
+              {/* DOB FIELD */}
+              <div className="flex justify-between items-center border-b py-4">
+                <div>
+                  <h2 className="font-medium flex gap-x-2 items-center">Date of Birth</h2>
 
+                  {editField === "dob" ? (
+                    <div className="relative">
+                      <label
+                        htmlFor="dob"
+                        className="px-2 absolute h-full flex items-center text-green-500"
+                      >
+                        🎂
+                      </label>
+
+                      <input
+                        type="date"
+                        id="dob"
+                        name="dob"
+                        value={updatedData.dob || adminData.dob || ""}
+                        onChange={(e) => handleInputChange(e, "dob")}
+                        className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-gray-600 text-sm flex items-center gap-2">
+                      🎂 {adminData.dob ? new Date(adminData.dob).toLocaleDateString("en-GB") : "Not Set"}
+                    </p>
+
+                  )}
+                </div>
+
+                <div>
+                  {editField === "dob" ? (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSaveClick}
+                        className="bg-[#6cb049] text-white px-4 py-1 rounded-md"
+                      >
+                        <Check />
+                      </button>
+                      <button
+                        onClick={handleCancelClick}
+                        className="bg-red-500 text-white px-4 py-1 rounded-md"
+                      >
+                        <X />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleEditClick("dob")}
+                      className="border border-green-100 px-5 py-1 rounded-md hover:bg-green-50 duration-150 text-[#6cb049]"
+                    >
+                      <Pencil />
+                    </button>
+                  )}
+                </div>
+              </div>
               <div className="flex justify-between items-center border-b py-4">
                 <div>
                   <span className="font-medium flex gap-x-2 items-center">
@@ -238,30 +296,9 @@ export default function AdminData({ params }) {
               </div>
 
               <div className="flex justify-between items-center border-b py-4">
-               <div>
-               <h2 className="font-medium flex gap-x-2 items-center">Branch</h2>
-                {editField === "branch" ? (
-                  <div className="relative">
-                    <label htmlFor="branch" className="px-2 absolute h-full flex items-center text-green-500">
-                      <Shield size={15} />
-                    </label>
-                    <select
-                      name="branch"
-                      id="branch"
-                      value={updatedData.branch || adminData.branch}
-                      onChange={(e) => handleInputChange(e, "branch")}
-                      className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
-                      required
-                    >
-                      {branches.map((branch) => (
-                        <option key={branch._id} value={branch.branch_name}>
-                          {branch.branch_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ) : (
-                  <p className="text-gray-600 text-sm flex gap-x-2 items-center">
+                <div>
+                  <h2 className="font-medium flex gap-x-2 items-center">Branch</h2>
+                  {editField === "branch" ? (
                     <div className="relative">
                       <label htmlFor="branch" className="px-2 absolute h-full flex items-center text-green-500">
                         <Shield size={15} />
@@ -269,7 +306,6 @@ export default function AdminData({ params }) {
                       <select
                         name="branch"
                         id="branch"
-                        disabled
                         value={updatedData.branch || adminData.branch}
                         onChange={(e) => handleInputChange(e, "branch")}
                         className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
@@ -282,9 +318,31 @@ export default function AdminData({ params }) {
                         ))}
                       </select>
                     </div>
-                  </p>
-                )}
-               </div>
+                  ) : (
+                    <p className="text-gray-600 text-sm flex gap-x-2 items-center">
+                      <div className="relative">
+                        <label htmlFor="branch" className="px-2 absolute h-full flex items-center text-green-500">
+                          <Shield size={15} />
+                        </label>
+                        <select
+                          name="branch"
+                          id="branch"
+                          disabled
+                          value={updatedData.branch || adminData.branch}
+                          onChange={(e) => handleInputChange(e, "branch")}
+                          className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
+                          required
+                        >
+                          {branches.map((branch) => (
+                            <option key={branch._id} value={branch.branch_name}>
+                              {branch.branch_name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </p>
+                  )}
+                </div>
 
 
                 <div>
@@ -314,47 +372,47 @@ export default function AdminData({ params }) {
                 </div>
               </div>
               <div className="flex justify-between items-center border-b py-4">
-               <div>
-               <h2 className="font-medium flex gap-x-2 items-center">User Roll</h2>
-                {editField === "usertype" ? (
-                  <div className="relative">
-                    <label htmlFor="branch" className="px-2 absolute h-full flex items-center text-green-500">
-                      <Shield size={15} />
-                    </label>
-                    <select
-                      name="usertype"
-                      id="usertype"
-                      value={updatedData.usertype || adminData.usertype}
-                      onChange={(e) => handleInputChange(e, "usertype")}
-                      className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
-                      required
-                    >
-                      <option value="0">Staff</option>
-                      <option value="1">Admin</option>
-                    </select>
-                  </div>
-                ) : (
-                  <p className="text-gray-600 text-sm flex gap-x-2 items-center">
+                <div>
+                  <h2 className="font-medium flex gap-x-2 items-center">User Roll</h2>
+                  {editField === "usertype" ? (
                     <div className="relative">
-                      <label htmlFor="usertype" className="px-2 absolute h-full flex items-center text-green-500">
+                      <label htmlFor="branch" className="px-2 absolute h-full flex items-center text-green-500">
                         <Shield size={15} />
                       </label>
                       <select
                         name="usertype"
                         id="usertype"
-                        disabled
                         value={updatedData.usertype || adminData.usertype}
                         onChange={(e) => handleInputChange(e, "usertype")}
                         className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                         required
                       >
-                         <option value="0">Staff</option>
-                         <option value="1">Admin</option>
+                        <option value="0">Staff</option>
+                        <option value="1">Admin</option>
                       </select>
                     </div>
-                  </p>
-                )}
-               </div>
+                  ) : (
+                    <p className="text-gray-600 text-sm flex gap-x-2 items-center">
+                      <div className="relative">
+                        <label htmlFor="usertype" className="px-2 absolute h-full flex items-center text-green-500">
+                          <Shield size={15} />
+                        </label>
+                        <select
+                          name="usertype"
+                          id="usertype"
+                          disabled
+                          value={updatedData.usertype || adminData.usertype}
+                          onChange={(e) => handleInputChange(e, "usertype")}
+                          className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
+                          required
+                        >
+                          <option value="0">Staff</option>
+                          <option value="1">Admin</option>
+                        </select>
+                      </div>
+                    </p>
+                  )}
+                </div>
 
 
                 <div>
@@ -399,8 +457,8 @@ export default function AdminData({ params }) {
                         className="block w-full px-7 py-3 text-gray-500 bg-white border border-gray-200 rounded-md appearance-none placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
                         required
                       >
-                           <option value="true">🟢 Active</option>
-                           <option value="false">🔴 Deactive</option>
+                        <option value="true">🟢 Active</option>
+                        <option value="false">🔴 Deactive</option>
                       </select>
                     </div>
                   ) : (
@@ -550,13 +608,13 @@ export default function AdminData({ params }) {
                 )}
               </div>
               <div className="mt-2">
-                    <button
-                      onClick={handledelete}
-                      className="py-2 px-4 bg-red-600 text-white rounded"
-                    >
-                      Delete This User
-                    </button>
-                  </div>
+                <button
+                  onClick={handledelete}
+                  className="py-2 px-4 bg-red-600 text-white rounded"
+                >
+                  Delete This User
+                </button>
+              </div>
             </div>
           )}
         </div>
