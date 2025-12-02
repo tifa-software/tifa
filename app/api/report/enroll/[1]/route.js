@@ -225,12 +225,40 @@ export const GET = async (request) => {
                 admissionupdatedate: admissionEntry?.actionDate || null,
             };
         });
+        // Compute accurate userCourseCounts across ALL matching documents (not just the current page)
+        const countsAgg = await QueryModel.aggregate([
+            { $match: mongoFilters },
+            {
+                $group: {
+                    _id: { userid: "$userid", courseInterest: "$courseInterest" },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const userCourseCounts = {};
+        countsAgg.forEach(({ _id, count }) => {
+            const staffId = _id.userid ? _id.userid.toString() : null;
+            const courseId = _id.courseInterest ? _id.courseInterest.toString() : null;
+
+            // Resolve names using the maps you already created
+            const staffName = staffId && adminMap[staffId] ? adminMap[staffId] : "Not Assigned";
+            const courseName =
+                courseId && courseMap[courseId] && courseMap[courseId].name
+                    ? courseMap[courseId].name
+                    : "Not_Provided";
+
+            if (!userCourseCounts[staffName]) userCourseCounts[staffName] = {};
+            userCourseCounts[staffName][courseName] =
+                (userCourseCounts[staffName][courseName] || 0) + count;
+        });
 
         return Response.json(
             {
                 message: "Admission data fetched successfully",
                 success: true,
                 fetch: formatted,
+                userCourseCounts,
                 pagination: {
                     page,
                     limit,

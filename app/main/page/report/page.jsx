@@ -6,6 +6,7 @@ import MBSWise from '../../component/Report/MBSWise/MBSWise';
 import LeadTransfer from '../../component/Report/LeadTransfer/LeadTransfer';
 import Demo from '../../component/Report/Demo/Demo';
 import Visit from '../../component/Report/Visit/Visit';
+import Admissionxlms from '../../component/Report/Admissionxlms/Admissionxlms';
 import Addmission from '../../component/Addmission/Addmission';
 import Lead from '../../component/Report/Lead/Lead';
 import Staff from '../../component/Report/Staff/Staff';
@@ -100,7 +101,7 @@ export default function BranchReportPage() {
                         </button>
                     </div>
 
-                  
+
                     <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
                         <button
                             className="text-[#29234b] "
@@ -119,7 +120,7 @@ export default function BranchReportPage() {
                         </button>
                     </div>
 
-                      <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
                         <button
                             className="text-[#29234b] "
                             onClick={() => handleOpenModal(<UserPendingReport />)}
@@ -134,6 +135,15 @@ export default function BranchReportPage() {
                             onClick={() => handleOpenModal(<Xlms />)}
                         >
                             Visit XL Report
+                        </button>
+                    </div>
+
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<Admissionxlms />)}
+                        >
+                            Addmission XL Report
                         </button>
                     </div>
                 </div>
