@@ -395,10 +395,19 @@ export const GET = async (request) => {
 
     // Fetch all matching queries (no skip/limit) but only fields required for counting
     // NOTE: queryFilter already includes _id: { $in: stageSixQueryIds }
-    const allMatchingQueries = await QueryModel.find(
-      { ...queryFilter },
-      { _id: 1, userid: 1, courseInterest: 1 }
-    );
+   const allMatchingQueries = await QueryModel.find(
+  { ...queryFilter },
+  { 
+    _id: 1,
+    userid: 1,
+    courseInterest: 1,
+    referenceid: 1,
+    suboption: 1,
+    studentContact: 1,
+    studentName: 1
+  }
+);
+
 
     // Filter only valid courseInterest ObjectIds for querying CourseModel
     const allCourseIds = [
@@ -444,15 +453,33 @@ export const GET = async (request) => {
     for (const q of allMatchingQueries) {
       const staffName = adminMap[q.userid?.toString()] || "Unassigned";
 
-      // If courseInterest is not a valid ObjectId, treat as "No Course" or use the raw string
       const ci = q.courseInterest ? q.courseInterest.toString() : null;
       const courseName = ci && allCourseMap[ci] ? allCourseMap[ci] : (ci || "No Course");
 
-      if (!userCourseCounts[staffName]) userCourseCounts[staffName] = {};
-      if (!userCourseCounts[staffName][courseName]) userCourseCounts[staffName][courseName] = 0;
+      if (!userCourseCounts[staffName]) {
+        userCourseCounts[staffName] = {};
+      }
 
-      userCourseCounts[staffName][courseName]++;
+      if (!userCourseCounts[staffName][courseName]) {
+        userCourseCounts[staffName][courseName] = {
+          count: 0,
+          queries: []
+        };
+      }
+
+      userCourseCounts[staffName][courseName].count++;
+
+      // Push the full query info you want
+      userCourseCounts[staffName][courseName].queries.push({
+        _id: q._id,
+        userid: q.userid,
+        referenceid: q.referenceid,
+        suboption: q.suboption,
+        studentName:q.studentName,
+        studentContact: q.studentContact,
+      });
     }
+
 
     // ---------------------------------------------------------
     // Final response (includes userCourseCounts - NO PAGINATION)

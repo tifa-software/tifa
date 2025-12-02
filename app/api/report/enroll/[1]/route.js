@@ -226,32 +226,64 @@ export const GET = async (request) => {
             };
         });
         // Compute accurate userCourseCounts across ALL matching documents (not just the current page)
+        // Prepare userCourseCounts object including detailed query lists
+        // 1️⃣ Group by userid + courseInterest and collect query IDs
         const countsAgg = await QueryModel.aggregate([
             { $match: mongoFilters },
             {
                 $group: {
                     _id: { userid: "$userid", courseInterest: "$courseInterest" },
-                    count: { $sum: 1 }
+                    count: { $sum: 1 },
+                    queries: { $push: "$_id" } // collect IDs
                 }
             }
         ]);
 
-        const userCourseCounts = {};
-        countsAgg.forEach(({ _id, count }) => {
-            const staffId = _id.userid ? _id.userid.toString() : null;
-            const courseId = _id.courseInterest ? _id.courseInterest.toString() : null;
+        // 2️⃣ Fetch FULL query details for ALL needed IDs in ONE request
+        const allQueryIds = countsAgg.flatMap(g => g.queries);
+        // Fetch FULL query details for ALL needed IDs but ONLY selected fields
+        const fullQueryDocs = await QueryModel.find(
+            { _id: { $in: allQueryIds } },
+            {
+                _id: 1,
+                userid: 1,
+                referenceid: 1,
+                suboption: 1,
+                demo: 1,
+                studentName: 1,
+                gender: 1,
+                category: 1,
+                studentContact: 1,
+            }
+        ).lean();
 
-            // Resolve names using the maps you already created
-            const staffName = staffId && adminMap[staffId] ? adminMap[staffId] : "Not Assigned";
-            const courseName =
-                courseId && courseMap[courseId] && courseMap[courseId].name
-                    ? courseMap[courseId].name
-                    : "Not_Provided";
+
+        // Convert to easy lookup map
+        const queryMap = fullQueryDocs.reduce((acc, doc) => {
+            acc[doc._id.toString()] = doc;
+            return acc;
+        }, {});
+
+        // 3️⃣ Build userCourseCounts with full query details
+        const userCourseCounts = {};
+
+        countsAgg.forEach(({ _id, count, queries }) => {
+            const staffId = _id.userid?.toString() || null;
+            const courseId = _id.courseInterest?.toString() || null;
+
+            const staffName = adminMap[staffId] || "Not Assigned";
+            const courseName = courseMap[courseId]?.name || "Not_Provided";
 
             if (!userCourseCounts[staffName]) userCourseCounts[staffName] = {};
-            userCourseCounts[staffName][courseName] =
-                (userCourseCounts[staffName][courseName] || 0) + count;
+            if (!userCourseCounts[staffName][courseName]) userCourseCounts[staffName][courseName] = {};
+
+            userCourseCounts[staffName][courseName] = {
+                count,
+                queries: queries.map(id => queryMap[id.toString()]) // FULL documents 🎯
+            };
         });
+
+
 
         return Response.json(
             {
