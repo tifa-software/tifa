@@ -1,6 +1,6 @@
 "use client"
 import React, { useState } from 'react';
-
+import Xlms from '../../component/Report/Xlms/Xlms';
 import QueryReport from '../../component/Report/QueryReport/QueryReport';
 import MBSWise from '../../component/Report/MBSWise/MBSWise';
 import LeadTransfer from '../../component/Report/LeadTransfer/LeadTransfer';
@@ -128,14 +128,14 @@ export default function BranchReportPage() {
                         </button>
                     </div>
 
-                    {/* <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
                         <button
                             className="text-[#29234b] "
-                            onClick={() => handleOpenModal(<MBSWise />)}
+                            onClick={() => handleOpenModal(<Xlms />)}
                         >
-                            Lead Update Report
+                            Visit XL Report
                         </button>
-                    </div> */}
+                    </div>
                 </div>
             </div>
 
