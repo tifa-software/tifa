@@ -21,7 +21,7 @@ export default function QueryReport() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [admission, setAdmission] = useState("");
-  const [reason, setReason] = useState([]);
+  const [reson, setReson] = useState("");
   const [grade, setGrade] = useState("");
   const [location, setLocation] = useState("");
   const [city, setCity] = useState("");
@@ -47,6 +47,8 @@ export default function QueryReport() {
     { value: "no_visit_branch_yet", label: "No Visit Branch Yet" }
   ];
 
+  // ✅ State to store selected reasons
+  const [reason, setReason] = useState([]);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -95,6 +97,11 @@ export default function QueryReport() {
         setBranches(branchesResponse.data.fetch);
         const referenceResponse = await axios.get("/api/reference/fetchall/reference");
         setReferenceData(referenceResponse.data.fetch);
+        const response = await axios.get("/api/report/allvisit/query");
+        const fetchedData = response.data.fetch || [];
+        setAllquery(fetchedData);
+        setTotalCount(response.data.pagination?.total ?? fetchedData.length);
+        setTotalPages(response.data.pagination?.totalPages ?? 1);
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Error fetching data");
@@ -157,6 +164,7 @@ export default function QueryReport() {
     setFromDate("");
     setToDate("");
     setAdmission("");
+    setReson("");
     setGrade("");
     setReason([]);
     setBranch("");
@@ -287,9 +295,8 @@ export default function QueryReport() {
             <button
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 1}
-              className={`px-3 py-1 rounded border ${
-                page === 1 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white text-gray-700 hover:bg-gray-50"
-              }`}
+              className={`px-3 py-1 rounded border ${page === 1 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white text-gray-700 hover:bg-gray-50"
+                }`}
             >
               Previous
             </button>
@@ -299,11 +306,10 @@ export default function QueryReport() {
             <button
               onClick={() => handlePageChange(page + 1)}
               disabled={page >= safeTotalPages}
-              className={`px-3 py-1 rounded border ${
-                page >= safeTotalPages
+              className={`px-3 py-1 rounded border ${page >= safeTotalPages
                   ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                   : "bg-white text-gray-700 hover:bg-gray-50"
-              }`}
+                }`}
             >
               Next
             </button>
@@ -423,7 +429,7 @@ export default function QueryReport() {
                     className="w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
                   >
                     <option value="">All</option>
-                     <option value="H">Important</option>
+                    <option value="H">Important</option>
                     <option value="A">A</option>
                     <option value="B">B</option>
                     <option value="C">C</option>
@@ -558,7 +564,7 @@ export default function QueryReport() {
                   >
                     <td className="px-4 py-3 text-[12px]">{startIndex + index + 1}</td>
                     <td className="px-4 py-3 text-[12px]">{data.userid}</td>
-                     <td className="px-4 py-3 text-[12px] text-blue-500">
+                    <td className="px-4 py-3 text-[12px] text-blue-500">
 
                       <button onClick={() => handleOpenModal(`${data._id}`)}>
                         {data.studentName || "N/A"}
@@ -637,7 +643,7 @@ export default function QueryReport() {
         </div >
       </div>
 
-{isModalOpen && (
+      {isModalOpen && (
         <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
           <div className="   h-screen w-screen  relative">
             <button

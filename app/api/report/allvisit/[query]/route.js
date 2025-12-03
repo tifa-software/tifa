@@ -34,7 +34,6 @@ export const GET = async (request) => {
     const toDate = searchParams.get("toDate");
     const admission = searchParams.get("admission");
     const grade = searchParams.get("grade");
-    const reason = searchParams.get("reason");
     const location = searchParams.get("location");
     const city = searchParams.get("city");
     const assignedName = searchParams.get("assignedName");
@@ -53,45 +52,7 @@ export const GET = async (request) => {
     }
 
     if (suboption) queryFilter.suboption = { $regex: suboption, $options: "i" };
-
-    // ---- SAME reason filter ----
-    if (reason) {
-      const validReasons = [
-        "Wrong Lead Looking For Job",
-        "interested_but_not_proper_response",
-        "no_connected",
-        "not_lifting",
-        "busy",
-        "not_interested",
-        "wrong_no",
-        "no_visit_branch_yet",
-      ];
-
-      const reasonArray = reason
-        .split(",")
-        .filter((r) => validReasons.includes(r));
-
-      if (reasonArray.length > 0) {
-        const matchingAuditLogs = await AuditLog.find({
-          $or: [
-            { connectedsubStatus: { $in: reasonArray } },
-            { connectionStatus: { $in: reasonArray } },
-            { onlinesubStatus: { $in: reasonArray } },
-            { oflinesubStatus: { $in: reasonArray } },
-            { ready_visit: { $in: reasonArray } },
-            { not_liftingsubStatus: { $in: reasonArray } },
-          ],
-        });
-
-        const matchingQueryIds = matchingAuditLogs.map((l) =>
-          l.queryId.toString()
-        );
-
-        if (matchingQueryIds.length > 0) {
-          queryFilter._id = { $in: matchingQueryIds };
-        }
-      }
-    }
+    
 
     // ❌ REMOVE createdAt filter because stage6 filtering must control date
     // (old code for createdAt removed)
