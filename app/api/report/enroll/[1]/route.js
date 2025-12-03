@@ -273,16 +273,26 @@ export const GET = async (request) => {
             const staffId = _id.userid?.toString() || null;
             const courseId = _id.courseInterest?.toString() || null;
 
-            const staffName = adminMap[staffId] || "Not Assigned";
-            const courseName = courseMap[courseId]?.name || "Not_Provided";
+            if (!userCourseCounts[staffId]) {
+                userCourseCounts[staffId] = {
+                    staffName: adminMap[staffId] || "Not Assigned",
+                    courses: {}
+                };
+            }
 
-            if (!userCourseCounts[staffName]) userCourseCounts[staffName] = {};
-            if (!userCourseCounts[staffName][courseName]) userCourseCounts[staffName][courseName] = {};
+            if (!userCourseCounts[staffId].courses[courseId]) {
+                userCourseCounts[staffId].courses[courseId] = {
+                    courseName: courseMap[courseId]?.name || "Not_Provided",
+                    count: 0,
+                    queries: []
+                };
+            }
 
-            userCourseCounts[staffName][courseName] = {
-                count,
-                queries: queries.map(id => queryMap[id.toString()]) // FULL documents 🎯
-            };
+            userCourseCounts[staffId].courses[courseId].count += count;
+            userCourseCounts[staffId].courses[courseId].queries.push(
+                ...queries.map(id => queryMap[id.toString()])
+            );
+
         });
         // 🔥 New: Group Course → Branch
         const courseBranchCounts = {};
