@@ -127,7 +127,7 @@ export default function UpdateQuery({ query, audit }) {
         }
 
 
-        // router.push("./")
+        router.push("./")
         // window.location.reload();
       } else {
         console.error('Error updating query:', response.statusText);

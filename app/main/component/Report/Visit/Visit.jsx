@@ -21,7 +21,7 @@ export default function QueryReport() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [admission, setAdmission] = useState("");
-  const [reson, setReson] = useState("");
+  const [reason, setReason] = useState([]);
   const [grade, setGrade] = useState("");
   const [location, setLocation] = useState("");
   const [city, setCity] = useState("");
@@ -47,8 +47,6 @@ export default function QueryReport() {
     { value: "no_visit_branch_yet", label: "No Visit Branch Yet" }
   ];
 
-  // ✅ State to store selected reasons
-  const [reason, setReason] = useState([]);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -159,7 +157,6 @@ export default function QueryReport() {
     setFromDate("");
     setToDate("");
     setAdmission("");
-    setReson("");
     setGrade("");
     setReason([]);
     setBranch("");
