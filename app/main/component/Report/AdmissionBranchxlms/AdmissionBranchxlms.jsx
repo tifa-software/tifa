@@ -229,9 +229,10 @@ export default function AdmissionBranchxlms() {
                             <thead className="bg-gray-200">
                                 <tr>
                                     <th className="border p-2">S/N</th>
+                                    <th className="border p-2">Date</th>
                                     <th className="border p-2">Staff</th>
                                     <th className="border p-2">Student</th>
-                                    <th className="border p-2">Phone</th>
+                                    <th className="border p-2">Branch</th>
                                     {/* <th className="border p-2">City</th> */}
                                     {/* <th className="border p-2">Reference</th> */}
                                     {/* <th className="border p-2">Sub Option</th> */}
@@ -242,9 +243,19 @@ export default function AdmissionBranchxlms() {
                                 {selectedData.queries.map((q, index) => (
                                     <tr key={q._id} className="hover:bg-blue-50">
                                         <td className="border p-2">{index + 1}</td>
+                                        <td className="border p-2">
+                                            {q.firstFeeDate
+                                                ? new Date(q.firstFeeDate).toLocaleDateString("en-GB", {
+                                                    day: "numeric",
+                                                    month: "short",
+                                                    year: "numeric",
+                                                }).replace(",", "")
+                                                : "-"}
+                                        </td>
+
                                         <td className="border p-2">{q.staffName}</td>
                                         <td className="border p-2">{q.studentName}</td>
-                                        <td className="border p-2">{q.studentContact?.phoneNumber}</td>
+                                        <td className="border p-2">{q.branch}</td>
                                         {/* <td className="border p-2">{q.studentContact?.city}</td> */}
                                         {/* <td className="border p-2">{q.referenceid}</td> */}
                                         {/* <td className="border p-2">{q.suboption}</td> */}

@@ -215,8 +215,10 @@ export default function Admissionxlms() {
               <thead className="bg-gray-200">
                 <tr>
                   <th className="border p-2">S/N</th>
+                  <th className="border p-2">Date</th>
                   <th className="border p-2">Staff</th>
                   <th className="border p-2">Student</th>
+                  <th className="border p-2">Branch</th>
                   <th className="border p-2">Phone</th>
                   {/* <th className="border p-2">City</th> */}
                   {/* <th className="border p-2">Reference</th> */}
@@ -228,8 +230,10 @@ export default function Admissionxlms() {
                 {selectedData.queries.map((q, index) => (
                   <tr key={q._id} className="hover:bg-blue-50">
                     <td className="border p-2">{index + 1}</td>
+                    <td className="border p-2">DATE</td>
                     <td className="border p-2">{selectedData.user}</td>
                     <td className="border p-2">{q.studentName}</td>
+                    <td className="border p-2">{selectedData.course}</td>
                     <td className="border p-2">{q.studentContact?.phoneNumber}</td>
                     {/* <td className="border p-2">{q.studentContact?.city}</td> */}
                     {/* <td className="border p-2">{q.referenceid}</td> */}

@@ -242,22 +242,45 @@ export const GET = async (request) => {
         // 2️⃣ Fetch FULL query details for ALL needed IDs in ONE request
         const allQueryIds = countsAgg.flatMap(g => g.queries);
         // Fetch FULL query details for ALL needed IDs but ONLY selected fields
-        const fullQueryDocs = await QueryModel.find(
-            { _id: { $in: allQueryIds } },
-            {
-                _id: 1,
-                userid: 1,
-                referenceid: 1,
-                suboption: 1,
-                branch: 1,
-                demo: 1,
-                studentName: 1,
-                gender: 1,
-                courseInterest: 1,
-                category: 1,
-                studentContact: 1,
+       const fullQueryDocs = await QueryModel.aggregate([
+  { $match: { _id: { $in: allQueryIds } } },
+
+  {
+    $addFields: {
+      firstFeeDate: {
+        $let: {
+          vars: {
+            sortedFees: {
+              $sortArray: {
+                input: "$fees",
+                sortBy: { transactionDate: 1 }
+              }
             }
-        ).lean();
+          },
+          in: { $arrayElemAt: ["$$sortedFees.transactionDate", 0] }
+        }
+      }
+    }
+  },
+
+  {
+    $project: {
+      _id: 1,
+      userid: 1,
+      referenceid: 1,
+      suboption: 1,
+      branch: 1,
+      demo: 1,
+      studentName: 1,
+      gender: 1,
+      courseInterest: 1,
+      category: 1,
+      studentContact: 1,
+      firstFeeDate: 1, // 👍 Now included!
+    }
+  }
+]);
+
 
 
         // Convert to easy lookup map
