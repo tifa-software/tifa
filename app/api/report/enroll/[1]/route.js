@@ -289,9 +289,19 @@ export const GET = async (request) => {
             }
 
             userCourseCounts[staffId].courses[courseId].count += count;
-            userCourseCounts[staffId].courses[courseId].queries.push(
-                ...queries.map(id => queryMap[id.toString()])
-            );
+           userCourseCounts[staffId].courses[courseId].queries.push(
+        ...queries.map(id => {
+            const q = queryMap[id.toString()];
+            if (!q) return null;
+
+            const staffName = q.userid ? adminMap[q.userid.toString()] || "Not Assigned" : "Not Assigned";
+            return {
+                ...q,
+                staffName,     // add staffName
+                userid: undefined // optional: remove raw userid
+            };
+        }).filter(Boolean)
+    );
 
         });
         // 🔥 New: Group Course → Branch
@@ -306,7 +316,7 @@ export const GET = async (request) => {
                 const courseName = courseMap[courseId]?.name || "Not_Provided";
 
                 const branch = q.branch || "Not_Provided";
-
+                const staffName = q.userid ? adminMap[q.userid.toString()] || "Not Assigned" : "Not Assigned";
                 if (!courseBranchCounts[courseName]) {
                     courseBranchCounts[courseName] = {};
                 }
@@ -319,7 +329,11 @@ export const GET = async (request) => {
                 }
 
                 courseBranchCounts[courseName][branch].count += 1;
-                courseBranchCounts[courseName][branch].queries.push(q);
+                courseBranchCounts[courseName][branch].queries.push({
+                    ...q,
+                    staffName,  // add staff name
+                    userid: undefined  // remove the raw userid if needed
+                });
             });
         });
 
