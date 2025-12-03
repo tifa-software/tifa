@@ -115,34 +115,39 @@ export default function Admissionxlms() {
       {/* Table */}
       {!loading && (
         <div className="overflow-x-auto">
-          <table className="w-full border border-gray-300 rounded-lg text-xs shadow-sm">
-            <thead className="sticky top-0 z-10">
-              <tr className="bg-green-700 text-white">
-                <th className="border p-2 w-40">Courses</th>
+          <table className="w-full text-[11px] border border-green-700 rounded-sm shadow-sm">
+            <thead className="sticky top-0 z-10 bg-green-700 text-white">
+              <tr className="text-[11px]">
+                <th className="border border-green-800 p-2 w-32 font-semibold">
+                  Courses
+                </th>
                 {Object.keys(allquery).map((user) => (
-                  <th key={user} className="border p-2 text-center">
+                  <th key={user} className="border border-green-800 p-2 text-center font-semibold">
                     {user}
                   </th>
                 ))}
-                <th className="border p-2 text-center bg-yellow-400 text-black font-bold">
+                <th className="border border-green-900 p-2 text-center font-bold bg-green-800">
                   Total
                 </th>
               </tr>
             </thead>
 
-            <tbody>
+            <tbody className="bg-white">
               {courseList.map((course, idx) => (
-                <tr key={course} className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50`}>
-                  <td className="border p-2 font-medium">{course}</td>
+                <tr key={course} className={`hover:bg-green-50 transition ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                  }`}>
+                  <td className="border border-gray-500 p-2 font-semibold text-gray-800">
+                    {course}
+                  </td>
 
                   {Object.keys(allquery).map((user) => {
                     const data = allquery[user][course];
 
                     return (
-                      <td key={user} className="border p-2 text-center">
+                      <td key={user} className="border border-gray-500 p-2 text-center">
                         {data?.count > 0 ? (
                           <button
-                            className=" underline font-semibold"
+                            className="text-green-700 underline font-bold hover:text-green-600"
                             onClick={() =>
                               setSelectedData({
                                 user,
@@ -160,22 +165,25 @@ export default function Admissionxlms() {
                     );
                   })}
 
-                  <td className="border p-2 text-center font-bold bg-blue-100">
+
+                  <td className="border border-green-300 p-2 text-center font-bold bg-green-100 text-gray-900">
                     {getCourseTotal(course)}
                   </td>
                 </tr>
               ))}
 
-              <tr className="bg-orange-200 font-bold">
-                <td className="border p-2 text-center">TOTAL</td>
+              <tr className="bg-green-200 font-bold text-gray-900">
+                <td className="border border-green-400 p-2 text-center">
+                  TOTAL
+                </td>
 
                 {Object.keys(allquery).map((user) => (
-                  <td key={user} className="border p-2 text-center">
+                  <td key={user} className="border border-green-400 p-2 text-center font-bold">
                     {userTotals[user]}
                   </td>
                 ))}
 
-                <td className="border p-2 text-center bg-yellow-300 text-black">
+                <td className="border border-green-500 p-2 text-center bg-green-300 font-extrabold">
                   {grandTotal}
                 </td>
               </tr>
@@ -216,9 +224,9 @@ export default function Admissionxlms() {
               </thead>
 
               <tbody>
-                {selectedData.queries.map((q,index) => (
+                {selectedData.queries.map((q, index) => (
                   <tr key={q._id} className="hover:bg-blue-50">
-                    <td className="border p-2">{index+1}</td>
+                    <td className="border p-2">{index + 1}</td>
                     <td className="border p-2">{q.studentName}</td>
                     <td className="border p-2">{q.studentContact?.phoneNumber}</td>
                     <td className="border p-2">{q.studentContact?.city}</td>

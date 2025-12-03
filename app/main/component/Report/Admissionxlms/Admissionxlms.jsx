@@ -126,38 +126,52 @@ export default function Admissionxlms() {
             {/* Table */}
             {!loading ? (
                 <div className="overflow-x-auto">
-                    <table className="w-full border border-gray-300 rounded-lg text-xs shadow-sm">
-                        <thead className="sticky top-0 z-10">
-                            <tr className="bg-green-700 text-white">
-                                <th className="border p-2 w-40">Courses</th>
+                    <table className="w-full text-[11px] border border-green-700 rounded-sm shadow-sm">
+                        <thead className="sticky top-0 z-10 bg-green-700 text-white">
+                            <tr className="text-[11px]">
+                                <th className="border border-green-800 p-2 w-32 font-semibold">
+                                    Courses
+                                </th>
+
                                 {staffList.map((staff) => (
-                                    <th key={staff} className="border p-2 text-center">
+                                    <th
+                                        key={staff}
+                                        className="border border-green-800 p-2 text-center font-semibold"
+                                    >
                                         {allquery[staff]?.staffName || "Unknown"}
                                     </th>
                                 ))}
-                                <th className="border p-2 text-center bg-yellow-400 text-black font-bold">
+
+                                <th className="border border-green-900 p-2 text-center font-bold bg-green-800">
                                     Total
                                 </th>
                             </tr>
                         </thead>
 
-                        <tbody>
+                        <tbody className="bg-white">
                             {courseList.map((course, idx) => (
                                 <tr
                                     key={course}
-                                    className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50`}
+                                    className={`hover:bg-green-50 transition ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                                        }`}
                                 >
-                                    <td className="border p-2 font-medium">{course}</td>
+                                    <td className="border border-gray-500 p-2 font-semibold text-gray-800">
+                                        {course}
+                                    </td>
 
                                     {staffList.map((staff) => {
-                                        const courseData = Object.values(allquery[staff].courses || {})
-                                            .find((c) => c.courseName === course);
+                                        const courseData = Object.values(allquery[staff].courses || {}).find(
+                                            (c) => c.courseName === course
+                                        );
 
                                         return (
-                                            <td key={staff} className="border p-2 text-center">
+                                            <td
+                                                key={staff}
+                                                className="border border-gray-500 p-2 text-center"
+                                            >
                                                 {courseData?.count > 0 ? (
                                                     <button
-                                                        className="underline font-semibold"
+                                                        className="text-green-700 underline font-bold hover:text-green-600"
                                                         onClick={() =>
                                                             setSelectedData({
                                                                 staffName: allquery[staff].staffName,
@@ -175,25 +189,34 @@ export default function Admissionxlms() {
                                         );
                                     })}
 
-                                    <td className="border p-2 text-center font-bold bg-blue-100">
+                                    <td className="border border-green-300 p-2 text-center font-bold bg-green-100 text-gray-900">
                                         {getCourseTotal(course)}
                                     </td>
                                 </tr>
                             ))}
 
-                            <tr className="bg-orange-200 font-bold">
-                                <td className="border p-2 text-center">TOTAL</td>
+                            {/* TOTAL ROW */}
+                            <tr className="bg-green-200 font-bold text-gray-900">
+                                <td className="border border-green-400 p-2 text-center">
+                                    TOTAL
+                                </td>
+
                                 {staffList.map((staff) => (
-                                    <td key={staff} className="border p-2 text-center">
+                                    <td
+                                        key={staff}
+                                        className="border border-green-400 p-2 text-center font-bold"
+                                    >
                                         {userTotals[staff]}
                                     </td>
                                 ))}
-                                <td className="border p-2 text-center bg-yellow-300 text-black">
+
+                                <td className="border border-green-500 p-2 text-center bg-green-300 font-extrabold">
                                     {grandTotal}
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+
                 </div>
             ) : (
                 <div className="text-center font-semibold text-gray-500 mt-4">

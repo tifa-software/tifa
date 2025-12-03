@@ -115,35 +115,49 @@ export default function AdmissionBranchxlms() {
             {/* Table */}
             {!loading && (
                 <div className="overflow-x-auto">
-                    <table className="w-full border border-gray-300 rounded-lg text-xs shadow-sm">
-                        <thead className="sticky top-0 z-10">
-                            <tr className="bg-green-700 text-white">
-                                <th className="border p-2 w-40">Branch</th>
+                    <table className="w-full text-[11px] border border-green-700 rounded-sm shadow-sm">
+                        <thead className="sticky top-0 z-10 bg-green-700 text-white">
+                            <tr className="text-[11px]">
+                                <th className="border border-green-800 p-2 text-left font-semibold w-32">
+                                    Branch
+                                </th>
+
                                 {courseList.map((course) => (
-                                    <th key={course} className="border p-2 text-center">
+                                    <th
+                                        key={course}
+                                        className="border border-green-800 p-2 text-center font-semibold"
+                                    >
                                         {course}
                                     </th>
                                 ))}
-                                <th className="border p-2 text-center bg-yellow-400 text-black font-bold">
+
+                                <th className="border border-green-900 p-2 text-center font-bold bg-green-800">
                                     Total
                                 </th>
-
                             </tr>
                         </thead>
 
-                        <tbody>
+                        <tbody className="bg-white">
                             {Object.keys(allquery).map((branch, idx) => (
-                                <tr key={branch} className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50`}>
-                                    <td className="border p-2 font-medium">{branch}</td>
+                                <tr
+                                    key={branch}
+                                    className={`hover:bg-green-50 transition ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                                        }`}
+                                >
+                                    <td className="border border-gray-500 p-2 font-semibold text-gray-800">
+                                        {branch}
+                                    </td>
 
                                     {courseList.map((course) => {
                                         const data = allquery[branch][course];
-
                                         return (
-                                            <td key={course} className="border p-2 text-center">
+                                            <td
+                                                key={course}
+                                                className="border border-gray-500 p-2 text-center"
+                                            >
                                                 {data?.count > 0 ? (
                                                     <button
-                                                        className="underline font-semibold"
+                                                        className="text-green-700 underline font-bold hover:text-green-600"
                                                         onClick={() =>
                                                             setSelectedData({
                                                                 user: branch,
@@ -161,28 +175,34 @@ export default function AdmissionBranchxlms() {
                                         );
                                     })}
 
-                                    <td className="border p-2 text-center font-bold bg-blue-100">
+                                    <td className="border border-green-300 p-2 text-center font-bold bg-green-100 text-gray-900">
                                         {userTotals[branch]}
                                     </td>
                                 </tr>
                             ))}
+
                             {/* Total Row */}
-                            <tr className="bg-orange-200 font-bold">
-                                <td className="border p-2 text-center">TOTAL</td>
+                            <tr className="bg-green-200 font-bold text-gray-900">
+                                <td className="border border-green-400 p-2 text-center">
+                                    TOTAL
+                                </td>
 
                                 {courseList.map((course) => (
-                                    <td key={course} className="border p-2 text-center">
+                                    <td
+                                        key={course}
+                                        className="border border-green-400 p-2 text-center font-bold"
+                                    >
                                         {getCourseTotal(course)}
                                     </td>
                                 ))}
 
-                                <td className="border p-2 text-center bg-yellow-300 text-black">
+                                <td className="border border-green-500 p-2 text-center bg-green-300 font-extrabold">
                                     {grandTotal}
                                 </td>
                             </tr>
-
                         </tbody>
                     </table>
+
                 </div>
             )}
 
