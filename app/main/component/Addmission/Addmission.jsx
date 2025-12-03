@@ -4,6 +4,7 @@ import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
+import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
 
 const initialFilters = {
     staffId: "",
@@ -23,6 +24,16 @@ export default function AddmissionRegister() {
     const [queries, setQueries] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [activeQuery, setActiveQuery] = useState(null);
+    const handleOpenModal = (queryContent) => {
+        setActiveQuery(queryContent);
+        setIsModalOpen(true);
+    };
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setActiveQuery(null);
+    };
 
     const [adminList, setAdminList] = useState([]);
     const [courseList, setCourseList] = useState([]);
@@ -157,10 +168,7 @@ export default function AddmissionRegister() {
         setSuboption("");
     };
 
-    const handleRowClick = (id) => {
-        router.push(`/main/page/allquery/${id}`);
-    };
-
+ 
     const exportToExcel = () => {
         const worksheet = XLSX.utils.json_to_sheet(queries);
         const workbook = XLSX.utils.book_new();
@@ -509,7 +517,7 @@ export default function AddmissionRegister() {
                                     <tr
                                         key={query._id}
                                         className="odd:bg-gray-50 even:bg-white hover:bg-blue-50 transition-colors cursor-pointer"
-                                        onClick={() => handleRowClick(query._id)}
+                                       onClick={() => handleOpenModal(`${query._id}`)}
                                     >
                                         <td className="px-4 py-3 text-[12px] font-semibold">
                                             {(page - 1) * limit + index + 1}
@@ -557,7 +565,7 @@ export default function AddmissionRegister() {
                                                 "N/A"
                                             )}
                                         </td>
-                                        
+
                                         <td className="px-4 py-3 text-[12px]">
                                             {query.totalFees != null ? `${query.totalFees} ₹` : "N/A"}
                                         </td>
@@ -576,6 +584,19 @@ export default function AddmissionRegister() {
                     </table>
                 </div>
             </div>
+            {isModalOpen && (
+                <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
+                    <div className="   h-screen w-screen  relative">
+                        <button
+                            className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
+                            onClick={handleCloseModal}
+                        >
+                            &times;
+                        </button>
+                        <div><Queryreport55 id={activeQuery} /></div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

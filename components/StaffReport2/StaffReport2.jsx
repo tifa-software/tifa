@@ -4,9 +4,23 @@ import axios from 'axios';
 import { PhoneCall, CheckCircle, CircleDashed, Navigation, Locate, LocateOff, Trash } from "lucide-react";
 import { XCircle } from "lucide-react"
 import Link from 'next/link';
+import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
+
 export default function StaffReport2({ data }) {
     const [branches, setBranches] = useState([]);
     const [open, setOpen] = useState(false);
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [activeQuery, setActiveQuery] = useState(null);
+    const handleOpenModal = (queryContent) => {
+        setActiveQuery(queryContent);
+        setIsModalOpen(true);
+    };
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setActiveQuery(null);
+    };
+
     const enrolledQueries = data.filter(item => item.addmission === true);
     useEffect(() => {
         const fetchBranchData = async () => {
@@ -88,7 +102,12 @@ export default function StaffReport2({ data }) {
                                         <tbody>
                                             {enrolledQueries.map(query => (
                                                 <tr key={query.id} className='border'>
-                                                    <td className='border px-4 py-2'><Link href={`/main/page/allquery/${query._id}`} className=' text-blue-700 capitalize'>{query.studentName}</Link></td>
+                                                    <td className="px-4 py-3 text-[12px] text-blue-500">
+
+                                                        <button onClick={() => handleOpenModal(`${query._id}`)}>
+                                                            {query.studentName || "N/A"}
+                                                        </button>
+                                                    </td>
                                                     <td className='border px-4 py-2'>{query.branch}</td>
                                                     <td className='border px-4 py-2'>{query.total} ₹</td>
                                                 </tr>
@@ -188,6 +207,19 @@ export default function StaffReport2({ data }) {
                     ))}
                 </div>
             </div>
+            {isModalOpen && (
+                <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
+                    <div className="   h-screen w-screen  relative">
+                        <button
+                            className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
+                            onClick={handleCloseModal}
+                        >
+                            &times;
+                        </button>
+                        <div><Queryreport55 id={activeQuery} /></div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import Link from "next/link";
+import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
 
 export default function UserPendingReport() {
   const today = new Date(new Date().setDate(new Date().getDate() - 1))
@@ -24,6 +25,7 @@ export default function UserPendingReport() {
   const [error, setError] = useState(null);
 
   const [modalInfo, setModalInfo] = useState(null);
+
 
   const fetchBranches = async () => {
     try {
@@ -324,6 +326,16 @@ export default function UserPendingReport() {
 
 // ================== MODAL COMPONENT ==================
 function QueryModal({ title, queries, closeModal }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeQuery, setActiveQuery] = useState(null);
+  const handleOpenModal = (queryContent) => {
+    setActiveQuery(queryContent);
+    setIsModalOpen(true);
+  };
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setActiveQuery(null);
+  };
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
@@ -374,12 +386,9 @@ function QueryModal({ title, queries, closeModal }) {
                       {q.studentContact.city}
                     </td>
                     <td className="px-3 py-2 text-center">
-                      <Link
-                        href={`/main/page/allquery/${q._id}`}
-                        className="text-blue-600 font-medium hover:underline hover:text-blue-800 transition"
-                      >
+                      <button onClick={() => handleOpenModal(`${q._id}`)}>
                         View →
-                      </Link>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -402,6 +411,19 @@ function QueryModal({ title, queries, closeModal }) {
           </button>
         </div>
       </div>
+      {isModalOpen && (
+        <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
+          <div className="   h-screen w-screen  relative">
+            <button
+              className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
+              onClick={handleCloseModal}
+            >
+              &times;
+            </button>
+            <div><Queryreport55 id={activeQuery} /></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

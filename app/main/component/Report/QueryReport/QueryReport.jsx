@@ -4,7 +4,7 @@ import axios from "axios";
 import { useSession } from 'next-auth/react';
 import Link from "next/link";
 import * as XLSX from "xlsx";
-
+import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
 import { ChevronDownSquare } from "lucide-react";
 export default function QueryReport() {
   const [allquery, setAllquery] = useState([]);
@@ -52,6 +52,18 @@ export default function QueryReport() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const tableWrapperRef = useRef(null);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeQuery, setActiveQuery] = useState(null);
+  const handleOpenModal = (queryContent) => {
+    setActiveQuery(queryContent);
+    setIsModalOpen(true);
+  };
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setActiveQuery(null);
+  };
+
 
   // ✅ Toggle selection of an option
   const toggleOption = (value) => {
@@ -279,9 +291,8 @@ export default function QueryReport() {
             <button
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 1}
-              className={`px-3 py-1 rounded border ${
-                page === 1 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white text-gray-700 hover:bg-gray-50"
-              }`}
+              className={`px-3 py-1 rounded border ${page === 1 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white text-gray-700 hover:bg-gray-50"
+                }`}
             >
               Previous
             </button>
@@ -291,11 +302,10 @@ export default function QueryReport() {
             <button
               onClick={() => handlePageChange(page + 1)}
               disabled={page >= safeTotalPages}
-              className={`px-3 py-1 rounded border ${
-                page >= safeTotalPages
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
-              }`}
+              className={`px-3 py-1 rounded border ${page >= safeTotalPages
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-white text-gray-700 hover:bg-gray-50"
+                }`}
             >
               Next
             </button>
@@ -415,7 +425,7 @@ export default function QueryReport() {
                     className="w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
                   >
                     <option value="">All</option>
-                     <option value="H">Important</option>
+                    <option value="H">Important</option>
                     <option value="A">A</option>
                     <option value="B">B</option>
                     <option value="C">C</option>
@@ -550,7 +560,12 @@ export default function QueryReport() {
                   >
                     <td className="px-4 py-3 text-[12px]">{startIndex + index + 1}</td>
                     <td className="px-4 py-3 text-[12px]">{data.userid}</td>
-                    <td className="px-4 py-3 text-[12px] text-blue-500"> <Link href={`/main/page/allquery/${data._id}`}>{data.studentName}</Link></td>
+                    <td className="px-4 py-3 text-[12px] text-blue-500">
+
+                      <button onClick={() => handleOpenModal(`${data._id}`)}>
+                        {data.studentName || "N/A"}
+                      </button>
+                    </td>
                     <td className="px-4 py-3 text-[12px]">{data.studentContact.phoneNumber}</td>
                     <td className="px-4 py-3 text-[12px]"> {data.historyCount}</td>
                     <td className="px-4 py-3 text-[12px]">{data.referenceid} {data.suboption}</td>
@@ -623,7 +638,19 @@ export default function QueryReport() {
           </table>
         </div >
       </div>
-
+      {isModalOpen && (
+        <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
+          <div className="   h-screen w-screen  relative">
+            <button
+              className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
+              onClick={handleCloseModal}
+            >
+              &times;
+            </button>
+            <div><Queryreport55 id={activeQuery} /></div>
+          </div>
+        </div>
+      )}
 
     </>
   );

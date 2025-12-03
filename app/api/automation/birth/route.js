@@ -59,19 +59,8 @@ export async function POST(request) {
                         to: formattedMobile,
                         type: "template",
                         template: {
-                            name: "birthdaywishes",
-                            language: { code: "en" },
-                            components: [
-                                {
-                                    type: "header",
-                                    parameters: [
-                                        {
-                                            type: "text",
-                                            text: admin.name || "Dear Friend"
-                                        }
-                                    ]
-                                }
-                            ]
+                            name: "hello_world",
+                            language: { code: "en_US" }
                         }
                     },
                     {
