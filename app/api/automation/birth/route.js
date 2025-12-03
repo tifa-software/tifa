@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 
 // ENV Variables
 const WHATSAPP_API_TOKEN = process.env.WHATSAPP_API_TOKEN;
-const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID || '908366409022419';
+const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID || '933988523111654';
 
 export async function POST(request) {
     try {
@@ -59,8 +59,19 @@ export async function POST(request) {
                         to: formattedMobile,
                         type: "template",
                         template: {
-                            name: "hello_world",
-                            language: { code: "en_US" }
+                            name: "birthdaywishes",
+                            language: { code: "en" },
+                            components: [
+                                {
+                                    type: "header",
+                                    parameters: [
+                                        {
+                                            type: "text",
+                                            text: admin.name || "Dear Friend"
+                                        }
+                                    ]
+                                }
+                            ]
                         }
                     },
                     {

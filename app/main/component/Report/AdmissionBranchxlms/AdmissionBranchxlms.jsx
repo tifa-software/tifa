@@ -118,34 +118,35 @@ export default function AdmissionBranchxlms() {
                     <table className="w-full border border-gray-300 rounded-lg text-xs shadow-sm">
                         <thead className="sticky top-0 z-10">
                             <tr className="bg-green-700 text-white">
-                                <th className="border p-2 w-40">Courses</th>
-                                {Object.keys(allquery).map((user) => (
-                                    <th key={user} className="border p-2 text-center">
-                                        {user}
+                                <th className="border p-2 w-40">Branch</th>
+                                {courseList.map((course) => (
+                                    <th key={course} className="border p-2 text-center">
+                                        {course}
                                     </th>
                                 ))}
                                 <th className="border p-2 text-center bg-yellow-400 text-black font-bold">
                                     Total
                                 </th>
+
                             </tr>
                         </thead>
 
                         <tbody>
-                            {courseList.map((course, idx) => (
-                                <tr key={course} className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50`}>
-                                    <td className="border p-2 font-medium">{course}</td>
+                            {Object.keys(allquery).map((branch, idx) => (
+                                <tr key={branch} className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50`}>
+                                    <td className="border p-2 font-medium">{branch}</td>
 
-                                    {Object.keys(allquery).map((user) => {
-                                        const data = allquery[user][course];
+                                    {courseList.map((course) => {
+                                        const data = allquery[branch][course];
 
                                         return (
-                                            <td key={user} className="border p-2 text-center">
+                                            <td key={course} className="border p-2 text-center">
                                                 {data?.count > 0 ? (
                                                     <button
-                                                        className=" underline font-semibold"
+                                                        className="underline font-semibold"
                                                         onClick={() =>
                                                             setSelectedData({
-                                                                user,
+                                                                user: branch,
                                                                 course,
                                                                 queries: data.queries,
                                                             })
@@ -161,17 +162,17 @@ export default function AdmissionBranchxlms() {
                                     })}
 
                                     <td className="border p-2 text-center font-bold bg-blue-100">
-                                        {getCourseTotal(course)}
+                                        {userTotals[branch]}
                                     </td>
                                 </tr>
                             ))}
-
+                            {/* Total Row */}
                             <tr className="bg-orange-200 font-bold">
                                 <td className="border p-2 text-center">TOTAL</td>
 
-                                {Object.keys(allquery).map((user) => (
-                                    <td key={user} className="border p-2 text-center">
-                                        {userTotals[user]}
+                                {courseList.map((course) => (
+                                    <td key={course} className="border p-2 text-center">
+                                        {getCourseTotal(course)}
                                     </td>
                                 ))}
 
@@ -179,6 +180,7 @@ export default function AdmissionBranchxlms() {
                                     {grandTotal}
                                 </td>
                             </tr>
+
                         </tbody>
                     </table>
                 </div>
@@ -216,9 +218,9 @@ export default function AdmissionBranchxlms() {
                             </thead>
 
                             <tbody>
-                                {selectedData.queries.map((q,index) => (
+                                {selectedData.queries.map((q, index) => (
                                     <tr key={q._id} className="hover:bg-blue-50">
-                                        <td className="border p-2">{index+1}</td>
+                                        <td className="border p-2">{index + 1}</td>
                                         <td className="border p-2">{q.studentName}</td>
                                         <td className="border p-2">{q.studentContact?.phoneNumber}</td>
                                         <td className="border p-2">{q.studentContact?.city}</td>
