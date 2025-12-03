@@ -9,290 +9,336 @@ import CourseModel from "@/model/Courses";
 import ReferenceModel from "@/model/Reference";
 import mongoose from "mongoose";
 
-const normalizeString = (value) => (value || "").toLowerCase();
-
+/**
+ * Helper utils
+ */
 const sanitizeId = (value) => {
-    if (!value) return null;
-    return /^[0-9a-fA-F]{24}$/.test(value) ? value : null;
+  if (!value) return null;
+  return /^[0-9a-fA-F]{24}$/.test(value) ? value : null;
+};
+
+const normalizeStringForRegex = (value) => {
+  if (!value) return null;
+  // escape regex special chars
+  const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(escaped, "i");
 };
 
 export const GET = async (request) => {
-    await dbConnect();
+  await dbConnect();
 
-    try {
-        const { searchParams } = new URL(request.url);
-        const pageParam = parseInt(searchParams.get("page") || "1", 10);
-        const limitParam = parseInt(searchParams.get("limit") || "50", 10);
-        const page = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
-        const limit = Number.isNaN(limitParam) || limitParam < 1 ? 50 : Math.min(limitParam, 200);
-        const skip = (page - 1) * limit;
+  try {
+    const { searchParams } = new URL(request.url);
 
-        const studentName = searchParams.get("studentName") || "";
-        const phoneNumber = searchParams.get("phoneNumber") || "";
-        const staffId = sanitizeId(searchParams.get("staffId"));
-        const courseId = sanitizeId(searchParams.get("courseId"));
-        const assignedToId = sanitizeId(searchParams.get("assignedToId"));
-        const branch = searchParams.get("branch") || "";
-        const city = searchParams.get("city") || "";
-        const finalFees = searchParams.get("finalFees");
-        const fromDate = searchParams.get("fromDate");
-        const toDate = searchParams.get("toDate");
-        const referenceId = searchParams.get("referenceId") || "";
-        const suboption = searchParams.get("suboption") || "";
+    // Pagination params
+    const pageParam = parseInt(searchParams.get("page") || "1", 10);
+    const limitParam = parseInt(searchParams.get("limit") || "50", 10);
+    const page = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
+    const limit = Number.isNaN(limitParam) || limitParam < 1 ? 50 : Math.min(limitParam, 200);
+    const skip = (page - 1) * limit;
 
-        // Base queries
-        const queries = await QueryModel.find({ demo: true, autoclosed: "open" });
-        const queryIds = queries.map((query) => query._id.toString());
+    // Filters (raw)
+    const studentName = (searchParams.get("studentName") || "").trim();
+    const phoneNumber = (searchParams.get("phoneNumber") || "").trim();
+    const staffId = sanitizeId(searchParams.get("staffId"));
+    const courseId = sanitizeId(searchParams.get("courseId"));
+    const assignedToId = sanitizeId(searchParams.get("assignedToId"));
+    const branch = (searchParams.get("branch") || "").trim();
+    const city = (searchParams.get("city") || "").trim();
+    const finalFees = searchParams.get("finalFees");
+    const fromDate = searchParams.get("fromDate");
+    const toDate = searchParams.get("toDate");
+    const referenceId = (searchParams.get("referenceId") || "").trim();
+    const suboption = (searchParams.get("suboption") || "").trim();
 
-        // helper
-        const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+    // Build MongoDB filter (do as much as possible in DB)
+    const mongoFilter = {
+      demo: true,
+      autoclosed: "open",
+    };
 
-        const adminIds = Array.from(
-            new Set(
-                queries
-                    .flatMap((query) => [query.userid, query.assignedTo])
-                    .filter((id) => isValidObjectId(id)) // REMOVE invalid IDs like "Not-Assigned"
-                    .map((id) => id.toString())
-            )
-        );
+    if (staffId) mongoFilter.userid = staffId;
+    if (courseId) mongoFilter.courseInterest = courseId;
+    if (assignedToId) mongoFilter.assignedTo = assignedToId;
 
-        const [auditLogs, adminDetails, courses, allReferences] = await Promise.all([
-            AuditModel.find({ queryId: { $in: queryIds } }).lean(),
-            AdminModel.find({ _id: { $in: adminIds } }).select("_id name").lean(),
-            CourseModel.find().select("_id course_name fees enrollpercent").lean(),
-            ReferenceModel.find().lean(),
-        ]);
-
-        const adminMap = adminDetails.reduce((map, admin) => {
-            map[admin._id.toString()] = admin.name;
-            return map;
-        }, {});
-
-        const courseMap = courses.reduce((map, course) => {
-            map[course._id.toString()] = {
-                name: course.course_name,
-                fees: course.fees,
-                enrollpercent: course.enrollpercent,
-            };
-            return map;
-        }, {});
-
-        const getRelevantDate = (query) => {
-            // Use demodate if available (set in map function), otherwise fall back to other dates
-            if (query.demodate) {
-                const dt = new Date(query.demodate);
-                if (!Number.isNaN(dt.valueOf())) return dt;
-            }
-            if (query.demoupdatedate) {
-                const dt = new Date(query.demoupdatedate);
-                if (!Number.isNaN(dt.valueOf())) return dt;
-            }
-            if (query.fees && query.fees.length > 0 && query.fees[0]?.transactionDate) {
-                const dt = new Date(query.fees[0].transactionDate);
-                if (!Number.isNaN(dt.valueOf())) return dt;
-            }
-            if (query.createdAt) {
-                const dt = new Date(query.createdAt);
-                if (!Number.isNaN(dt.valueOf())) return dt;
-            }
-            return null;
-        };
-
-        const fromDateObj = fromDate ? new Date(fromDate) : null;
-        const toDateObj = toDate ? new Date(toDate) : null;
-
-        if (fromDateObj) {
-            fromDateObj.setHours(0, 0, 0, 0);
-        }
-        if (toDateObj) {
-            toDateObj.setHours(23, 59, 59, 999);
-        }
-
-        const getAdminName = (id) => {
-            if (!id) return "Not Assigned";
-            if (!/^[0-9a-fA-F]{24}$/.test(id)) return "Not Assigned";
-            return adminMap[id] || "Not Assigned";
-        };
-
-        const filteredQueries = queries
-            .map((query) => {
-                const queryObj = query.toObject ? query.toObject() : query;
-                const log = auditLogs.find((entry) => entry.queryId === queryObj._id.toString());
-                
-                // Find demo entry from history - look for oflinesubStatus === "demo" or changes.demo === true
-                const demoEntry = log?.history?.find((entry) => 
-                    entry.oflinesubStatus === "demo" || 
-                    (entry.changes && entry.changes.demo === true)
-                );
-
-                const courseData = courseMap[queryObj.courseInterest?.toString()] || null;
-                
-                // Calculate totalFees using course fees and enrollpercent
-                // Formula: (fees * enrollpercent) / 100
-                let totalFees = null;
-                if (courseData?.fees && courseData?.enrollpercent) {
-                    const courseFees = parseFloat(courseData.fees) || 0;
-                    const enrollPercent = parseFloat(courseData.enrollpercent) || 0;
-                    totalFees = (courseFees * enrollPercent) / 100;
-                } else if (queryObj.finalfees) {
-                    totalFees = queryObj.finalfees;
-                }
-
-                const finalFeesUsed =
-                    queryObj.finalfees === 0 || queryObj.finalfees == null
-                        ? (courseData?.fees ? parseFloat(courseData.fees) : null)
-                        : queryObj.finalfees;
-
-                // Remaining fees = (course enroll percent total) - (deposit total)
-                // totalFees is the enroll percent total, queryObj.total is the deposit/paid amount
-                const remainingFees =
-                    totalFees != null && queryObj.total != null
-                        ? totalFees - queryObj.total
-                        : null;
-
-                // Get demo date from audit log entry, or use the first fee transaction date when demo was set
-                let demodate = null;
-                if (demoEntry?.actionDate) {
-                    demodate = demoEntry.actionDate;
-                } else if (queryObj.fees && queryObj.fees.length > 0) {
-                    // Use the first fee transaction date if demo entry not found
-                    // Sort fees by date to get the earliest one
-                    const sortedFees = [...queryObj.fees].sort((a, b) => {
-                        const dateA = a.transactionDate ? new Date(a.transactionDate).getTime() : 0;
-                        const dateB = b.transactionDate ? new Date(b.transactionDate).getTime() : 0;
-                        return dateA - dateB;
-                    });
-                    const firstFee = sortedFees[0];
-                    if (firstFee?.transactionDate) {
-                        demodate = firstFee.transactionDate;
-                    }
-                } else if (queryObj.createdAt) {
-                    // Fallback to createdAt if no other date available
-                    demodate = queryObj.createdAt;
-                }
-
-                return {
-                    ...queryObj,
-                    courseName: courseData?.name || "Not_Provided",
-                    totalFees,
-                    finalFeesUsed,
-                    remainingFees,
-                    staffName: getAdminName(queryObj.userid),
-                    assignedToName: getAdminName(queryObj.assignedTo),
-                    demoupdatedate: demoEntry?.actionDate || null,
-                    demodate: demodate,
-                };
-            })
-            .filter((query) => {
-                // Filter by staffId (userid)
-                if (staffId && query.userid?.toString() !== staffId) {
-                    return false;
-                }
-
-                // Filter by courseId (courseInterest)
-                if (courseId && query.courseInterest?.toString() !== courseId) {
-                    return false;
-                }
-
-                // Filter by assignedToId
-                if (assignedToId && query.assignedTo?.toString() !== assignedToId) {
-                    return false;
-                }
-
-                // Filter by finalFees
-                if (finalFees) {
-                    const parsed = Number(finalFees);
-                    if (!Number.isNaN(parsed) && query.finalfees !== parsed) {
-                        return false;
-                    }
-                }
-
-                // Date filtering
-                const relevantDate = getRelevantDate(query);
-                if (fromDateObj && (!relevantDate || relevantDate < fromDateObj)) {
-                    return false;
-                }
-                if (toDateObj && (!relevantDate || relevantDate > toDateObj)) {
-                    return false;
-                }
-
-                // Reference and suboption filtering
-                if (referenceId && query.referenceid !== referenceId) {
-                    return false;
-                }
-                if (suboption && query.suboption !== suboption) {
-                    return false;
-                }
-
-                // String matching filters
-                const matchesString = (source, target) => {
-                    if (!target) return true;
-                    return normalizeString(source).includes(normalizeString(target));
-                };
-
-                return (
-                    matchesString(query.studentName, studentName) &&
-                    matchesString(query.studentContact?.phoneNumber, phoneNumber) &&
-                    matchesString(query.branch, branch) &&
-                    matchesString(query.studentContact?.city, city)
-                );
-            })
-            .sort((a, b) => {
-                // Sort by demodate first, then createdAt
-                const dateA = getRelevantDate(a);
-                const dateB = getRelevantDate(b);
-                if (dateB && dateA) {
-                    return dateB.getTime() - dateA.getTime();
-                }
-                if (dateB) return -1;
-                if (dateA) return 1;
-                // Fallback to createdAt
-                const createdA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-                const createdB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-                return createdB - createdA;
-            });
-
-        const total = filteredQueries.length;
-        const paginatedQueries = filteredQueries.slice(skip, skip + limit);
-
-        const allAdmins = adminDetails.map((admin) => ({
-            _id: admin._id,
-            name: admin.name,
-        }));
-
-        const allCourses = courses.map((course) => ({
-            _id: course._id,
-            course_name: course.course_name,
-            fees: course.fees,
-            enrollpercent: course.enrollpercent,
-        }));
-
-        return Response.json(
-            {
-                message: "Demo data fetched successfully",
-                success: true,
-                fetch: paginatedQueries,
-                pagination: {
-                    page,
-                    limit,
-                    total,
-                    totalPages: Math.max(1, Math.ceil(total / limit)),
-                },
-                allAdmins,
-                allCourses,
-                allReferences,
-            },
-            { status: 200 }
-        );
-    } catch (error) {
-        console.log("Error on getting data list:", error);
-
-        return Response.json(
-            {
-                message: "Error on getting data list!",
-                success: false,
-            },
-            { status: 500 }
-        );
+    if (studentName) {
+      mongoFilter.studentName = normalizeStringForRegex(studentName);
     }
+    if (phoneNumber) {
+      mongoFilter["studentContact.phoneNumber"] = normalizeStringForRegex(phoneNumber);
+    }
+    if (branch) {
+      mongoFilter.branch = normalizeStringForRegex(branch);
+    }
+    if (city) {
+      mongoFilter["studentContact.city"] = normalizeStringForRegex(city);
+    }
+    if (referenceId) {
+      mongoFilter.referenceid = referenceId;
+    }
+    if (suboption) {
+      mongoFilter.suboption = suboption;
+    }
+    // finalFees exact match filter
+    if (finalFees) {
+      const parsed = Number(finalFees);
+      if (!Number.isNaN(parsed)) {
+        mongoFilter.finalfees = parsed;
+      }
+    }
+
+    // Date filtering: we cannot easily filter by "derived demo date" (because demo date is stored in audit logs),
+    // so we filter by createdAt or fee transaction date as a reasonable approximation.
+    // This will accept queries whose createdAt or any fees.transactionDate falls into the window.
+    const fromDateObj = fromDate ? new Date(fromDate) : null;
+    const toDateObj = toDate ? new Date(toDate) : null;
+    if (fromDateObj && toDateObj) {
+      fromDateObj.setHours(0, 0, 0, 0);
+      toDateObj.setHours(23, 59, 59, 999);
+
+      // Use $or to match either createdAt or fees.transactionDate range
+      mongoFilter.$or = [
+        { createdAt: { $gte: fromDateObj, $lte: toDateObj } },
+        { "fees.transactionDate": { $gte: fromDateObj.toISOString(), $lte: toDateObj.toISOString() } },
+      ];
+    } else if (fromDateObj) {
+      fromDateObj.setHours(0, 0, 0, 0);
+      mongoFilter.$or = [
+        { createdAt: { $gte: fromDateObj } },
+        { "fees.transactionDate": { $gte: fromDateObj.toISOString() } },
+      ];
+    } else if (toDateObj) {
+      toDateObj.setHours(23, 59, 59, 999);
+      mongoFilter.$or = [
+        { createdAt: { $lte: toDateObj } },
+        { "fees.transactionDate": { $lte: toDateObj.toISOString() } },
+      ];
+    }
+
+    // Get total count (fast because it's server side and uses indexes)
+    const total = await QueryModel.countDocuments(mongoFilter);
+
+    // Fetch only paginated queries (lean for performance)
+    const queries = await QueryModel.find(mongoFilter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    // If no queries, still return dropdown data
+    const queryIds = queries.map((q) => q._id.toString());
+
+    // Load audit logs only for this page
+    const auditLogs = queryIds.length
+      ? await AuditModel.find({ queryId: { $in: queryIds } }).lean()
+      : [];
+
+    // Admins: fetch admins required for this page (for mapping names) + also fetch all admins for dropdown
+    const pageAdminIds = Array.from(
+      new Set(
+        queries.flatMap((q) => [q.userid, q.assignedTo]).filter((id) => mongoose.Types.ObjectId.isValid(id))
+      )
+    );
+
+    const adminDetailsForPage = pageAdminIds.length
+      ? await AdminModel.find({ _id: { $in: pageAdminIds } }).select("_id name").lean()
+      : [];
+
+    // Fetch all admins for dropdown (small payload). If huge, consider paginating in frontend.
+    const allAdmins = await AdminModel.find().select("_id name").lean();
+
+    // Courses: fetch required courses for paginated queries + all courses for dropdown
+    const pageCourseIds = Array.from(
+      new Set(queries.map((q) => q.courseInterest).filter((id) => mongoose.Types.ObjectId.isValid(id)))
+    );
+
+    const courseDocsForPage = pageCourseIds.length
+      ? await CourseModel.find({ _id: { $in: pageCourseIds } }).select("_id course_name fees enrollpercent").lean()
+      : [];
+
+    const allCourses = await CourseModel.find().select("_id course_name fees enrollpercent").lean();
+
+    // References for dropdown
+    const allReferences = await ReferenceModel.find().lean();
+
+    // Build quick maps for mapping in-memory
+    const adminMap = {};
+    adminDetailsForPage.forEach((a) => {
+      adminMap[a._id.toString()] = a.name;
+    });
+
+    // Also map allAdmins for dropdown mapping in frontend (we returned allAdmins)
+    const allAdminsResponse = allAdmins.map((a) => ({ _id: a._id, name: a.name }));
+
+    const courseMap = {};
+    courseDocsForPage.forEach((c) => {
+      courseMap[c._id.toString()] = {
+        name: c.course_name,
+        fees: c.fees,
+        enrollpercent: c.enrollpercent,
+      };
+    });
+
+    // Map audit logs by queryId for quick lookup
+    const auditLogMap = {};
+    auditLogs.forEach((log) => {
+      // Keep the most relevant entry (for your previous logic you used log.history.find)
+      // We'll store the whole log for now; mapping will find demo entries in history below.
+      auditLogMap[log.queryId.toString()] = log;
+    });
+
+    // Helper to get admin name (fallback to "Not Assigned")
+    const getAdminName = (id) => {
+      if (!id) return "Not Assigned";
+      if (!/^[0-9a-fA-F]{24}$/.test(id)) return "Not Assigned";
+      return adminMap[id] || "Not Assigned";
+    };
+
+    // Helper to compute the "most relevant date" (same logic as before but only for paginated queries)
+    const getRelevantDate = (query, auditLog) => {
+      // 1) demo entry date in audit log (history)
+      if (auditLog && Array.isArray(auditLog.history)) {
+        // find first history entry where oflinesubStatus === "demo" OR changes.demo === true
+        const found = auditLog.history.find((h) => {
+          try {
+            return (
+              (h.oflinesubStatus && String(h.oflinesubStatus).toLowerCase() === "demo") ||
+              (h.changes && (h.changes.demo === true || String(h.changes.demo).toLowerCase() === "true"))
+            );
+          } catch (e) {
+            return false;
+          }
+        });
+        if (found && found.actionDate) {
+          const dt = new Date(found.actionDate);
+          if (!Number.isNaN(dt.valueOf())) return dt;
+        }
+      }
+
+      // 2) demoupdatedate (if present on query)
+      if (query.demoupdatedate) {
+        const dt = new Date(query.demoupdatedate);
+        if (!Number.isNaN(dt.valueOf())) return dt;
+      }
+
+      // 3) First fee transaction date (earliest)
+      if (Array.isArray(query.fees) && query.fees.length > 0) {
+        const validDates = query.fees
+          .map((f) => (f && f.transactionDate ? new Date(f.transactionDate) : null))
+          .filter((d) => d && !Number.isNaN(d.valueOf()));
+        if (validDates.length > 0) {
+          const min = new Date(Math.min(...validDates.map((d) => d.getTime())));
+          return min;
+        }
+      }
+
+      // 4) createdAt fallback
+      if (query.createdAt) {
+        const dt = new Date(query.createdAt);
+        if (!Number.isNaN(dt.valueOf())) return dt;
+      }
+
+      return null;
+    };
+
+    // Build final mapped queries to send to frontend
+    const mapped = queries.map((queryObj) => {
+      const q = queryObj; // lean result
+      const auditLog = auditLogMap[q._id.toString()];
+
+      // Find demoEntry (if any) from auditLog history - mimic previous logic
+      let demoEntry = null;
+      if (auditLog && Array.isArray(auditLog.history)) {
+        demoEntry =
+          auditLog.history.find(
+            (entry) =>
+              (entry.oflinesubStatus && String(entry.oflinesubStatus).toLowerCase() === "demo") ||
+              (entry.changes && (entry.changes.demo === true || String(entry.changes.demo).toLowerCase() === "true"))
+          ) || null;
+      }
+
+      const courseData = courseMap[q.courseInterest?.toString()] || null;
+
+      // Calculate totalFees using course fees and enrollpercent if possible
+      let totalFees = null;
+      if (courseData?.fees && courseData?.enrollpercent) {
+        const courseFees = parseFloat(courseData.fees) || 0;
+        const enrollPercent = parseFloat(courseData.enrollpercent) || 0;
+        totalFees = (courseFees * enrollPercent) / 100;
+      } else if (q.finalfees != null) {
+        totalFees = q.finalfees;
+      }
+
+      const finalFeesUsed =
+        q.finalfees === 0 || q.finalfees == null ? (courseData?.fees ? parseFloat(courseData.fees) : null) : q.finalfees;
+
+      const remainingFees =
+        totalFees != null && q.total != null ? Number(totalFees) - Number(q.total) : null;
+
+      // Derive demodate similarly to your earlier code
+      let demodate = null;
+      if (demoEntry?.actionDate) {
+        demodate = demoEntry.actionDate;
+      } else if (Array.isArray(q.fees) && q.fees.length > 0) {
+        // Use earliest fee date
+        const sortedFees = [...q.fees].sort((a, b) => {
+          const dateA = a.transactionDate ? new Date(a.transactionDate).getTime() : Infinity;
+          const dateB = b.transactionDate ? new Date(b.transactionDate).getTime() : Infinity;
+          return dateA - dateB;
+        });
+        const firstFee = sortedFees[0];
+        if (firstFee?.transactionDate) demodate = firstFee.transactionDate;
+      } else if (q.createdAt) {
+        demodate = q.createdAt;
+      }
+
+      return {
+        ...q,
+        courseName: courseData?.name || "Not_Provided",
+        totalFees,
+        finalFeesUsed,
+        remainingFees,
+        staffName: getAdminName(q.userid),
+        assignedToName: getAdminName(q.assignedTo),
+        demoupdatedate: demoEntry?.actionDate || null,
+        demodate,
+      };
+    });
+
+    // Build allCourses response (for dropdowns)
+    const allCoursesResponse = allCourses.map((c) => ({
+      _id: c._id,
+      course_name: c.course_name,
+      fees: c.fees,
+      enrollpercent: c.enrollpercent,
+    }));
+
+    return Response.json(
+      {
+        message: "Demo data fetched successfully",
+        success: true,
+        fetch: mapped,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.max(1, Math.ceil(total / limit)),
+        },
+        allAdmins: allAdminsResponse,
+        allCourses: allCoursesResponse,
+        allReferences,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error on getting data list:", error);
+    return Response.json(
+      {
+        message: "Error on getting data list!",
+        success: false,
+        error: error?.message || String(error),
+      },
+      { status: 500 }
+    );
+  }
 };
