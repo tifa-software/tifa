@@ -2,6 +2,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import * as XLSX from "xlsx";
+
+const MAX_RANGE_DAYS = 7; // 1 Dec → 8 Dec (7 days diff) allowed
+
 export default function Admissionxlms() {
   const [allquery, setAllquery] = useState({});
   const [loading, setLoading] = useState(true);
@@ -9,43 +12,91 @@ export default function Admissionxlms() {
   const [toDate, setToDate] = useState("");
   const [selectedData, setSelectedData] = useState(null);
 
-  const fetchFilteredData = async () => {
+  // ===== Helpers =====
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const diffInDays = (start, end) => {
+    const s = new Date(start);
+    const e = new Date(end);
+    const diffTime = e.getTime() - s.getTime();
+    return diffTime / (1000 * 60 * 60 * 24);
+  };
+
+  // ===== API Call (with validation on button press) =====
+  const fetchFilteredData = async (customFromDate, customToDate) => {
+    const fDate = customFromDate ?? fromDate;
+    const tDate = customToDate ?? toDate;
+
+    // Validation
+    if (!fDate || !tDate) {
+      alert("Please select both From and To dates.");
+      return;
+    }
+
+    const fromObj = new Date(fDate);
+    const toObj = new Date(tDate);
+
+    if (toObj < fromObj) {
+      alert("To date cannot be before From date.");
+      return;
+    }
+
+    const diff = diffInDays(fDate, tDate);
+    if (diff > MAX_RANGE_DAYS) {
+      alert("Max 8 days report allowed. (Example: 1 Dec - 8 Dec)");
+      return;
+    }
+
     setLoading(true);
     try {
       const params = {};
-      if (fromDate) params.fromDate = fromDate;
-      if (toDate) params.toDate = toDate;
+      if (fDate) params.fromDate = fDate;
+      if (tDate) params.toDate = tDate;
 
-      const response = await axios.get("/api/report/allvisit/course-stats/query", { params });
-      if (response.data?.success === true && response.data?.message === "All data fetched!") {
+      const response = await axios.get(
+        "/api/report/allvisit/course-stats/query",
+        { params }
+      );
+
+      if (
+        response.data?.success === true &&
+        response.data?.message === "All data fetched!"
+      ) {
         setAllquery(response.data.userBranchCounts || {});
-        setLoading(false);
       } else {
         console.warn("API responded but success is false");
-        // loading remains until user tries again
       }
     } catch (error) {
       console.error("Error fetching filtered data:", error);
     } finally {
-   
+      setLoading(false);
     }
   };
 
+  // ===== Default dates: today & today - 7 days =====
   useEffect(() => {
-    // On initial load, default to current month range
-    const now = new Date();
-    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const today = new Date();
+    const toStr = formatDate(today);
 
-    const toStr = now.toISOString().split("T")[0];
-    const fromStr = firstOfMonth.toISOString().split("T")[0];
+    const past = new Date();
+    past.setDate(past.getDate() - 7); // last 7 days
+    const fromStr = formatDate(past);
 
     setFromDate(fromStr);
     setToDate(toStr);
 
-    fetchFilteredData();
+    // initial fetch with default valid range
+    fetchFilteredData(fromStr, toStr);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-
+  // ===== Calculations for table =====
   const courseList = Array.from(
     new Set(
       Object.values(allquery).flatMap((course) => Object.keys(course || {}))
@@ -68,6 +119,7 @@ export default function Admissionxlms() {
 
   const grandTotal = Object.values(userTotals).reduce((a, b) => a + b, 0);
 
+  // ===== Excel Export =====
   const exportExcel = () => {
     const sheetData = [
       ["Tifa Counsellor Admission Report"],
@@ -76,7 +128,9 @@ export default function Admissionxlms() {
       ["Course", ...Object.keys(allquery), "Total"],
       ...courseList.map((course) => [
         course,
-        ...Object.keys(allquery).map((user) => allquery[user][course]?.count || 0),
+        ...Object.keys(allquery).map(
+          (user) => allquery[user][course]?.count || 0
+        ),
         getCourseTotal(course),
       ]),
       [
@@ -91,6 +145,8 @@ export default function Admissionxlms() {
     XLSX.utils.book_append_sheet(wb, ws, "Report");
     XLSX.writeFile(wb, "Tifa_Admission_Report.xlsx");
   };
+
+  // ===== Print styles =====
   useEffect(() => {
     const style = document.createElement("style");
     style.innerHTML = `
@@ -102,7 +158,6 @@ export default function Admissionxlms() {
     background: white !important;
   }
 
-  /* ❌ DO NOT hide all buttons — only hide non-table buttons */
   .print-hide, .top-buttons, input {
     display: none !important;
   }
@@ -112,7 +167,6 @@ export default function Admissionxlms() {
     margin: 0 !important;
   }
 
-  /* ✔ Ensure table fits */
   table {
     width: 100% !important;
     font-size: 10px !important;
@@ -124,7 +178,6 @@ export default function Admissionxlms() {
     padding: 4px !important;
   }
 
-  /* ✔ Convert count buttons into plain text */
   td button {
     all: unset !important;
     color: black !important;
@@ -138,12 +191,10 @@ export default function Admissionxlms() {
     margin: 10mm;
   }
 
-  /* Hide modal */
   .modal-print-hide {
     display: none !important;
   }
 }
-
   `;
     document.head.appendChild(style);
 
@@ -162,6 +213,7 @@ export default function Admissionxlms() {
           {fromDate || "Start"} to {toDate || "End"}
         </p>
       </div>
+
       {/* Filter */}
       <div className="flex gap-4 mb-4 items-end">
         <div className="flex flex-col text-gray-600 text-xs">
@@ -183,7 +235,7 @@ export default function Admissionxlms() {
           />
         </div>
         <button
-          onClick={fetchFilteredData}
+          onClick={() => fetchFilteredData()}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow text-xs"
         >
           Apply Filter
@@ -200,19 +252,17 @@ export default function Admissionxlms() {
         >
           Print Report
         </button>
-
       </div>
 
-      {/* Table */}
       {/* Table */}
       {!loading && (
         <div className="overflow-x-auto">
           <table className="w-full text-[11px] border border-green-700 rounded-sm shadow-sm">
-
-            {/* NEW THEAD — Courses on top */}
             <thead className="sticky top-0 z-10 bg-green-700 text-white">
               <tr>
-                <th className="border border-green-800 p-2 font-semibold">Staff</th>
+                <th className="border border-green-800 p-2 font-semibold">
+                  Staff
+                </th>
 
                 {courseList.map((course) => (
                   <th
@@ -229,21 +279,17 @@ export default function Admissionxlms() {
               </tr>
             </thead>
 
-            {/* NEW TBODY — Users in rows */}
             <tbody className="bg-white">
-
               {Object.keys(allquery).map((user, idx) => (
                 <tr
                   key={user}
                   className={`hover:bg-green-50 transition ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"
                     }`}
                 >
-                  {/* Left column: User */}
                   <td className="border border-gray-500 p-2 font-semibold text-gray-800">
                     {user}
                   </td>
 
-                  {/* Data cells */}
                   {courseList.map((course) => {
                     const data = allquery[user]?.[course];
 
@@ -253,22 +299,18 @@ export default function Admissionxlms() {
                         className="border border-gray-500 p-2 text-center"
                       >
                         {data?.count > 0 ? (
-                          <>
-                            <button
-                              className="text-green-700 underline font-bold hover:text-green-600 ml-2"
-                              onClick={() =>
-                                setSelectedData({
-                                  user,
-                                  course,
-                                  queries: data.queries,
-                                })
-                              }
-                            >
-                              {data.count}
-
-                            </button>
-
-                          </>
+                          <button
+                            className="text-green-700 underline font-bold hover:text-green-600 ml-2"
+                            onClick={() =>
+                              setSelectedData({
+                                user,
+                                course,
+                                queries: data.queries,
+                              })
+                            }
+                          >
+                            {data.count}
+                          </button>
                         ) : (
                           "-"
                         )}
@@ -276,16 +318,16 @@ export default function Admissionxlms() {
                     );
                   })}
 
-                  {/* User Total */}
                   <td className="border border-green-300 p-2 text-center font-bold bg-green-100">
                     {userTotals[user]}
                   </td>
                 </tr>
               ))}
 
-              {/* Last Row — Course totals + Grand total */}
               <tr className="bg-green-200 font-bold text-gray-900">
-                <td className="border border-green-400 p-2 text-center">TOTAL</td>
+                <td className="border border-green-400 p-2 text-center">
+                  TOTAL
+                </td>
 
                 {courseList.map((course) => (
                   <td
@@ -305,22 +347,24 @@ export default function Admissionxlms() {
         </div>
       )}
 
-
       {loading && (
-        <div className="text-center font-semibold text-gray-500 mt-4">Loading…</div>
+        <div className="text-center font-semibold text-gray-500 mt-4">
+          Loading…
+        </div>
       )}
 
       {/* Modal Details */}
       {selectedData && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 ">
           <div className="bg-white w-[95%] md:w-[70%] p-4 rounded-xl shadow-lg max-h-[85vh] overflow-y-auto">
-
             <div className="flex justify-between items-center border-b pb-2 mb-3">
               <h2 className="text-lg font-bold text-gray-800">
                 {selectedData.course} — {selectedData.user}
               </h2>
-              <button className="text-red-600 font-bold text-xl"
-                onClick={() => setSelectedData(null)}>
+              <button
+                className="text-red-600 font-bold text-xl"
+                onClick={() => setSelectedData(null)}
+              >
                 ✖
               </button>
             </div>
@@ -334,9 +378,6 @@ export default function Admissionxlms() {
                   <th className="border p-2">Student</th>
                   <th className="border p-2">Branch</th>
                   <th className="border p-2">Phone</th>
-                  {/* <th className="border p-2">City</th> */}
-                  {/* <th className="border p-2">Reference</th> */}
-                  {/* <th className="border p-2">Sub Option</th> */}
                 </tr>
               </thead>
 
@@ -344,19 +385,23 @@ export default function Admissionxlms() {
                 {selectedData.queries.map((q, index) => (
                   <tr key={q._id} className="hover:bg-blue-50">
                     <td className="border p-2">{index + 1}</td>
-                    <td className="border p-2">DATE</td>
+                    <td className="border p-2"> {q.stage6UpdatedDate
+                      ? new Date(q.stage6UpdatedDate).toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      }).replace(",", "")
+                      : "-"}</td>
                     <td className="border p-2">{selectedData.user}</td>
                     <td className="border p-2">{q.studentName}</td>
                     <td className="border p-2">{selectedData.course}</td>
-                    <td className="border p-2">{q.studentContact?.phoneNumber}</td>
-                    {/* <td className="border p-2">{q.studentContact?.city}</td> */}
-                    {/* <td className="border p-2">{q.referenceid}</td> */}
-                    {/* <td className="border p-2">{q.suboption}</td> */}
+                    <td className="border p-2">
+                      {q.studentContact?.phoneNumber}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-
           </div>
         </div>
       )}

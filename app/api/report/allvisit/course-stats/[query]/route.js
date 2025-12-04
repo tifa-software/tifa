@@ -127,6 +127,7 @@ export const GET = async (request) => {
     const effectiveTo = toDate ? new Date(toDate) : new Date();
     effectiveTo.setHours(23, 59, 59, 999);
 
+
     // First, get only those logs that have ANY history entry
     // where stage is set to 6 within the requested date range.
     // This narrows the working set significantly.
@@ -410,28 +411,15 @@ export const GET = async (request) => {
       }
     }
 
-    // Build the userCourseCounts object
+    // Build the userCourseCounts object (staff x branch) without
+    // doing an extra full AuditLog scan. XLMS frontend does not
+    // use per-query stage6updatedate, so we can omit it for
+    // significant performance gain.
     const userBranchCounts = {};
-
-    // Get audit logs for all matching queries to find stage6updatedate
-    const allAuditLogs = await AuditLog.find({
-      queryId: { $in: allMatchingQueries.map(q => q._id) }
-    });
-
-    // Create a map of queryId to its audit log for quick lookup
-    const queryAuditMap = allAuditLogs.reduce((map, log) => {
-      const id = log.queryId.toString();
-      if (!map[id]) {
-        map[id] = [];
-      }
-      map[id].push(...(log.history || []));
-      return map;
-    }, {});
 
     for (const q of allMatchingQueries) {
       const staffName = adminMap[q.userid?.toString()] || "Unassigned";
       const branchName = q.branch || "No Branch";
-      const queryId = q._id.toString();
 
       if (!userBranchCounts[staffName]) {
         userBranchCounts[staffName] = {};
@@ -446,11 +434,7 @@ export const GET = async (request) => {
 
       userBranchCounts[staffName][branchName].count++;
 
-      // Get stage6updatedate for this query
-      const auditHistory = queryAuditMap[queryId] || [];
-      const stage6updatedate = getStage6UpdatedDate(auditHistory);
-
-      // Push the full query info with stage6updatedate
+      // Push the full query info needed for drill-down modal
       userBranchCounts[staffName][branchName].queries.push({
         _id: q._id,
         userid: q.userid,
@@ -458,7 +442,7 @@ export const GET = async (request) => {
         suboption: q.suboption,
         studentName: q.studentName,
         studentContact: q.studentContact,
-        stage6updatedate: stage6updatedate || null
+        stage6UpdatedDate: stage6DateMap[q._id.toString()] || null,
       });
     }
 
