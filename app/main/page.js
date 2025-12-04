@@ -15,10 +15,12 @@ export default function Page() {
           <Mainline />
         </div>
 
+        <div className=' md:col-span-2'>
 
         <MainBar />
 
-        <MainPie />
+        {/* <MainPie /> */}
+        </div>
 
 
 

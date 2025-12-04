@@ -409,6 +409,28 @@ export const GET = async (request) => {
       }
     }
 
+    // Get stage6 update dates for all queries
+    const allQueryIds = allMatchingQueries.map(q => q._id.toString());
+    const allAuditLogs = await AuditLog.find({
+      queryId: { $in: allQueryIds },
+      stage: 6
+    });
+
+    // Create a map of queryId to stage6 update date
+    const queryStage6DateMap = {};
+    
+    allAuditLogs.forEach(log => {
+      if (!log.history || log.history.length === 0) return;
+      
+      const latestStage6Update = [...log.history].reverse().find(h => 
+        h.changes && h.changes.get("stage")?.newValue == 6
+      );
+      
+      if (latestStage6Update) {
+        queryStage6DateMap[log.queryId.toString()] = latestStage6Update.actionDate || null;
+      }
+    });
+
     // Build the userCourseCounts object
     const userBranchCounts = {};
 
@@ -438,6 +460,7 @@ export const GET = async (request) => {
         suboption: q.suboption,
         studentName: q.studentName,
         studentContact: q.studentContact,
+        stage6UpdatedDate: queryStage6DateMap[q._id.toString()] || null
       });
     }
 

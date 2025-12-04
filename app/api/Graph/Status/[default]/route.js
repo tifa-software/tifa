@@ -4,14 +4,32 @@ export const preferredRegion = ["bom1"];
 import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
 
-export const GET = async () => {
+export const GET = async (request) => {
   await dbConnect();
 
   try {
+    const { searchParams } = new URL(request.url);
+    const year = Number(searchParams.get("year")) || new Date().getFullYear();
+    const month = Number(searchParams.get("month")) || null;
+
+    // Date range filter
+    const startDate = new Date(`${year}-01-01T00:00:00Z`);
+    const endDate = new Date(`${year}-12-31T23:59:59Z`);
+
+    const matchStage = {
+      defaultdata: "query",
+      createdAt: { $gte: startDate, $lte: endDate },
+    };
+
+    if (month) {
+      matchStage.createdAt = {
+        $gte: new Date(`${year}-${String(month).padStart(2, "0")}-01T00:00:00Z`),
+        $lte: new Date(`${year}-${String(month).padStart(2, "0")}-31T23:59:59Z`),
+      };
+    }
+
     const [stats] = await QueryModel.aggregate([
-      {
-        $match: { defaultdata: "query" },
-      },
+      { $match: matchStage },
       {
         $group: {
           _id: null,
@@ -34,14 +52,15 @@ export const GET = async () => {
           AutoClose: 1,
         },
       },
-    ]);
+    ]).option({ allowDiskUse: true });
 
     const result = stats || { Pending: 0, Enrolled: 0, AutoClose: 0 };
 
     return Response.json(
       {
         success: true,
-        message: "Query stats fetched successfully!",
+        year,
+        month: month || "All Months",
         fetch: [
           { label: "Pending Queries", value: result.Pending },
           { label: "Enrolled Queries", value: result.Enrolled },
@@ -51,11 +70,11 @@ export const GET = async () => {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error fetching stats:", error);
+    console.error("Stats Fetch Error:", error);
     return Response.json(
       {
         success: false,
-        message: "Error fetching query stats",
+        message: "Server Error",
       },
       { status: 500 }
     );

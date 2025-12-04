@@ -1,127 +1,181 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Bar } from "react-chartjs-2";
+import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
 } from "chart.js";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 export default function Page() {
   const [year, setYear] = useState(new Date().getFullYear());
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [month, setMonth] = useState("");
+  const [barData, setBarData] = useState([]);
+  const [pieData, setPieData] = useState([]);
+  const [loadingBar, setLoadingBar] = useState(true);
+  const [loadingPie, setLoadingPie] = useState(true);
 
-  const monthNames = useMemo(
-    () => [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December",
-    ],
-    []
-  );
+  const monthNames = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December",
+  ];
 
-  // Chart options (stacked)
-  const options = useMemo(() => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { position: "top" },
-      tooltip: {
-        backgroundColor: "#29234b",
-        titleColor: "#fff",
-        bodyColor: "#fff",
-      },
-    },
-    scales: {
-      x: { stacked: true, grid: { display: false }, ticks: { color: "#29234b" } },
-      y: { stacked: true, grid: { color: "rgba(0,0,0,0.05)" }, ticks: { color: "#29234b" } },
-    },
-    animation: { duration: 600, easing: "easeOutCubic" },
-  }), []);
-
+  // Fetch Bar Data
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+    const fetchBarData = async () => {
+      setLoadingBar(true);
       try {
-        const res = await axios.get(`/api/Graph/comequeries/default?year=${year}`);
+        const res = await axios.get(
+          `/api/Graph/comequeries/default?year=${year}${month ? `&month=${month}` : ""}`
+        );
         const result = res.data.data || [];
+        const refs = Array.from(new Set(result.map((r) => r.referenceid)));
 
-        // Get all unique references
-        const references = Array.from(new Set(result.map(r => r.referenceid)));
+        const colors = [
+          "#6cb049", "#f59e0b", "#3b82f6",
+          "#ef4444", "#8b5cf6", "#d946ef",
+          "#10b981", "#0ea5e9"
+        ];
 
-        // Assign colors to references
-        const colors = ["#6cb049", "#f59e0b", "#3b82f6", "#ef4444", "#8b5cf6", "#d946ef", "#10b981"];
-
-        // Format datasets
-        const datasets = references.map((ref, idx) => ({
+        const datasets = refs.map((ref, i) => ({
           label: ref,
-          data: monthNames.map((_, monthIdx) => {
-            const found = result.find(d => d.month === monthIdx + 1 && d.referenceid === ref);
-            return found ? found.totalQueries : 0;
-          }),
-          backgroundColor: colors[idx % colors.length],
+          data: month
+            ? result.filter((d) => d.referenceid === ref).map((d) => d.totalQueries)
+            : monthNames.map((_, idx) => {
+                const item = result.find(
+                  (d) => d.month === idx + 1 && d.referenceid === ref
+                );
+                return item ? item.totalQueries : 0;
+              }),
+          backgroundColor: colors[i % colors.length],
           borderRadius: 6,
-          barPercentage: 0.6,
         }));
 
-        setData(datasets);
-      } catch (error) {
-        console.error("Error fetching data:", error);
+        setBarData(datasets);
       } finally {
-        setLoading(false);
+        setLoadingBar(false);
       }
     };
+    fetchBarData();
+  }, [year, month]);
 
-    fetchData();
-  }, [year, monthNames]);
+  // Fetch Pie Data
+  useEffect(() => {
+    const fetchPieData = async () => {
+      setLoadingPie(true);
+      try {
+        const res = await axios.get(
+          `/api/Graph/Status/default?year=${year}${month ? `&month=${month}` : ""}`
+        );
+        setPieData(res.data.fetch || []);
+      } finally {
+        setLoadingPie(false);
+      }
+    };
+    fetchPieData();
+  }, [year, month]);
 
-  const chartData = useMemo(() => ({
-    labels: monthNames,
-    datasets: data,
-  }), [data, monthNames]);
+  const barLabels = month ? [monthNames[month - 1]] : monthNames;
 
-  // Dynamic years for dropdown (from 2024 back to 5 years)
-  const years = useMemo(() => {
-    const current = new Date().getFullYear();
+  const barChartData = {
+    labels: barLabels,
+    datasets: barData,
+  };
+
+  const pieChartData = {
+    labels: pieData.map((i) => i.label),
+    datasets: [
+      {
+        data: pieData.map((i) => i.value),
+        backgroundColor: ["#6cb049", "#3b82f6", "#ef4444"],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const barOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: { x: { stacked: true }, y: { stacked: true } },
+  };
+
+  const years = (() => {
     const arr = [];
-    for (let y = current; y >= 2024; y--) arr.push(y);
+    const curr = new Date().getFullYear();
+    for (let y = curr; y >= 2024; y--) arr.push(y);
     return arr;
-  }, []);
+  })();
 
   return (
-    <div className="p-4 bg-white/70 backdrop-blur-md shadow-xl rounded-xl transition-all duration-500">
-      <h3 className="text-lg font-semibold text-center text-[#6cb049] mb-4">
-        Monthly Queries Overview
+    <div className="p-6 bg-white/90 backdrop-blur-lg shadow-xl rounded-2xl space-y-8">
+
+      <h3 className="text-2xl font-bold text-center text-[#6cb049] mb-2">
+        Query Overview Dashboard
       </h3>
 
-      <div className="mb-4 flex justify-center">
+      {/* Filters */}
+      <div className="flex gap-4 justify-center">
         <select
           value={year}
-          onChange={(e) => setYear(Number(e.target.value))}
-          className="px-3 py-2 rounded-md border border-gray-200 text-gray-700 bg-white shadow-sm focus:border-[#6cb049] focus:ring-[#6cb049] outline-none"
+          onChange={(e) => setYear(e.target.value)}
+          className="border px-4 py-2 rounded-lg shadow-sm focus:ring-[#6cb049] focus:border-[#6cb049]"
         >
           {years.map((y) => (
-            <option key={y} value={y}>{y}</option>
+            <option key={y}>{y}</option>
+          ))}
+        </select>
+
+        <select
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+          className="border px-4 py-2 rounded-lg shadow-sm focus:ring-[#6cb049] focus:border-[#6cb049]"
+        >
+          <option value="">All Months</option>
+          {monthNames.map((m, i) => (
+            <option key={i} value={i + 1}>
+              {m}
+            </option>
           ))}
         </select>
       </div>
 
-      {loading ? (
-        <div className="h-64 flex items-center justify-center text-gray-400">
-          <div className="animate-pulse">Loading chart...</div>
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        {/* Same Height Chart Containers */}
+        <div className="h-[400px] bg-white rounded-xl shadow-lg p-4 flex items-center justify-center">
+          {loadingBar ? (
+            <div className="text-gray-500 animate-pulse">Loading Bar Chart...</div>
+          ) : (
+            <Bar data={barChartData} options={barOptions} />
+          )}
         </div>
-      ) : (
-        <div className="h-64">
-          <Bar data={chartData} options={options} />
+
+        <div className="h-[400px] bg-white rounded-xl shadow-lg p-4 flex items-center justify-center">
+          {loadingPie ? (
+            <div className="text-gray-500 animate-pulse">Loading Pie Chart...</div>
+          ) : (
+            <Pie data={pieChartData} />
+          )}
         </div>
-      )}
+
+      </div>
     </div>
   );
 }
