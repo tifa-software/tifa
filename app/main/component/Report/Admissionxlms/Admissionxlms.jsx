@@ -80,7 +80,66 @@ export default function Admissionxlms() {
         XLSX.utils.book_append_sheet(wb, ws, "Report");
         XLSX.writeFile(wb, "Tifa_Admission_Report.xlsx");
     };
+ useEffect(() => {
+    const style = document.createElement("style");
+    style.innerHTML = `
+   @media print {
 
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background: white !important;
+  }
+
+  /* ❌ DO NOT hide all buttons — only hide non-table buttons */
+  .print-hide, .top-buttons, input {
+    display: none !important;
+  }
+
+  .print-area {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* ✔ Ensure table fits */
+  table {
+    width: 100% !important;
+    font-size: 10px !important;
+    border-collapse: collapse !important;
+    page-break-inside: avoid !important;
+  }
+
+  th, td {
+    padding: 4px !important;
+  }
+
+  /* ✔ Convert count buttons into plain text */
+  td button {
+    all: unset !important;
+    color: black !important;
+    font-size: 10px !important;
+    text-decoration: none !important;
+    cursor: default !important;
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  /* Hide modal */
+  .modal-print-hide {
+    display: none !important;
+  }
+}
+
+  `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
     return (
         <div className="p-4 bg-[#F3F7FB] min-h-screen text-sm">
 
@@ -120,6 +179,12 @@ export default function Admissionxlms() {
                     className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow text-xs"
                 >
                     Export to Excel
+                </button>
+                  <button
+                    onClick={() => window.print()}
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded shadow text-xs print:hidden"
+                >
+                    Print Report
                 </button>
             </div>
 
@@ -166,22 +231,26 @@ export default function Admissionxlms() {
 
                                         return (
                                             <td
-                                                key={staff}
+                                                key={course}
                                                 className="border border-gray-500 p-2 text-center"
                                             >
                                                 {courseData?.count > 0 ? (
-                                                    <button
-                                                        className="text-green-700 underline font-bold hover:text-green-600"
-                                                        onClick={() =>
-                                                            setSelectedData({
-                                                                staffName: allquery[staff].staffName,
-                                                                courseName: course,
-                                                                queries: courseData.queries,
-                                                            })
-                                                        }
-                                                    >
-                                                        {courseData.count}
-                                                    </button>
+                                                    <>
+                                                        <button
+                                                            className="text-green-700 underline font-bold hover:text-green-600 ml-2"
+                                                            onClick={() =>
+                                                                setSelectedData({
+                                                                    user,
+                                                                    course,
+                                                                    queries: courseData.queries,
+                                                                })
+                                                            }
+                                                        >
+                                                            {courseData.count}
+
+                                                        </button>
+
+                                                    </>
                                                 ) : (
                                                     "-"
                                                 )}

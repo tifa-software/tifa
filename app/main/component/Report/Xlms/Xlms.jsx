@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import * as XLSX from "xlsx";
-
 export default function Admissionxlms() {
   const [allquery, setAllquery] = useState({});
   const [loading, setLoading] = useState(true);
@@ -77,9 +76,69 @@ export default function Admissionxlms() {
     XLSX.utils.book_append_sheet(wb, ws, "Report");
     XLSX.writeFile(wb, "Tifa_Admission_Report.xlsx");
   };
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.innerHTML = `
+   @media print {
+
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background: white !important;
+  }
+
+  /* ❌ DO NOT hide all buttons — only hide non-table buttons */
+  .print-hide, .top-buttons, input {
+    display: none !important;
+  }
+
+  .print-area {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* ✔ Ensure table fits */
+  table {
+    width: 100% !important;
+    font-size: 10px !important;
+    border-collapse: collapse !important;
+    page-break-inside: avoid !important;
+  }
+
+  th, td {
+    padding: 4px !important;
+  }
+
+  /* ✔ Convert count buttons into plain text */
+  td button {
+    all: unset !important;
+    color: black !important;
+    font-size: 10px !important;
+    text-decoration: none !important;
+    cursor: default !important;
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  /* Hide modal */
+  .modal-print-hide {
+    display: none !important;
+  }
+}
+
+  `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   return (
-    <div className="p-4 bg-[#F3F7FB] min-h-screen text-sm">
+    <div className="p-4 bg-[#F3F7FB] min-h-screen text-sm print-area">
       <div className="text-center mb-4">
         <h1 className="text-2xl font-extrabold text-[#2C4B8A]">
           Tifa Institute Counsellor Visit Record
@@ -120,54 +179,81 @@ export default function Admissionxlms() {
         >
           Export to Excel
         </button>
+        <button
+          onClick={() => window.print()}
+          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded shadow text-xs print:hidden"
+        >
+          Print Report
+        </button>
+
       </div>
 
+      {/* Table */}
       {/* Table */}
       {!loading && (
         <div className="overflow-x-auto">
           <table className="w-full text-[11px] border border-green-700 rounded-sm shadow-sm">
+
+            {/* NEW THEAD — Courses on top */}
             <thead className="sticky top-0 z-10 bg-green-700 text-white">
-              <tr className="text-[11px]">
-                <th className="border border-green-800 p-2 w-32 font-semibold">
-                  Courses
-                </th>
-                {Object.keys(allquery).map((user) => (
-                  <th key={user} className="border border-green-800 p-2 text-center font-semibold">
-                    {user}
+              <tr>
+                <th className="border border-green-800 p-2 font-semibold">Staff</th>
+
+                {courseList.map((course) => (
+                  <th
+                    key={course}
+                    className="border border-green-800 p-2 text-center font-semibold"
+                  >
+                    {course}
                   </th>
                 ))}
+
                 <th className="border border-green-900 p-2 text-center font-bold bg-green-800">
                   Total
                 </th>
               </tr>
             </thead>
 
+            {/* NEW TBODY — Users in rows */}
             <tbody className="bg-white">
-              {courseList.map((course, idx) => (
-                <tr key={course} className={`hover:bg-green-50 transition ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                  }`}>
+
+              {Object.keys(allquery).map((user, idx) => (
+                <tr
+                  key={user}
+                  className={`hover:bg-green-50 transition ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                    }`}
+                >
+                  {/* Left column: User */}
                   <td className="border border-gray-500 p-2 font-semibold text-gray-800">
-                    {course}
+                    {user}
                   </td>
 
-                  {Object.keys(allquery).map((user) => {
-                    const data = allquery[user][course];
+                  {/* Data cells */}
+                  {courseList.map((course) => {
+                    const data = allquery[user]?.[course];
 
                     return (
-                      <td key={user} className="border border-gray-500 p-2 text-center">
+                      <td
+                        key={course}
+                        className="border border-gray-500 p-2 text-center"
+                      >
                         {data?.count > 0 ? (
-                          <button
-                            className="text-green-700 underline font-bold hover:text-green-600"
-                            onClick={() =>
-                              setSelectedData({
-                                user,
-                                course,
-                                queries: data.queries,
-                              })
-                            }
-                          >
-                            {data.count}
-                          </button>
+                          <>
+                            <button
+                              className="text-green-700 underline font-bold hover:text-green-600 ml-2"
+                              onClick={() =>
+                                setSelectedData({
+                                  user,
+                                  course,
+                                  queries: data.queries,
+                                })
+                              }
+                            >
+                              {data.count}
+
+                            </button>
+
+                          </>
                         ) : (
                           "-"
                         )}
@@ -175,21 +261,23 @@ export default function Admissionxlms() {
                     );
                   })}
 
-
-                  <td className="border border-green-300 p-2 text-center font-bold bg-green-100 text-gray-900">
-                    {getCourseTotal(course)}
+                  {/* User Total */}
+                  <td className="border border-green-300 p-2 text-center font-bold bg-green-100">
+                    {userTotals[user]}
                   </td>
                 </tr>
               ))}
 
+              {/* Last Row — Course totals + Grand total */}
               <tr className="bg-green-200 font-bold text-gray-900">
-                <td className="border border-green-400 p-2 text-center">
-                  TOTAL
-                </td>
+                <td className="border border-green-400 p-2 text-center">TOTAL</td>
 
-                {Object.keys(allquery).map((user) => (
-                  <td key={user} className="border border-green-400 p-2 text-center font-bold">
-                    {userTotals[user]}
+                {courseList.map((course) => (
+                  <td
+                    key={course}
+                    className="border border-green-400 p-2 text-center font-bold"
+                  >
+                    {getCourseTotal(course)}
                   </td>
                 ))}
 
@@ -202,13 +290,14 @@ export default function Admissionxlms() {
         </div>
       )}
 
+
       {loading && (
         <div className="text-center font-semibold text-gray-500 mt-4">Loading…</div>
       )}
 
       {/* Modal Details */}
       {selectedData && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 ">
           <div className="bg-white w-[95%] md:w-[70%] p-4 rounded-xl shadow-lg max-h-[85vh] overflow-y-auto">
 
             <div className="flex justify-between items-center border-b pb-2 mb-3">
