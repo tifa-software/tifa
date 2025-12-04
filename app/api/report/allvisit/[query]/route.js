@@ -357,90 +357,90 @@ export const GET = async (request) => {
 
     // Fetch all matching queries (no skip/limit) but only fields required for counting
     // NOTE: queryFilter already includes _id: { $in: stageSixQueryIds }
-    const allMatchingQueries = await QueryModel.find(
-      { ...queryFilter },
-      {
-        _id: 1,
-        userid: 1,
-        branch: 1,
-        courseInterest: 1,
-        referenceid: 1,
-        suboption: 1,
-        studentContact: 1,
-        studentName: 1
-      }
-    );
+    // const allMatchingQueries = await QueryModel.find(
+    //   { ...queryFilter },
+    //   {
+    //     _id: 1,
+    //     userid: 1,
+    //     branch: 1,
+    //     courseInterest: 1,
+    //     referenceid: 1,
+    //     suboption: 1,
+    //     studentContact: 1,
+    //     studentName: 1
+    //   }
+    // );
 
 
-    // Filter only valid courseInterest ObjectIds for querying CourseModel
-    const allCourseIds = [
-      ...new Set(
-        allMatchingQueries
-          .map((q) => q.courseInterest)
-          .filter(Boolean)
-          .map((id) => id?.toString())
-          .filter((s) => mongoose.Types.ObjectId.isValid(s))
-      ),
-    ];
+    // // Filter only valid courseInterest ObjectIds for querying CourseModel
+    // const allCourseIds = [
+    //   ...new Set(
+    //     allMatchingQueries
+    //       .map((q) => q.courseInterest)
+    //       .filter(Boolean)
+    //       .map((id) => id?.toString())
+    //       .filter((s) => mongoose.Types.ObjectId.isValid(s))
+    //   ),
+    // ];
 
-    const allCourses = allCourseIds.length > 0 ? await CourseModel.find(
-      { _id: { $in: allCourseIds } },
-      { _id: 1, course_name: 1 }
-    ) : [];
+    // const allCourses = allCourseIds.length > 0 ? await CourseModel.find(
+    //   { _id: { $in: allCourseIds } },
+    //   { _id: 1, course_name: 1 }
+    // ) : [];
 
-    const allCourseMap = Object.fromEntries(
-      allCourses.map(c => [c._id.toString(), c.course_name])
-    );
+    // const allCourseMap = Object.fromEntries(
+    //   allCourses.map(c => [c._id.toString(), c.course_name])
+    // );
 
-    // Ensure adminMap has all users present (add missing admins)
-    const allUserIds = [
-      ...new Set(allMatchingQueries
-        .map(q => q.userid)
-        .filter(Boolean)
-        .map(id => id.toString()))
-    ];
+    // // Ensure adminMap has all users present (add missing admins)
+    // const allUserIds = [
+    //   ...new Set(allMatchingQueries
+    //     .map(q => q.userid)
+    //     .filter(Boolean)
+    //     .map(id => id.toString()))
+    // ];
 
-    if (allUserIds.length > 0) {
-      const missingAdminIds = allUserIds.filter(id => !adminMap[id]);
-      if (missingAdminIds.length > 0) {
-        const missingAdmins = await AdminModel.find({ _id: { $in: missingAdminIds } }, { _id: 1, name: 1 });
-        for (const a of missingAdmins) {
-          adminMap[a._id.toString()] = a.name;
-        }
-      }
-    }
+    // if (allUserIds.length > 0) {
+    //   const missingAdminIds = allUserIds.filter(id => !adminMap[id]);
+    //   if (missingAdminIds.length > 0) {
+    //     const missingAdmins = await AdminModel.find({ _id: { $in: missingAdminIds } }, { _id: 1, name: 1 });
+    //     for (const a of missingAdmins) {
+    //       adminMap[a._id.toString()] = a.name;
+    //     }
+    //   }
+    // }
 
-    // Build the userCourseCounts object
-    const userBranchCounts = {};
+    // // Build the userCourseCounts object
+    // const userBranchCounts = {};
 
-    for (const q of allMatchingQueries) {
-      const staffName = adminMap[q.userid?.toString()] || "Unassigned";
+    // for (const q of allMatchingQueries) {
+    //   const staffName = adminMap[q.userid?.toString()] || "Unassigned";
 
-      const branchName = q.branch || "No Branch"; // <-- use branch instead of course
+    //   const branchName = q.branch || "No Branch"; // <-- use branch instead of course
 
-      if (!userBranchCounts[staffName]) {
-        userBranchCounts[staffName] = {};
-      }
+    //   if (!userBranchCounts[staffName]) {
+    //     userBranchCounts[staffName] = {};
+    //   }
 
-      if (!userBranchCounts[staffName][branchName]) {
-        userBranchCounts[staffName][branchName] = {
-          count: 0,
-          queries: []
-        };
-      }
+    //   if (!userBranchCounts[staffName][branchName]) {
+    //     userBranchCounts[staffName][branchName] = {
+    //       count: 0,
+    //       queries: []
+    //     };
+    //   }
 
-      userBranchCounts[staffName][branchName].count++;
+    //   userBranchCounts[staffName][branchName].count++;
 
-      // Push the full query info you want
-      userBranchCounts[staffName][branchName].queries.push({
-        _id: q._id,
-        userid: q.userid,
-        referenceid: q.referenceid,
-        suboption: q.suboption,
-        studentName: q.studentName,
-        studentContact: q.studentContact,
-      });
-    }
+    //   // Push the full query info you want
+    //   userBranchCounts[staffName][branchName].queries.push({
+    //     _id: q._id,
+    //     userid: q.userid,
+    //     referenceid: q.referenceid,
+    //     suboption: q.suboption,
+    //     studentName: q.studentName,
+    //     studentContact: q.studentContact,
+    //   });
+    // }
 
 
     // ---------------------------------------------------------
@@ -458,7 +458,7 @@ export const GET = async (request) => {
           count: c.count
         }))
       })),
-      userBranchCounts, // ⭐ NEW TOTAL COUNTS (NO PAGINATION)
+      // userBranchCounts, // ⭐ NEW TOTAL COUNTS (NO PAGINATION)
       pagination: {
         total: totalQueries,
         page,

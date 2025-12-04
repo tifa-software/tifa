@@ -126,21 +126,31 @@ export default function QueryReport() {
           limit,
         },
       });
-      const fetchedData = response.data.fetch || [];
-      setAllquery(fetchedData);
-      setTotalCount(response.data.pagination?.total ?? fetchedData.length);
-      setTotalPages(response.data.pagination?.totalPages ?? 1);
+      if (response.data?.success === true && response.data?.message === "All data fetched!") {
+        const fetchedData = response.data.fetch || [];
+        setAllquery(fetchedData);
+        setTotalCount(response.data.pagination?.total ?? fetchedData.length);
+        setTotalPages(response.data.pagination?.totalPages ?? 1);
+
+        alert("Filter Applied Successfully");
+
+        setLoading(false); // Stop loading only when success true!
+      } else {
+        console.warn("API responded but success is false");
+        // loading remains until user tries again
+      }
     } catch (error) {
       console.error("Error fetching filtered data:", error);
     } finally {
       setLoading(false);
+      
     }
   };
 
   // Fetch data whenever filters or pagination change
   useEffect(() => {
     fetchFilteredData();
-  }, [referenceId, studentName, suboption, fromDate, branch, toDate, admission, grade, location, city, assignedName, assignedFrom, userName, showClosed, page, limit]);
+  }, []);
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -257,6 +267,12 @@ export default function QueryReport() {
               className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:bg-blue-500"
             >
               Export to Excel
+            </button>
+            <button
+              onClick={fetchFilteredData}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow text-xs"
+            >
+              Apply Filter
             </button>
           </div>
         </div>

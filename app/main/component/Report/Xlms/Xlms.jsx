@@ -16,13 +16,18 @@ export default function Admissionxlms() {
       if (fromDate) params.fromDate = fromDate;
       if (toDate) params.toDate = toDate;
 
-      const response = await axios.get("/api/report/allvisit/query", { params });
-
-      setAllquery(response.data.userBranchCounts || {});
+      const response = await axios.get("/api/report/allvisit/course-stats/query", { params });
+      if (response.data?.success === true && response.data?.message === "All data fetched!") {
+        setAllquery(response.data.userBranchCounts || {});
+        setLoading(false);
+      } else {
+        console.warn("API responded but success is false");
+        // loading remains until user tries again
+      }
     } catch (error) {
       console.error("Error fetching filtered data:", error);
     } finally {
-      setLoading(false);
+   
     }
   };
 
