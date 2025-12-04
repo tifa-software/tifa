@@ -13,9 +13,12 @@ export default function Admissionxlms() {
   const fetchFilteredData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/api/report/allvisit/query", {
-        params: { fromDate, toDate },
-      });
+      const params = {};
+      if (fromDate) params.fromDate = fromDate;
+      if (toDate) params.toDate = toDate;
+
+      const response = await axios.get("/api/report/allvisit/query", { params });
+
       setAllquery(response.data.userBranchCounts || {});
     } catch (error) {
       console.error("Error fetching filtered data:", error);
@@ -26,7 +29,8 @@ export default function Admissionxlms() {
 
   useEffect(() => {
     fetchFilteredData();
-  }, [fromDate, toDate]);
+  }, []);
+
 
   const courseList = Array.from(
     new Set(
@@ -104,6 +108,12 @@ export default function Admissionxlms() {
             className="border rounded px-2 py-1"
           />
         </div>
+        <button
+          onClick={fetchFilteredData}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow text-xs"
+        >
+          Apply Filter
+        </button>
         <button
           onClick={exportExcel}
           className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow text-xs"

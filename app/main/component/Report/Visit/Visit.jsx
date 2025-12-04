@@ -21,7 +21,6 @@ export default function QueryReport() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [admission, setAdmission] = useState("");
-  const [reson, setReson] = useState("");
   const [grade, setGrade] = useState("");
   const [location, setLocation] = useState("");
   const [city, setCity] = useState("");
@@ -47,8 +46,6 @@ export default function QueryReport() {
     { value: "no_visit_branch_yet", label: "No Visit Branch Yet" }
   ];
 
-  // ✅ State to store selected reasons
-  const [reason, setReason] = useState([]);
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -65,13 +62,7 @@ export default function QueryReport() {
     setActiveQuery(null);
   };
   // ✅ Toggle selection of an option
-  const toggleOption = (value) => {
-    setReason((prevSelected) =>
-      prevSelected.includes(value)
-        ? prevSelected.filter((option) => option !== value)
-        : [...prevSelected, value]
-    );
-  };
+
 
   // ✅ Handles click outside to close dropdown
   useEffect(() => {
@@ -123,7 +114,6 @@ export default function QueryReport() {
           toDate,
           admission,
           grade,
-          reason: reason.length > 0 ? reason.join(",") : "",
           location,
           branch,
           city,
@@ -150,12 +140,12 @@ export default function QueryReport() {
   // Fetch data whenever filters or pagination change
   useEffect(() => {
     fetchFilteredData();
-  }, [referenceId, studentName, suboption, fromDate, branch, toDate, admission, grade, reason, location, city, assignedName, assignedFrom, userName, showClosed, page, limit]);
+  }, [referenceId, studentName, suboption, fromDate, branch, toDate, admission, grade, location, city, assignedName, assignedFrom, userName, showClosed, page, limit]);
 
   // Reset to first page when filters change
   useEffect(() => {
     setPage(1);
-  }, [referenceId, studentName, suboption, fromDate, branch, toDate, admission, grade, reason, location, city, assignedName, assignedFrom, userName, showClosed]);
+  }, [referenceId, studentName, suboption, fromDate, branch, toDate, admission, grade, location, city, assignedName, assignedFrom, userName, showClosed]);
 
   const removeFilter = () => {
     // Reset all filter variables to their default values
@@ -164,9 +154,7 @@ export default function QueryReport() {
     setFromDate("");
     setToDate("");
     setAdmission("");
-    setReson("");
     setGrade("");
-    setReason([]);
     setBranch("");
     setLocation("");
     setCity("");
@@ -209,7 +197,6 @@ export default function QueryReport() {
     if (toDate) filters.push(`To Date: ${toDate}`);
     if (admission) filters.push(`Admission: ${admission === "true" ? "Enroll" : "Not Enroll"}`);
     if (grade) filters.push(`Grade: ${grade}`);
-    if (reason.length > 0) filters.push(`Reason: ${reason.join(", ")}`);
     if (location) filters.push(`Branch: ${location}`);
     if (city) filters.push(`City: ${city}`);
     if (assignedName) filters.push(`Assigned To: ${assignedName}`);
@@ -307,8 +294,8 @@ export default function QueryReport() {
               onClick={() => handlePageChange(page + 1)}
               disabled={page >= safeTotalPages}
               className={`px-3 py-1 rounded border ${page >= safeTotalPages
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-white text-gray-700 hover:bg-gray-50"
                 }`}
             >
               Next
@@ -491,45 +478,9 @@ export default function QueryReport() {
                   </div>
                 </th>
 
-                {showClosed === "close" ? (
-                  <>
-                    <th className="px-4 py-3 text-[12px] relative">
 
-                      <div ref={dropdownRef} className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setDropdownOpen(!dropdownOpen)}
-                          className="ms-2 px-2 py-1 text-white border rounded-md text-left focus:ring-0 focus:outline-none"
-                        >
-                          <span>Reason</span>
-                        </button>
+                <th className="px-4 py-3 text-[12px]">Stage</th>
 
-                        {dropdownOpen && (
-                          <div className="absolute left-0 mt-2 w-52 bg-white border rounded-md shadow-md z-10">
-                            <div className="p-2 max-h-48 overflow-y-auto">
-                              {options.map((option) => (
-                                <label key={option.value} className="flex items-center space-x-2 p-2 hover:bg-gray-100 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    value={option.value}
-                                    checked={reason.includes(option.value)}
-                                    onChange={(e) => toggleOption(e.target.value)}
-                                    className="w-4 h-4"
-                                  />
-                                  <span className="text-sm text-gray-800">{option.label}</span>
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </th>
-                  </>
-                ) : (
-                  <>
-                    <th className="px-4 py-3 text-[12px]">Stage</th>
-                  </>
-                )}
 
                 <th className="px-4 py-3 text-[12px]">Enroll
                   <select
@@ -598,35 +549,24 @@ export default function QueryReport() {
                       })()}
                     </td>
 
-                    {showClosed === "close" ? (
-                      <>
-                        <td className="px-4 py-3 text-[12px] relative">
-                          <span className="overflow-hidden whitespace-nowrap text-ellipsis">{data.reason?.slice(0, 12) || "N/A"}</span>
-                          <div className="absolute cursor-pointer left-0 bottom-0 bg-gray-800 text-white p-2 rounded-md opacity-0 transition-opacity hover:opacity-100 max-w-xs w-48">
-                            {data.reason || "N/A"}
-                          </div>
-                        </td>
-                      </>
-                    ) : (
-                      <>
 
-                        <td className="px-4 py-3 text-[12px]">
-                          {data.stage === 1
-                            ? "1st Stage"
-                            : data.stage === 2
-                              ? "2nd Stage"
-                              : data.stage === 3
-                                ? "3rd Stage"
-                                : data.stage === 4
-                                  ? "4th Stage"
-                                  : data.stage === 5
-                                    ? "5th Stage"
-                                    : data.stage === 6
-                                      ? "6th Stage"
-                                      : "Initial Stage"}
-                        </td>
-                      </>
-                    )}
+
+                    <td className="px-4 py-3 text-[12px]">
+                      {data.stage === 1
+                        ? "1st Stage"
+                        : data.stage === 2
+                          ? "2nd Stage"
+                          : data.stage === 3
+                            ? "3rd Stage"
+                            : data.stage === 4
+                              ? "4th Stage"
+                              : data.stage === 5
+                                ? "5th Stage"
+                                : data.stage === 6
+                                  ? "6th Stage"
+                                  : "Initial Stage"}
+                    </td>
+
 
                     <td className="px-4 py-3 text-[12px]">{data.addmission ? "Enrolled" : "Not Enrolled"}</td>
                   </tr>
