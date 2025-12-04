@@ -40,7 +40,13 @@ export const GET = async (request) => {
     try {
         const { searchParams } = new URL(request.url);
 
-        const mongoFilters = { addmission: true };
+        // const mongoFilters = { addmission: true };
+        const mongoFilters = {
+            $or: [
+                { addmission: true },
+                { total: { $exists: true, $gt: 0 } }
+            ]
+        };
 
         const staffId = sanitizeId(searchParams.get("staffId"));
         if (staffId) {
@@ -242,44 +248,44 @@ export const GET = async (request) => {
         // 2️⃣ Fetch FULL query details for ALL needed IDs in ONE request
         const allQueryIds = countsAgg.flatMap(g => g.queries);
         // Fetch FULL query details for ALL needed IDs but ONLY selected fields
-       const fullQueryDocs = await QueryModel.aggregate([
-  { $match: { _id: { $in: allQueryIds } } },
+        const fullQueryDocs = await QueryModel.aggregate([
+            { $match: { _id: { $in: allQueryIds } } },
 
-  {
-    $addFields: {
-      firstFeeDate: {
-        $let: {
-          vars: {
-            sortedFees: {
-              $sortArray: {
-                input: "$fees",
-                sortBy: { transactionDate: 1 }
-              }
+            {
+                $addFields: {
+                    firstFeeDate: {
+                        $let: {
+                            vars: {
+                                sortedFees: {
+                                    $sortArray: {
+                                        input: "$fees",
+                                        sortBy: { transactionDate: 1 }
+                                    }
+                                }
+                            },
+                            in: { $arrayElemAt: ["$$sortedFees.transactionDate", 0] }
+                        }
+                    }
+                }
+            },
+
+            {
+                $project: {
+                    _id: 1,
+                    userid: 1,
+                    referenceid: 1,
+                    suboption: 1,
+                    branch: 1,
+                    demo: 1,
+                    studentName: 1,
+                    gender: 1,
+                    courseInterest: 1,
+                    category: 1,
+                    studentContact: 1,
+                    firstFeeDate: 1, // 👍 Now included!
+                }
             }
-          },
-          in: { $arrayElemAt: ["$$sortedFees.transactionDate", 0] }
-        }
-      }
-    }
-  },
-
-  {
-    $project: {
-      _id: 1,
-      userid: 1,
-      referenceid: 1,
-      suboption: 1,
-      branch: 1,
-      demo: 1,
-      studentName: 1,
-      gender: 1,
-      courseInterest: 1,
-      category: 1,
-      studentContact: 1,
-      firstFeeDate: 1, // 👍 Now included!
-    }
-  }
-]);
+        ]);
 
 
 
@@ -312,19 +318,19 @@ export const GET = async (request) => {
             }
 
             userCourseCounts[staffId].courses[courseId].count += count;
-           userCourseCounts[staffId].courses[courseId].queries.push(
-        ...queries.map(id => {
-            const q = queryMap[id.toString()];
-            if (!q) return null;
+            userCourseCounts[staffId].courses[courseId].queries.push(
+                ...queries.map(id => {
+                    const q = queryMap[id.toString()];
+                    if (!q) return null;
 
-            const staffName = q.userid ? adminMap[q.userid.toString()] || "Not Assigned" : "Not Assigned";
-            return {
-                ...q,
-                staffName,     // add staffName
-                userid: undefined // optional: remove raw userid
-            };
-        }).filter(Boolean)
-    );
+                    const staffName = q.userid ? adminMap[q.userid.toString()] || "Not Assigned" : "Not Assigned";
+                    return {
+                        ...q,
+                        staffName,     // add staffName
+                        userid: undefined // optional: remove raw userid
+                    };
+                }).filter(Boolean)
+            );
 
         });
         // 🔥 New: Group Course → Branch
