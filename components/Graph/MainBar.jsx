@@ -32,8 +32,8 @@ export default function Page() {
   const [loadingPie, setLoadingPie] = useState(true);
 
   const monthNames = [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December",
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
   ];
 
   // Fetch Bar Data
@@ -53,19 +53,26 @@ export default function Page() {
           "#10b981", "#0ea5e9"
         ];
 
-        const datasets = refs.map((ref, i) => ({
-          label: ref,
-          data: month
+        const datasets = refs.map((ref, i) => {
+          const values = month
             ? result.filter((d) => d.referenceid === ref).map((d) => d.totalQueries)
             : monthNames.map((_, idx) => {
-                const item = result.find(
-                  (d) => d.month === idx + 1 && d.referenceid === ref
-                );
-                return item ? item.totalQueries : 0;
-              }),
-          backgroundColor: colors[i % colors.length],
-          borderRadius: 6,
-        }));
+              const item = result.find(
+                (d) => d.month === idx + 1 && d.referenceid === ref
+              );
+              return item ? item.totalQueries : 0;
+            });
+
+          const total = values.reduce((a, b) => a + b, 0);
+
+          return {
+            label: `${ref} (${total})`, // 👈 add total count to label
+            data: values,
+            backgroundColor: colors[i % colors.length],
+            borderRadius: 6,
+          };
+        });
+
 
         setBarData(datasets);
       } finally {
