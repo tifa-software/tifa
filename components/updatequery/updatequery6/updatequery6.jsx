@@ -61,7 +61,8 @@ export default function UpdateQuery6({ query, audit }) {
       if (response.status === 200) {
         console.log('Fees updated successfully:', response.data);
         setIsModalOpen(false); // Close the modal after successful submission
-        router.push("./")
+        // router.push("./")
+        window.location.reload();
       } else {
         console.error('Error updating fees:', response.statusText);
       }
@@ -99,9 +100,9 @@ export default function UpdateQuery6({ query, audit }) {
       const auditResponse = await axios.patch('/api/audit/update', data);
       if (auditResponse.status === 200) {
         console.log('Audit updated successfully:', auditResponse.data);
-        router.push("./")
+        // router.push("./")
 
-        // window.location.reload();
+        window.location.reload();
       } else {
         console.error('Error updating audit:', auditResponse.statusText);
       }

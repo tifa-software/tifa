@@ -8,16 +8,16 @@ import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
 
 export default function Assigned() {
   const router = useRouter();
- const [isModalOpen, setIsModalOpen] = useState(false);
-    const [activeQuery, setActiveQuery] = useState(null);
-    const handleOpenModal = (queryContent) => {
-        setActiveQuery(queryContent);
-        setIsModalOpen(true);
-    };
-       const handleCloseModal = () => {
-        setIsModalOpen(false);
-        setActiveQuery(null);
-    };
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeQuery, setActiveQuery] = useState(null);
+  const handleOpenModal = (queryContent) => {
+    setActiveQuery(queryContent);
+    setIsModalOpen(true);
+  };
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setActiveQuery(null);
+  };
 
   const [queries, setQueries] = useState([]);
   const [data, setData] = useState([]);
@@ -147,7 +147,7 @@ export default function Assigned() {
                             <tr
                               key={query._id}
                               className={`border-b cursor-pointer transition-colors duration-200 hover:opacity-90 ${rowClass} `}
-                             onClick={() => handleOpenModal(`${query._id}`)}
+                              onClick={() => handleOpenModal(`${query._id}`)}
                             >
                               <td className="px-6 py-1 font-semibold">{index + 1}</td>
                               <td className="px-6 py-1 font-semibold">{query.studentName}</td>
@@ -320,19 +320,19 @@ export default function Assigned() {
         </div>
 
       </div>
-{isModalOpen && (
-                <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
-                    <div className="   h-screen w-screen  relative">
-                        <button
-                            className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
-                            onClick={handleCloseModal}
-                        >
-                            &times;
-                        </button>
-                        <div><Queryreport55 id={activeQuery} /></div>
-                    </div>
-                </div>
-            )}
+      {isModalOpen && (
+        <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
+          <div className="   h-screen w-screen  relative">
+            <button
+              className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
+              onClick={handleCloseModal}
+            >
+              &times;
+            </button>
+            <div><Queryreport55 id={activeQuery} /></div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

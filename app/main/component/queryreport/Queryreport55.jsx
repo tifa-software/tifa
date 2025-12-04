@@ -82,7 +82,7 @@ export default function Page({ id }) {
     if (error) {
         return (
             <div className="flex justify-center items-center w-full min-h-screen bg-gray-50">
-                <p className="text-red-500 text-lg">{error}</p>
+            <p className="text-red-500 text-lg">{error}</p>
             </div>
         );
     }
@@ -93,7 +93,7 @@ export default function Page({ id }) {
             <div className="col-span-1 bg-white shadow-lg rounded-lg p-6">
                 {query.autoclosed !== "close" && (
                     <button onClick={() => handleOpenModal(`${query._id}`)}>
-                        {query.studentName || "N/A"}
+                        Edit
                     </button>
                     // <Link href={`/main/page/update/${query._id}`}>
                     //     <Edit size={15} className=" mb-2 text-[#29234b]" />

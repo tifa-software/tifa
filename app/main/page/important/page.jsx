@@ -9,6 +9,8 @@ import BulkAssign from "@/components/BulkAssign/BulkAssign";
 import { ArrowLeft, ArrowRight, Search, Trash2, CirclePlus, Filter, X, Send, XCircleIcon, Download } from "lucide-react";
 import Image from "next/image";
 import * as XLSX from "xlsx";
+import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
+
 // Utility: build API URL with query params
 function buildApiUrl({
   type = "open",
@@ -48,7 +50,10 @@ const formatDeadlineValue = (value) => {
 
 export default function AllQueryClient({ initialQueries, initialPage, totalPages, users }) {
   const router = useRouter();
+  const [isModalOpen2, setIsModalOpen2] = useState(false);
+  const [activeQuery, setActiveQuery] = useState(null);
 
+ 
   // ---- Data state ----
   const [queries, setQueries] = useState(() => initialQueries ?? []);
   const [page, setPage] = useState(() => initialPage ?? 1);
@@ -79,7 +84,14 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
   // Sentinel for infinite scroll
   const sentinelRef = useRef(null);
 
-  const handleRowClick = (id) => router.push(`/main/page/allquery/${id}`);
+  const handleRowClick = (id) =>  {
+    setActiveQuery(id);
+    setIsModalOpen2(true);
+  };
+   const handleCloseModal = () => {
+    setIsModalOpen2(false);
+    setActiveQuery(null);
+  };
   const toggleFilterPopup = () => setIsFilterOpen((v) => !v);
 
   // Debounce search term
@@ -886,6 +898,19 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
           </tbody>
         </table>
       </div>
+        {isModalOpen2 && (
+              <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
+                <div className="   h-screen w-screen  relative">
+                  <button
+                    className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
+                    onClick={handleCloseModal}
+                  >
+                    &times;
+                  </button>
+                  <div><Queryreport55 id={activeQuery} /></div>
+                </div>
+              </div>
+            )}
     </div>
   );
 }
