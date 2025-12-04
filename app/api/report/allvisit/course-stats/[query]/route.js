@@ -413,10 +413,25 @@ export const GET = async (request) => {
     // Build the userCourseCounts object
     const userBranchCounts = {};
 
+    // Get audit logs for all matching queries to find stage6updatedate
+    const allAuditLogs = await AuditLog.find({
+      queryId: { $in: allMatchingQueries.map(q => q._id) }
+    });
+
+    // Create a map of queryId to its audit log for quick lookup
+    const queryAuditMap = allAuditLogs.reduce((map, log) => {
+      const id = log.queryId.toString();
+      if (!map[id]) {
+        map[id] = [];
+      }
+      map[id].push(...(log.history || []));
+      return map;
+    }, {});
+
     for (const q of allMatchingQueries) {
       const staffName = adminMap[q.userid?.toString()] || "Unassigned";
-
-      const branchName = q.branch || "No Branch"; // <-- use branch instead of course
+      const branchName = q.branch || "No Branch";
+      const queryId = q._id.toString();
 
       if (!userBranchCounts[staffName]) {
         userBranchCounts[staffName] = {};
@@ -431,7 +446,11 @@ export const GET = async (request) => {
 
       userBranchCounts[staffName][branchName].count++;
 
-      // Push the full query info you want
+      // Get stage6updatedate for this query
+      const auditHistory = queryAuditMap[queryId] || [];
+      const stage6updatedate = getStage6UpdatedDate(auditHistory);
+
+      // Push the full query info with stage6updatedate
       userBranchCounts[staffName][branchName].queries.push({
         _id: q._id,
         userid: q.userid,
@@ -439,6 +458,7 @@ export const GET = async (request) => {
         suboption: q.suboption,
         studentName: q.studentName,
         studentContact: q.studentContact,
+        stage6updatedate: stage6updatedate || null
       });
     }
 

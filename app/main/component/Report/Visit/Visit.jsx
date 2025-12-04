@@ -150,7 +150,7 @@ export default function QueryReport() {
   // Fetch data whenever filters or pagination change
   useEffect(() => {
     fetchFilteredData();
-  }, []);
+  }, [page, limit]);
 
   // Reset to first page when filters change
   useEffect(() => {
