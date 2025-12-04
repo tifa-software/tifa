@@ -32,6 +32,16 @@ export default function Admissionxlms() {
   };
 
   useEffect(() => {
+    // On initial load, default to current month range
+    const now = new Date();
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const toStr = now.toISOString().split("T")[0];
+    const fromStr = firstOfMonth.toISOString().split("T")[0];
+
+    setFromDate(fromStr);
+    setToDate(toStr);
+
     fetchFilteredData();
   }, []);
 

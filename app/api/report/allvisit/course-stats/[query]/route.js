@@ -115,11 +115,52 @@ export const GET = async (request) => {
 
     // ---------------------------------------------------------
     //  ✔ ONLY STAGE 6
+    //  Optimized and with default current-month range when
+    //  fromDate/toDate are not provided.
     // ---------------------------------------------------------
-    const stageSixAuditLogs = await AuditLog.find({ stage: 6 }, { queryId: 1 });
-    let stageSixQueryIds = [
-      ...new Set(stageSixAuditLogs.map((l) => l.queryId?.toString())),
-    ].filter(Boolean);
+    let stageSixQueryIds = [];
+
+    // If no dates passed, default to current month
+    const now = new Date();
+    const defaultFrom = new Date(now.getFullYear(), now.getMonth(), 1);
+    const effectiveFrom = fromDate ? new Date(fromDate) : defaultFrom;
+    const effectiveTo = toDate ? new Date(toDate) : new Date();
+    effectiveTo.setHours(23, 59, 59, 999);
+
+    // First, get only those logs that have ANY history entry
+    // where stage is set to 6 within the requested date range.
+    // This narrows the working set significantly.
+    const stage6Logs = await AuditLog.find(
+      {
+        stage: 6,
+        history: {
+          $elemMatch: {
+            actionDate: { $gte: effectiveFrom, $lte: effectiveTo },
+            "changes.stage.newValue": 6,
+          },
+        },
+      },
+      { queryId: 1, history: 1 }
+    );
+
+    // Now compute the exact stage6UpdatedDate per queryId using
+    // the same JS logic as before, but only over this reduced
+    // set of logs.
+    const stage6DateMap = {};
+
+    for (const log of stage6Logs) {
+      if (!log.history || log.history.length === 0) continue;
+
+      const latest = [...log.history].reverse().find((h) =>
+        h.changes && h.changes.get("stage")?.newValue == 6
+      );
+
+      if (latest) stage6DateMap[log.queryId.toString()] = latest.actionDate;
+    }
+
+    stageSixQueryIds = Object.entries(stage6DateMap)
+      .filter(([, dt]) => dt && dt >= effectiveFrom && dt <= effectiveTo)
+      .map(([id]) => id);
 
     if (stageSixQueryIds.length === 0) {
       return Response.json({
@@ -129,47 +170,6 @@ export const GET = async (request) => {
         userCourseCounts: {},
         pagination: { total: 0, page, limit, totalPages: 1 },
       });
-    }
-
-    // ---------------------------------------------------------
-    // ⭐ FILTER BY stage6UpdatedDate (ONLY THIS)
-    // ---------------------------------------------------------
-    if (fromDate && toDate) {
-      const from = new Date(fromDate);
-      const to = new Date(toDate);
-      to.setHours(23, 59, 59, 999);
-
-      const stage6Logs = await AuditLog.find({
-        stage: 6,
-        queryId: { $in: stageSixQueryIds }
-      });
-
-      const stage6DateMap = {};
-
-      for (const log of stage6Logs) {
-        if (!log.history || log.history.length === 0) continue;
-
-        const latest = [...log.history].reverse().find(h =>
-          h.changes && h.changes.get("stage")?.newValue == 6
-        );
-
-        if (latest) stage6DateMap[log.queryId.toString()] = latest.actionDate;
-      }
-
-      stageSixQueryIds = stageSixQueryIds.filter(id => {
-        const dt = stage6DateMap[id];
-        return dt && dt >= from && dt <= to;
-      });
-
-      if (stageSixQueryIds.length === 0) {
-        return Response.json({
-          success: true,
-          fetch: [],
-          courseStats: [],
-          userCourseCounts: {},
-          pagination: { total: 0, page, limit, totalPages: 1 },
-        });
-      }
     }
 
     // ---------------------------------------------------------
