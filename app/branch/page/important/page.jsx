@@ -11,7 +11,7 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import * as XLSX from "xlsx";
 // Utility: build API URL with query params
-function buildApiUrl({ branchname, userid, page = 1, deadlineFilter = "", grade = "", search = "", customDate = "", rangeStart = "", rangeEnd = "", assignedFrom = "" }) {
+function buildApiUrl({ branchname, userid, page = 1, deadlineFilter = "", grade = "", search = "", customDate = "", rangeStart = "", rangeEnd = "", assignedFrom = "", self = "" }) {
   const params = new URLSearchParams();
   params.set("_id", userid);
   params.set("autoclosed", "open");
@@ -26,6 +26,7 @@ function buildApiUrl({ branchname, userid, page = 1, deadlineFilter = "", grade 
   }
   if (grade) params.set("grade", grade);
   if (search) params.set("search", search);
+  if (self) params.set("self", self);
   if (assignedFrom) params.set("assignedFrom", assignedFrom);
   return `/api/queries/fetchall-bybranch/${encodeURIComponent(branchname)}?${params.toString()}`;
 }
@@ -65,6 +66,7 @@ export default function Important() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterByGrade, setFilterByGrade] = useState("H");
   const [filterAssignedFrom, setFilterAssignedFrom] = useState("");
+  const [filterself, setFilterself] = useState("0");
   const [deadlineFilter, setDeadlineFilter] = useState("");
   const [customDate, setCustomDate] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -198,6 +200,7 @@ export default function Important() {
         grade: filterByGrade,
         search: debouncedSearchTerm,
         assignedFrom: filterAssignedFrom,
+        self: filterself,
       });
 
       const res = await fetch(url, { cache: "no-store" });
@@ -220,7 +223,7 @@ export default function Important() {
     } finally {
       setIsBootLoading(false);
     }
-  }, [adminData, deadlineFilter, customDate, startDate, endDate, filterByGrade, debouncedSearchTerm, filterAssignedFrom]);
+  }, [adminData, deadlineFilter, customDate, startDate, endDate, filterByGrade, debouncedSearchTerm, filterAssignedFrom, filterself]);
 
   // Apply filters on change
   useEffect(() => {
@@ -253,6 +256,7 @@ export default function Important() {
         grade: filterByGrade,
         search: debouncedSearchTerm,
         assignedFrom: filterAssignedFrom,
+        self: filterself,
       });
 
       const res = await fetch(url, { cache: "no-store" });
@@ -267,7 +271,7 @@ export default function Important() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, isLoading, isBootLoading, hasMore, adminData, deadlineFilter, customDate, startDate, endDate, filterByGrade, debouncedSearchTerm, filterAssignedFrom]);
+  }, [page, isLoading, isBootLoading, hasMore, adminData, deadlineFilter, customDate, startDate, endDate, filterByGrade, debouncedSearchTerm, filterAssignedFrom, filterself]);
 
   // IntersectionObserver for sentinel
   useEffect(() => {
@@ -342,6 +346,7 @@ export default function Important() {
           grade: filterByGrade,
           search: debouncedSearchTerm,
           assignedFrom: filterAssignedFrom,
+          self: filterself,
         });
 
         const res = await fetch(url, { cache: "no-store" });
@@ -387,6 +392,7 @@ export default function Important() {
     filterByGrade,
     debouncedSearchTerm,
     filterAssignedFrom,
+    filterself,
     mapQueryToExportRow,
   ]);
 
@@ -543,6 +549,15 @@ export default function Important() {
               </option>
             ))}
           </select>
+          <select
+            className="border px-3 py-2 focus:outline-none text-sm"
+            value={filterself}
+            onChange={(e) => setFilterself(e.target.value)}
+          >
+            <option value="0">All</option>
+            <option value="1">Self</option>
+          </select>
+
 
           {/* <select
             value={filterByGrade}
@@ -804,7 +819,7 @@ export default function Important() {
                         className="px-4 py-2 text-[12px]"
                       >
                         <div className="flex items-center gap-2 whitespace-nowrap">
-                           {querie.lastgrade !== "H" && (
+                          {querie.lastgrade !== "H" && (
                             <span>{querie.lastgrade}</span>
                           )}
 

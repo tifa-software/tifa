@@ -86,21 +86,22 @@ export const GET = async (request, context) => {
   const gradeFilter = searchParams.get("grade") || "";
   const searchTerm = searchParams.get("search") || "";
   const assignedFromFilter = searchParams.get("assignedFrom") || "";
-  
+  const selfFilter = searchParams.get("self") || "";
+
   const branchStaffIds = await AdminModel.find({ branch: branchname })
     .select("_id")
     .lean();
 
   const staffIds = branchStaffIds.map((u) => String(u._id));
-  
-  
+
+
   try {
-    
+
     const baseQuery = {
       autoclosed: autoclosedStatus,
       addmission: false,
       demo: false,
-     
+
       $and: [
         {
           $or: [
@@ -123,7 +124,14 @@ export const GET = async (request, context) => {
         ],
       });
     }
-
+    if (selfFilter === "1") {
+      baseQuery.$and.push({
+        $or: [
+          { userid: userid, assignedTo: "Not-Assigned" },
+          { assignedTo: userid },
+        ],
+      });
+    }
     // Add search conditions if search term exists
     if (searchTerm) {
       const searchRegex = new RegExp(searchTerm.trim(), "i");
