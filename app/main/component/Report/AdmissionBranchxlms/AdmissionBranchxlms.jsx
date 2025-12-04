@@ -26,8 +26,9 @@ export default function AdmissionBranchxlms() {
 
     useEffect(() => {
         fetchFilteredData();
-    }, [fromDate, toDate]);
+    }, []);
 
+    // ===== Derived lists & totals =====
     const courseList = Array.from(
         new Set(
             Object.values(allquery).flatMap((course) => Object.keys(course || {}))
@@ -35,8 +36,8 @@ export default function AdmissionBranchxlms() {
     );
 
     const userTotals = {};
-    Object.keys(allquery).forEach((user) => {
-        userTotals[user] = Object.values(allquery[user] || {}).reduce(
+    Object.keys(allquery).forEach((branch) => {
+        userTotals[branch] = Object.values(allquery[branch] || {}).reduce(
             (sum, v) => sum + (v?.count || 0),
             0
         );
@@ -44,26 +45,31 @@ export default function AdmissionBranchxlms() {
 
     const getCourseTotal = (course) =>
         Object.keys(allquery).reduce(
-            (sum, user) => sum + (allquery[user][course]?.count || 0),
+            (sum, branch) => sum + (allquery[branch]?.[course]?.count || 0),
             0
         );
 
     const grandTotal = Object.values(userTotals).reduce((a, b) => a + b, 0);
 
+    // ===== Excel Export (main table) =====
     const exportExcel = () => {
+        const branches = Object.keys(allquery);
+
         const sheetData = [
-            ["Tifa Counsellor Admission Report"],
+            ["Tifa Counsellor Admission Report (Branch-wise)"],
             [`${fromDate || "Start"} to ${toDate || "End"}`],
             [],
-            ["Course", ...Object.keys(allquery), "Total"],
-            ...courseList.map((course) => [
-                course,
-                ...Object.keys(allquery).map((user) => allquery[user][course]?.count || 0),
-                getCourseTotal(course),
+            ["Branch", ...courseList, "Total"],
+            ...branches.map((branch) => [
+                branch,
+                ...courseList.map(
+                    (course) => allquery[branch]?.[course]?.count || 0
+                ),
+                userTotals[branch] || 0,
             ]),
             [
                 "Total",
-                ...Object.keys(allquery).map((user) => userTotals[user]),
+                ...courseList.map((course) => getCourseTotal(course)),
                 grandTotal,
             ],
         ];
@@ -71,8 +77,10 @@ export default function AdmissionBranchxlms() {
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(sheetData);
         XLSX.utils.book_append_sheet(wb, ws, "Report");
-        XLSX.writeFile(wb, "Tifa_Admission_Report.xlsx");
+        XLSX.writeFile(wb, "Tifa_Branch_Admission_Report.xlsx");
     };
+
+    // ===== Print styles =====
     useEffect(() => {
         const style = document.createElement("style");
         style.innerHTML = `
@@ -84,7 +92,6 @@ export default function AdmissionBranchxlms() {
     background: white !important;
   }
 
-  /* ❌ DO NOT hide all buttons — only hide non-table buttons */
   .print-hide, .top-buttons, input {
     display: none !important;
   }
@@ -94,7 +101,6 @@ export default function AdmissionBranchxlms() {
     margin: 0 !important;
   }
 
-  /* ✔ Ensure table fits */
   table {
     width: 100% !important;
     font-size: 10px !important;
@@ -106,7 +112,6 @@ export default function AdmissionBranchxlms() {
     padding: 4px !important;
   }
 
-  /* ✔ Convert count buttons into plain text */
   td button {
     all: unset !important;
     color: black !important;
@@ -120,7 +125,6 @@ export default function AdmissionBranchxlms() {
     margin: 10mm;
   }
 
-  /* Hide modal */
   .modal-print-hide {
     display: none !important;
   }
@@ -133,6 +137,50 @@ export default function AdmissionBranchxlms() {
             document.head.removeChild(style);
         };
     }, []);
+
+    // ✅ Excel Export for Modal (selectedData)
+    const exportSelectedToExcel = () => {
+        if (!selectedData) return;
+
+        const headerTitle = `${selectedData.courseName} — ${selectedData.branchName}`;
+        const period = `${fromDate || "Start"} to ${toDate || "End"}`;
+
+        const sheetData = [
+            ["Tifa Branch Admission Details"],
+            [headerTitle],
+            [period],
+            [],
+            ["S/N", "Date", "Staff", "Student", "Branch"],
+            ...selectedData.queries.map((q, index) => {
+                const dateStr = q.firstFeeDate
+                    ? new Date(q.firstFeeDate)
+                        .toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                        })
+                        .replace(",", "")
+                    : "-";
+
+                return [
+                    index + 1,
+                    dateStr,
+                    q.staffName || "",
+                    q.studentName || "",
+                    q.branch || selectedData.branchName || "",
+                ];
+            }),
+        ];
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(sheetData);
+        XLSX.utils.book_append_sheet(wb, ws, "Details");
+        XLSX.writeFile(
+            wb,
+            `Tifa_${selectedData.branchName}_${selectedData.courseName}_Details.xlsx`
+        );
+    };
+
     return (
         <div className="p-4 bg-[#F3F7FB] min-h-screen text-sm">
             <div className="text-center mb-4">
@@ -143,6 +191,7 @@ export default function AdmissionBranchxlms() {
                     {fromDate || "Start"} to {toDate || "End"}
                 </p>
             </div>
+
             {/* Filter */}
             <div className="flex gap-4 mb-4 items-end">
                 <div className="flex flex-col text-gray-600 text-xs">
@@ -163,6 +212,12 @@ export default function AdmissionBranchxlms() {
                         className="border rounded px-2 py-1"
                     />
                 </div>
+                <button
+                    onClick={fetchFilteredData}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow text-xs"
+                >
+                    Apply Filter
+                </button>
                 <button
                     onClick={exportExcel}
                     className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow text-xs"
@@ -214,29 +269,26 @@ export default function AdmissionBranchxlms() {
                                     </td>
 
                                     {courseList.map((course) => {
-                                        const data = allquery[branch][course];
+                                        const data = allquery[branch]?.[course];
+
                                         return (
                                             <td
-                                                key={course}
+                                                key={branch + course}
                                                 className="border border-gray-500 p-2 text-center"
                                             >
                                                 {data?.count > 0 ? (
-                                                    <>
-                                                        <button
-                                                            className="text-green-700 underline font-bold hover:text-green-600 ml-2"
-                                                            onClick={() =>
-                                                                setSelectedData({
-                                                                    branch,
-                                                                    course,
-                                                                    queries: data.queries,
-                                                                })
-                                                            }
-                                                        >
-                                                            {data.count}
-
-                                                        </button>
-
-                                                    </>
+                                                    <button
+                                                        className="text-green-700 underline font-bold hover:text-green-600 ml-2"
+                                                        onClick={() =>
+                                                            setSelectedData({
+                                                                branchName: branch,
+                                                                courseName: course,
+                                                                queries: data.queries || [],
+                                                            })
+                                                        }
+                                                    >
+                                                        {data.count}
+                                                    </button>
                                                 ) : (
                                                     "-"
                                                 )}
@@ -271,71 +323,90 @@ export default function AdmissionBranchxlms() {
                             </tr>
                         </tbody>
                     </table>
-
                 </div>
             )}
 
             {loading && (
-                <div className="text-center font-semibold text-gray-500 mt-4">Loading…</div>
+                <div className="text-center font-semibold text-gray-500 mt-4">
+                    Loading…
+                </div>
             )}
 
             {/* Modal Details */}
             {selectedData && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                    <div className="bg-white w-[95%] md:w-[70%] p-4 rounded-xl shadow-lg max-h-[85vh] overflow-y-auto">
-
+                    <div className="bg-white w-[95%] md:w-[70%] p-4 rounded-xl shadow-lg max-h-[85vh] overflow-y-auto relative">
                         <div className="flex justify-between items-center border-b pb-2 mb-3">
                             <h2 className="text-lg font-bold text-gray-800">
-                                {selectedData.course} — {selectedData.user}
+                                {selectedData.courseName} — {selectedData.branchName}
                             </h2>
-                            <button className="text-red-600 font-bold text-xl"
-                                onClick={() => setSelectedData(null)}>
-                                ✖
-                            </button>
+
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={exportSelectedToExcel}
+                                    className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                                >
+                                    Export to Excel
+                                </button>
+                                <button
+                                    className="text-red-600 font-bold text-xl"
+                                    onClick={() => setSelectedData(null)}
+                                >
+                                    ✖
+                                </button>
+                            </div>
                         </div>
 
-                        <table className="w-full border text-sm">
-                            <thead className="bg-gray-200">
-                                <tr>
-                                    <th className="border p-2">S/N</th>
-                                    <th className="border p-2">Date</th>
-                                    <th className="border p-2">Staff</th>
-                                    <th className="border p-2">Student</th>
-                                    <th className="border p-2">Branch</th>
-                                    {/* <th className="border p-2">City</th> */}
-                                    {/* <th className="border p-2">Reference</th> */}
-                                    {/* <th className="border p-2">Sub Option</th> */}
-                                </tr>
-                            </thead>
+                        {/** ✅ sort by firstFeeDate before mapping */}
+                        {(() => {
+                            const sortedQueries = [...selectedData.queries].sort((a, b) => {
+                                const da = a.firstFeeDate ? new Date(a.firstFeeDate).getTime() : 0;
+                                const db = b.firstFeeDate ? new Date(b.firstFeeDate).getTime() : 0;
+                                return da - db; // ascending; use db - da for descending
+                            });
 
-                            <tbody>
-                                {selectedData.queries.map((q, index) => (
-                                    <tr key={q._id} className="hover:bg-blue-50">
-                                        <td className="border p-2">{index + 1}</td>
-                                        <td className="border p-2">
-                                            {q.firstFeeDate
-                                                ? new Date(q.firstFeeDate).toLocaleDateString("en-GB", {
-                                                    day: "numeric",
-                                                    month: "short",
-                                                    year: "numeric",
-                                                }).replace(",", "")
-                                                : "-"}
-                                        </td>
+                            return (
+                                <table className="w-full border text-sm">
+                                    <thead className="bg-gray-200 sticky top-0 z-10">
+                                        <tr>
+                                            <th className="border p-2">S/N</th>
+                                            <th className="border p-2">Date</th>
+                                            <th className="border p-2">Staff</th>
+                                            <th className="border p-2">Student</th>
+                                            <th className="border p-2">Branch</th>
+                                        </tr>
+                                    </thead>
 
-                                        <td className="border p-2">{q.staffName}</td>
-                                        <td className="border p-2">{q.studentName}</td>
-                                        <td className="border p-2">{q.branch}</td>
-                                        {/* <td className="border p-2">{q.studentContact?.city}</td> */}
-                                        {/* <td className="border p-2">{q.referenceid}</td> */}
-                                        {/* <td className="border p-2">{q.suboption}</td> */}
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-
+                                    <tbody>
+                                        {sortedQueries.sort((b, a) => new Date(b.firstFeeDate) - new Date(a.firstFeeDate)).map((q, index) => (
+                                            <tr key={q._id || index} className="hover:bg-blue-50">
+                                                <td className="border p-2">{index + 1}</td>
+                                                <td className="border p-2">
+                                                    {q.firstFeeDate
+                                                        ? new Date(q.firstFeeDate)
+                                                            .toLocaleDateString("en-GB", {
+                                                                day: "numeric",
+                                                                month: "short",
+                                                                year: "numeric",
+                                                            })
+                                                            .replace(",", "")
+                                                        : "-"}
+                                                </td>
+                                                <td className="border p-2">{q.staffName}</td>
+                                                <td className="border p-2">{q.studentName}</td>
+                                                <td className="border p-2">
+                                                    {q.branch || selectedData.branchName}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            );
+                        })()}
                     </div>
                 </div>
             )}
+
         </div>
     );
 }

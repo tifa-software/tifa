@@ -202,7 +202,48 @@ export default function Admissionxlms() {
       document.head.removeChild(style);
     };
   }, []);
+  const exportSelectedToExcel = () => {
+    if (!selectedData) return;
 
+    const headerTitle = `${selectedData.course} — ${selectedData.user}`;
+    const period = `${fromDate || "Start"} to ${toDate || "End"}`;
+
+    const sheetData = [
+      ["Tifa Counsellor Visit Details"],
+      [headerTitle],
+      [period],
+      [],
+      ["S/N", "Date", "Staff", "Student", "Branch", "Phone"],
+      ...selectedData.queries.map((q, index) => {
+        const dateStr = q.stage6UpdatedDate
+          ? new Date(q.stage6UpdatedDate)
+            .toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })
+            .replace(",", "")
+          : "-";
+
+        return [
+          index + 1,
+          dateStr,
+          selectedData.user,
+          q.studentName || "",
+          selectedData.course || "",
+          q.studentContact?.phoneNumber || "",
+        ];
+      }),
+    ];
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    XLSX.utils.book_append_sheet(wb, ws, "Details");
+    XLSX.writeFile(
+      wb,
+      `Tifa_${selectedData.user}_${selectedData.course}_Details.xlsx`
+    );
+  };
   return (
     <div className="p-4 bg-[#F3F7FB] min-h-screen text-sm print-area">
       <div className="text-center mb-4">
@@ -355,22 +396,32 @@ export default function Admissionxlms() {
 
       {/* Modal Details */}
       {selectedData && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 ">
-          <div className="bg-white w-[95%] md:w-[70%] p-4 rounded-xl shadow-lg max-h-[85vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          {/* ⭐ NEW: added relative for sticky header to work nicely */}
+          <div className="bg-white w-[95%] md:w-[70%] p-4 rounded-xl shadow-lg max-h-[85vh] overflow-y-auto relative">
             <div className="flex justify-between items-center border-b pb-2 mb-3">
               <h2 className="text-lg font-bold text-gray-800">
                 {selectedData.course} — {selectedData.user}
               </h2>
-              <button
-                className="text-red-600 font-bold text-xl"
-                onClick={() => setSelectedData(null)}
-              >
-                ✖
-              </button>
+              <div className=" flex gap-5">
+
+                <button
+                  onClick={exportSelectedToExcel}
+                  className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                >
+                  Export to Excel
+                </button>
+                <button
+                  className="text-red-600 font-bold text-xl"
+                  onClick={() => setSelectedData(null)}
+                >
+                  ✖
+                </button>
+              </div>
             </div>
 
             <table className="w-full border text-sm">
-              <thead className="bg-gray-200">
+              <thead className="bg-gray-200 sticky top-0 z-10">
                 <tr>
                   <th className="border p-2">S/N</th>
                   <th className="border p-2">Date</th>
@@ -382,7 +433,7 @@ export default function Admissionxlms() {
               </thead>
 
               <tbody>
-                {selectedData.queries.map((q, index) => (
+                {selectedData.queries.sort((b, a) => new Date(b.stage6UpdatedDate) - new Date(a.stage6UpdatedDate)).map((q, index) => (
                   <tr key={q._id} className="hover:bg-blue-50">
                     <td className="border p-2">{index + 1}</td>
                     <td className="border p-2"> {q.stage6UpdatedDate

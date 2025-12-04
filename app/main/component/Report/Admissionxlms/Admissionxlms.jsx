@@ -26,7 +26,7 @@ export default function Admissionxlms() {
 
     useEffect(() => {
         fetchFilteredData();
-    }, [fromDate, toDate]);
+    }, []);
 
     const staffList = Object.keys(allquery);
 
@@ -34,7 +34,9 @@ export default function Admissionxlms() {
     const courseList = Array.from(
         new Set(
             staffList.flatMap((staff) =>
-                Object.values(allquery[staff]?.courses || {}).map((c) => c.courseName)
+                Object.values(allquery[staff]?.courses || {}).map(
+                    (c) => c.courseName
+                )
             )
         )
     );
@@ -50,27 +52,30 @@ export default function Admissionxlms() {
 
     // Course wise totals
     const getCourseTotal = (courseName) =>
-        staffList.reduce(
-            (sum, staff) => sum +
-                (Object.values(allquery[staff].courses || {})
-                    .find((c) => c.courseName === courseName)?.count || 0),
-            0
-        );
+        staffList.reduce((sum, staff) => {
+            const courseObj = Object.values(allquery[staff].courses || {}).find(
+                (c) => c.courseName === courseName
+            );
+            return sum + (courseObj?.count || 0);
+        }, 0);
 
     const grandTotal = Object.values(userTotals).reduce((a, b) => a + b, 0);
 
-    // Excel Export
+    // Excel Export (main table)
     const exportExcel = () => {
         const sheetData = [
             ["Tifa Counsellor Admission Report"],
             [`${fromDate || "Start"} to ${toDate || "End"}`],
             [],
-            ["Course", ...staffList.map(s => allquery[s].staffName), "Total"],
+            ["Course", ...staffList.map((s) => allquery[s].staffName), "Total"],
             ...courseList.map((course) => [
                 course,
-                ...staffList.map((staff) =>
-                    Object.values(allquery[staff].courses || {})
-                        .find((c) => c.courseName === course)?.count || 0),
+                ...staffList.map((staff) => {
+                    const courseObj = Object.values(allquery[staff].courses || {}).find(
+                        (c) => c.courseName === course
+                    );
+                    return courseObj?.count || 0;
+                }),
                 getCourseTotal(course),
             ]),
             ["Total", ...staffList.map((staff) => userTotals[staff]), grandTotal],
@@ -80,9 +85,11 @@ export default function Admissionxlms() {
         XLSX.utils.book_append_sheet(wb, ws, "Report");
         XLSX.writeFile(wb, "Tifa_Admission_Report.xlsx");
     };
- useEffect(() => {
-    const style = document.createElement("style");
-    style.innerHTML = `
+
+    // Print styles
+    useEffect(() => {
+        const style = document.createElement("style");
+        style.innerHTML = `
    @media print {
 
   body {
@@ -91,7 +98,6 @@ export default function Admissionxlms() {
     background: white !important;
   }
 
-  /* ❌ DO NOT hide all buttons — only hide non-table buttons */
   .print-hide, .top-buttons, input {
     display: none !important;
   }
@@ -101,7 +107,6 @@ export default function Admissionxlms() {
     margin: 0 !important;
   }
 
-  /* ✔ Ensure table fits */
   table {
     width: 100% !important;
     font-size: 10px !important;
@@ -113,7 +118,6 @@ export default function Admissionxlms() {
     padding: 4px !important;
   }
 
-  /* ✔ Convert count buttons into plain text */
   td button {
     all: unset !important;
     color: black !important;
@@ -127,22 +131,64 @@ export default function Admissionxlms() {
     margin: 10mm;
   }
 
-  /* Hide modal */
   .modal-print-hide {
     display: none !important;
   }
 }
 
   `;
-    document.head.appendChild(style);
+        document.head.appendChild(style);
 
-    return () => {
-      document.head.removeChild(style);
+        return () => {
+            document.head.removeChild(style);
+        };
+    }, []);
+
+    // ✅ Excel Export for Modal (selectedData) – fixed names
+    const exportSelectedToExcel = () => {
+        if (!selectedData) return;
+
+        const headerTitle = `${selectedData.courseName} — ${selectedData.staffName}`;
+        const period = `${fromDate || "Start"} to ${toDate || "End"}`;
+
+        const sheetData = [
+            ["Tifa Counsellor Admission Details"],
+            [headerTitle],
+            [period],
+            [],
+            ["S/N", "Date", "Staff", "Student", "Branch"],
+            ...selectedData.queries.map((q, index) => {
+                const dateStr = q.firstFeeDate
+                    ? new Date(q.firstFeeDate)
+                        .toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                        })
+                        .replace(",", "")
+                    : "-";
+
+                return [
+                    index + 1,
+                    dateStr,
+                    q.staffName || selectedData.staffName || "",
+                    q.studentName || "",
+                    q.branch || selectedData.courseName || "",
+                ];
+            }),
+        ];
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(sheetData);
+        XLSX.utils.book_append_sheet(wb, ws, "Details");
+        XLSX.writeFile(
+            wb,
+            `Tifa_${selectedData.staffName}_${selectedData.courseName}_Details.xlsx`
+        );
     };
-  }, []);
+
     return (
         <div className="p-4 bg-[#F3F7FB] min-h-screen text-sm">
-
             {/* Header */}
             <div className="text-center mb-4">
                 <h1 className="text-2xl font-extrabold text-[#2C4B8A]">
@@ -173,14 +219,19 @@ export default function Admissionxlms() {
                         className="border rounded px-2 py-1"
                     />
                 </div>
-
+                <button
+                    onClick={() => fetchFilteredData()}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow text-xs"
+                >
+                    Apply Filter
+                </button>
                 <button
                     onClick={exportExcel}
                     className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded shadow text-xs"
                 >
                     Export to Excel
                 </button>
-                  <button
+                <button
                     onClick={() => window.print()}
                     className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded shadow text-xs print:hidden"
                 >
@@ -225,32 +276,30 @@ export default function Admissionxlms() {
                                     </td>
 
                                     {staffList.map((staff) => {
-                                        const courseData = Object.values(allquery[staff].courses || {}).find(
-                                            (c) => c.courseName === course
-                                        );
+                                        const courseData = Object.values(
+                                            allquery[staff].courses || {}
+                                        ).find((c) => c.courseName === course);
 
                                         return (
                                             <td
-                                                key={course}
+                                                key={staff + course}
                                                 className="border border-gray-500 p-2 text-center"
                                             >
                                                 {courseData?.count > 0 ? (
-                                                    <>
-                                                        <button
-                                                            className="text-green-700 underline font-bold hover:text-green-600 ml-2"
-                                                            onClick={() =>
-                                                                setSelectedData({
-                                                                    staff,
-                                                                    course,
-                                                                    queries: courseData.queries,
-                                                                })
-                                                            }
-                                                        >
-                                                            {courseData.count}
-
-                                                        </button>
-
-                                                    </>
+                                                    <button
+                                                        className="text-green-700 underline font-bold hover:text-green-600 ml-2"
+                                                        onClick={() =>
+                                                            setSelectedData({
+                                                                staffKey: staff,
+                                                                staffName:
+                                                                    allquery[staff]?.staffName || staff,
+                                                                courseName: course,
+                                                                queries: courseData.queries || [],
+                                                            })
+                                                        }
+                                                    >
+                                                        {courseData.count}
+                                                    </button>
                                                 ) : (
                                                     "-"
                                                 )}
@@ -285,7 +334,6 @@ export default function Admissionxlms() {
                             </tr>
                         </tbody>
                     </table>
-
                 </div>
             ) : (
                 <div className="text-center font-semibold text-gray-500 mt-4">
@@ -296,21 +344,29 @@ export default function Admissionxlms() {
             {/* Modal */}
             {selectedData && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                    <div className="bg-white w-[95%] md:w-[70%] p-4 rounded-xl shadow-lg max-h-[85vh] overflow-y-auto">
+                    <div className="bg-white w-[95%] md:w-[70%] p-4 rounded-xl shadow-lg max-h-[85vh] overflow-y-auto relative">
                         <div className="flex justify-between items-center border-b pb-2 mb-3">
                             <h2 className="text-lg font-bold text-gray-800">
                                 {selectedData.courseName} — {selectedData.staffName}
                             </h2>
-                            <button
-                                className="text-red-600 font-bold text-xl"
-                                onClick={() => setSelectedData(null)}
-                            >
-                                ✖
-                            </button>
+                            <div className="flex gap-5">
+                                <button
+                                    onClick={exportSelectedToExcel}
+                                    className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                                >
+                                    Export to Excel
+                                </button>
+                                <button
+                                    className="text-red-600 font-bold text-xl"
+                                    onClick={() => setSelectedData(null)}
+                                >
+                                    ✖
+                                </button>
+                            </div>
                         </div>
 
                         <table className="w-full border text-sm">
-                            <thead className="bg-gray-200">
+                            <thead className="bg-gray-200 sticky top-0 z-10">
                                 <tr>
                                     <th className="border p-2">S/N</th>
                                     <th className="border p-2">Date</th>
@@ -321,27 +377,31 @@ export default function Admissionxlms() {
                             </thead>
 
                             <tbody>
-                                {selectedData.queries.map((q, index) => (
-                                    <tr key={q._id} className="hover:bg-blue-50">
-                                       <td className="border p-2">{index + 1}</td>
+                                {selectedData.queries.sort((b, a) => new Date(b.firstFeeDate) - new Date(a.firstFeeDate)).map((q, index) => (
+                                    <tr key={q._id || index} className="hover:bg-blue-50">
+                                        <td className="border p-2">{index + 1}</td>
                                         <td className="border p-2">
                                             {q.firstFeeDate
-                                                ? new Date(q.firstFeeDate).toLocaleDateString("en-GB", {
-                                                    day: "numeric",
-                                                    month: "short",
-                                                    year: "numeric",
-                                                }).replace(",", "")
+                                                ? new Date(q.firstFeeDate)
+                                                    .toLocaleDateString("en-GB", {
+                                                        day: "numeric",
+                                                        month: "short",
+                                                        year: "numeric",
+                                                    })
+                                                    .replace(",", "")
                                                 : "-"}
                                         </td>
-
-                                        <td className="border p-2">{q.staffName}</td>
+                                        <td className="border p-2">
+                                            {q.staffName || selectedData.staffName}
+                                        </td>
                                         <td className="border p-2">{q.studentName}</td>
-                                        <td className="border p-2">{q.branch}</td>
+                                        <td className="border p-2">
+                                            {q.branch || selectedData.courseName}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
-
                     </div>
                 </div>
             )}
