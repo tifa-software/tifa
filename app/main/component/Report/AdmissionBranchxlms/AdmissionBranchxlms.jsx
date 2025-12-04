@@ -226,7 +226,7 @@ export default function AdmissionBranchxlms() {
                                                             className="text-green-700 underline font-bold hover:text-green-600 ml-2"
                                                             onClick={() =>
                                                                 setSelectedData({
-                                                                    user,
+                                                                    branch,
                                                                     course,
                                                                     queries: data.queries,
                                                                 })

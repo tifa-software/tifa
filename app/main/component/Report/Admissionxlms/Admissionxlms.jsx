@@ -240,7 +240,7 @@ export default function Admissionxlms() {
                                                             className="text-green-700 underline font-bold hover:text-green-600 ml-2"
                                                             onClick={() =>
                                                                 setSelectedData({
-                                                                    user,
+                                                                    staff,
                                                                     course,
                                                                     queries: courseData.queries,
                                                                 })
