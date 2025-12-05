@@ -6,6 +6,8 @@ import { useReactToPrint } from "react-to-print";
 import { useRef } from "react";
 import * as XLSX from "xlsx";
 import Link from "next/link";
+import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
+
 export default function StaffDatanew({ staffid }) {
     const [userData, setUserData] = useState(null);
     const [adminData, setAdminData] = useState(null);
@@ -33,7 +35,21 @@ export default function StaffDatanew({ staffid }) {
     const [filterEndDate, setFilterEndDate] = useState(today);
 
     const [monthlyActivity, setMonthlyActivity] = useState(null);
+    const [isModalOpen2, setIsModalOpen2] = useState(false);
+    const [modalData, setModalData] = useState(null);
+    const [activeQuery, setActiveQuery] = useState(null);
 
+    // Sentinel for infinite scroll
+    const sentinelRef = useRef(null);
+
+    const handleRowClick = (id) => {
+        setActiveQuery(id);
+        setIsModalOpen2(true);
+    };
+    const handleCloseModal = () => {
+        setIsModalOpen2(false);
+        setActiveQuery(null);
+    };
 
     const applyFilter = () => {
         // Priority: year/month if provided, otherwise use custom date range
@@ -472,7 +488,7 @@ export default function StaffDatanew({ staffid }) {
 
                             return (
                                 <div className="text-lg font-bold border border-[#29234b] p-3 rounded">
-                                  Total Query: {grandTotal}
+                                    Total Query: {grandTotal}
                                 </div>
                             );
                         })()
@@ -498,7 +514,7 @@ export default function StaffDatanew({ staffid }) {
                                         {activeDay === day && (
                                             <div className="mt-2">
                                                 <p className="font-medium text-sm border px-2 bg-gray-50">
-                                                     {/* Total Query: {activity.count[0]} */}
+                                                    {/* Total Query: {activity.count[0]} */}
                                                 </p>
                                                 <table className="w-full text-sm text-left rtl:text-right text-gray-600 font-sans mt-2">
                                                     <thead className="bg-[#29234b] text-white uppercase">
@@ -547,16 +563,16 @@ export default function StaffDatanew({ staffid }) {
                                                             )
                                                             .map((query, index) => (
                                                                 <tr key={index}>
-                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        <Link href={`/main/page/allquery/${query._id}`} key={index}>{index + 1}</Link>
+                                                                    <td className="px-4 py-2 text-[12px] font-semibold" onClick={() => handleRowClick(query._id)}>
+                                                                        {index + 1}
 
                                                                     </td>
-                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        <Link href={`/main/page/allquery/${query._id}`} key={index}>  {query.studentName}</Link>
+                                                                    <td className="px-4 py-2 text-[12px] font-semibold" onClick={() => handleRowClick(query._id)}>
+                                                                        {query.studentName}
 
                                                                     </td>
-                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        <Link href={`/main/page/allquery/${query._id}`} key={index}>    {query.studentContact.phoneNumber}</Link>
+                                                                    <td className="px-4 py-2 text-[12px] font-semibold" onClick={() => handleRowClick(query._id)}>
+                                                                        {query.studentContact.phoneNumber}
 
 
                                                                     </td>
@@ -649,6 +665,19 @@ export default function StaffDatanew({ staffid }) {
                             ))
                     )}
                 </div>
+                {isModalOpen2 && (
+                    <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
+                        <div className="   h-screen w-screen  relative">
+                            <button
+                                className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
+                                onClick={handleCloseModal}
+                            >
+                                &times;
+                            </button>
+                            <div><Queryreport55 id={activeQuery} /></div>
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     );
