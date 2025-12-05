@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import QueryReport from '@/app/main/component/franReport/QueryReport/QueryReport';
 import Demo from '@/app/main/component/franReport/Demo/Demo';
-
+import Visit from '@/app/main/component/franReport/Visit/Visit';
 export default function BranchReportPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,6 +43,14 @@ export default function BranchReportPage() {
                             onClick={() => handleOpenModal(<Demo />)}
                         >
                             Demo Queries
+                        </button>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<Visit />)}
+                        >
+                            Visit Queries
                         </button>
                     </div>
 
