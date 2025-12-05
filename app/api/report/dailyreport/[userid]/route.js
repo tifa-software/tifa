@@ -8,6 +8,19 @@ import AuditLog from "@/model/AuditLog";
 export const GET = async (request, context) => {
     await dbConnect();
     const adminId = context.params.userid;
+    const { searchParams } = new URL(request.url);
+    const startDateParam = searchParams.get("startDate");
+    const endDateParam = searchParams.get("endDate");
+
+    const now = new Date();
+    const todayISO = now.toISOString().split("T")[0];
+
+    // Determine filter date range (default to today)
+    const startDateStr = startDateParam || todayISO;
+    const endDateStr = endDateParam || startDateStr;
+
+    const filterStart = new Date(`${startDateStr}T00:00:00.000Z`);
+    const filterEnd = new Date(`${endDateStr}T23:59:59.999Z`);
 
     try {
         if (!adminId) {
@@ -33,10 +46,13 @@ export const GET = async (request, context) => {
         });
         const queryIds = queries.map(q => q._id.toString());
 
-        const auditLogs = await AuditLog.find({ queryId: { $in: queryIds } });
+        // Fetch only logs within the requested date range for better performance
+        const auditLogs = await AuditLog.find({
+            queryId: { $in: queryIds },
+            createdAt: { $gte: filterStart, $lte: filterEnd },
+        });
 
-        const now = new Date();
-        const todayDate = now.toISOString().split("T")[0];
+        const todayDate = todayISO;
         const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
         const startOfLastWeek = new Date(startOfWeek);
         startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
@@ -45,7 +61,13 @@ export const GET = async (request, context) => {
 
         const analytics = auditLogs.reduce((acc, log) => {
             const queryId = log.queryId.toString();
-            const logDate = new Date(log.createdAt).toISOString().split("T")[0];
+            const logCreatedAt = new Date(log.createdAt);
+            const logDate = logCreatedAt.toISOString().split("T")[0];
+
+            // Extra safety: ensure log itself is in range (in case createdAt filter changes later)
+            if (logCreatedAt < filterStart || logCreatedAt > filterEnd) {
+                return acc;
+            }
             
             if (!dailyConnectionStatus[logDate]) {
                 dailyConnectionStatus[logDate] = {
@@ -76,7 +98,14 @@ export const GET = async (request, context) => {
             }
 
             log.history.forEach(entry => {
-                const actionDate = new Date(entry.actionDate).toISOString().split("T")[0];
+                const actionDateObj = new Date(entry.actionDate);
+
+                // Skip actions outside the requested date range
+                if (actionDateObj < filterStart || actionDateObj > filterEnd) {
+                    return;
+                }
+
+                const actionDate = actionDateObj.toISOString().split("T")[0];
                 const actionMonth = actionDate.slice(0, 7);
                 const actionType = entry.action || "UNKNOWN";
                 

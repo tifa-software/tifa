@@ -25,11 +25,38 @@ export default function StaffDatanew({ staffid }) {
     const [selectedYear, setSelectedYear] = useState("");
     const [selectedMonth, setSelectedMonth] = useState("");
     const [filteredDates, setFilteredDates] = useState([]);
-    const [startDate, setStartDate] = useState(today);
-    const [endDate, setEndDate] = useState(today);
+    const [startDate, setStartDate] = useState(today); // applied start date for API
+    const [endDate, setEndDate] = useState(today);     // applied end date for API
+
+    // UI filter values (only applied when user clicks Apply Filter)
+    const [filterStartDate, setFilterStartDate] = useState(today);
+    const [filterEndDate, setFilterEndDate] = useState(today);
 
     const [monthlyActivity, setMonthlyActivity] = useState(null);
 
+
+    const applyFilter = () => {
+        // Priority: year/month if provided, otherwise use custom date range
+        if (selectedYear) {
+            if (selectedYear && selectedMonth) {
+                const start = new Date(Number(selectedYear), Number(selectedMonth) - 1, 1);
+                const end = new Date(Number(selectedYear), Number(selectedMonth), 0);
+                setStartDate(start.toISOString().split("T")[0]);
+                setEndDate(end.toISOString().split("T")[0]);
+            } else if (selectedYear && !selectedMonth) {
+                const start = new Date(Number(selectedYear), 0, 1);
+                const end = new Date(Number(selectedYear), 11, 31);
+                setStartDate(start.toISOString().split("T")[0]);
+                setEndDate(end.toISOString().split("T")[0]);
+            }
+        } else {
+            // No year/month selected: use custom dates from UI
+            const start = filterStartDate || today;
+            const end = filterEndDate || filterStartDate || today;
+            setStartDate(start);
+            setEndDate(end);
+        }
+    };
 
     useEffect(() => {
         const fetchAdminData = async () => {
@@ -39,8 +66,6 @@ export default function StaffDatanew({ staffid }) {
                 setAdminData(response.data._id);
             } catch (err) {
                 console.error(err.message);
-            } finally {
-                setLoading(false);
             }
         };
 
@@ -49,49 +74,52 @@ export default function StaffDatanew({ staffid }) {
 
     useEffect(() => {
         const fetchQueryData = async () => {
-            if (adminData) {
+            if (adminData && startDate && endDate) {
                 try {
                     setLoading(true);
-                    const response = await axios.get(`/api/report/dailyreport/${adminData}`);
+                    const response = await axios.get(`/api/report/dailyreport/${adminData}`, {
+                        params: { startDate, endDate },
+                    });
                     setData(response.data.data.userActivityReport);
                     setData1(response.data.data.userActivityReport.dailyConnectionStatus);
+                     setLoading(false);
                 } catch (error) {
                     console.error("Error fetching query data:", error);
                 } finally {
-                    setLoading(false);
+                   
                 }
             }
         };
 
         fetchQueryData();
-    }, [adminData]);
+    }, [adminData, startDate, endDate]);
 
-    useEffect(() => {
-        const fetchQueries = async () => {
-            if (adminData) {
-                try {
-                    setLoading(true);
-                    const response = await axios.get(`/api/queries/fetchall-byuser/${adminData}?autoclosed=open`);
-                    const today = new Date();
-                    const tomorrow = new Date(today);
-                    tomorrow.setDate(today.getDate() + 1);
+    // useEffect(() => {
+    //     const fetchQueries = async () => {
+    //         if (adminData) {
+    //             try {
+    //                 setLoading(true);
+    //                 const response = await axios.get(`/api/queries/fetchall-byuser/${adminData}?autoclosed=open`);
+    //                 const today = new Date();
+    //                 const tomorrow = new Date(today);
+    //                 tomorrow.setDate(today.getDate() + 1);
 
-                    const filteredQueries = response.data.fetch.filter(query => {
-                        const deadline = new Date(query.deadline);
-                        return deadline <= tomorrow;
-                    });
+    //                 const filteredQueries = response.data.fetch.filter(query => {
+    //                     const deadline = new Date(query.deadline);
+    //                     return deadline <= tomorrow;
+    //                 });
 
-                    setQueries(filteredQueries);
-                } catch (error) {
-                    console.error("Error fetching query data:", error);
-                } finally {
-                    setLoading(false);
-                }
-            }
-        };
+    //                 setQueries(filteredQueries);
+    //             } catch (error) {
+    //                 console.error("Error fetching query data:", error);
+    //             } finally {
+    //                 setLoading(false);
+    //             }
+    //         }
+    //     };
 
-        fetchQueries();
-    }, [adminData]);
+    //     fetchQueries();
+    // }, [adminData]);
 
     const handleButtonClick = () => {
         const queries = data.dailyActivity?.[today]?.queries || [];
@@ -99,14 +127,13 @@ export default function StaffDatanew({ staffid }) {
         setIsModalOpen(true);
     };
     const removeFilter = () => {
-        // Reset the filter states
+        // Reset the filter states to today's date
         setSelectedYear("");
         setSelectedMonth("");
-        setStartDate("");
-        setEndDate("");
-
-        // Reset the filtered dates to an empty array
-        setFilteredDates([]);
+        setFilterStartDate(today);
+        setFilterEndDate(today);
+        setStartDate(today);
+        setEndDate(today);
     };
     const closeModal = () => {
         setIsModalOpen(false);
@@ -127,44 +154,40 @@ export default function StaffDatanew({ staffid }) {
 
     useEffect(() => {
         if (data.dailyActivity) {
-            let filtered = Object.entries(data.dailyActivity);
-
-            if (selectedYear || selectedMonth || startDate || endDate) {
-                if (selectedYear) {
-                    filtered = filtered.filter(([day]) => new Date(day).getFullYear().toString() === selectedYear);
-                }
-                if (selectedMonth) {
-                    filtered = filtered.filter(([day]) => (new Date(day).getMonth() + 1).toString() === selectedMonth);
-                }
-                if (startDate) {
-                    filtered = filtered.filter(([day]) => new Date(day) >= new Date(startDate));
-                }
-                if (endDate) {
-                    filtered = filtered.filter(([day]) => new Date(day) <= new Date(endDate));
-                }
-                setFilteredDates(filtered);
-            } else {
-                setFilteredDates([]);
-            }
+            setFilteredDates(Object.entries(data.dailyActivity));
+        } else {
+            setFilteredDates([]);
         }
-    }, [selectedYear, selectedMonth, startDate, endDate, data.dailyActivity]);
+    }, [data.dailyActivity]);
 
     const getUserName = (id) => {
         const matchedUser = user.find((u) => u._id === id);
         return matchedUser ? matchedUser.name : "Unknown User";
     };
 
-    const years = Array.from(
+    const yearsFromData = Array.from(
         new Set(Object.keys(data.dailyActivity || {}).map((day) => new Date(day).getFullYear()))
     );
+    const currentYear = new Date().getFullYear();
+    const years = yearsFromData.length > 0 ? yearsFromData : [currentYear];
+
     const months = selectedYear
-        ? Array.from(
-            new Set(
-                Object.keys(data.dailyActivity || {})
-                    .filter((day) => new Date(day).getFullYear().toString() === selectedYear)
-                    .map((day) => new Date(day).getMonth() + 1)
-            )
-        )
+        ? (() => {
+            const monthsFromData = Array.from(
+                new Set(
+                    Object.keys(data.dailyActivity || {})
+                        .filter((day) => new Date(day).getFullYear().toString() === selectedYear)
+                        .map((day) => new Date(day).getMonth() + 1)
+                )
+            );
+            if (monthsFromData.length > 0) return monthsFromData;
+            if (selectedYear) {
+                // Fallback to current month when no data-based months are available
+                const currentMonth = new Date().getMonth() + 1;
+                return [currentMonth];
+            }
+            return [];
+        })()
         : [];
 
     if (loading) {
@@ -175,17 +198,22 @@ export default function StaffDatanew({ staffid }) {
         );
     }
     const calculateFilteredTotals = () => {
-        let filteredEntries = filteredDates || [];
+        // Work off dailyActivity (same data you see in the table)
+        const allEntries = Object.entries(data.dailyActivity || {});
 
-        // Initialize total values
+        // Respect applied start/end date (keys are YYYY-MM-DD strings)
+        const entries = allEntries.filter(([day]) => {
+            if (startDate && day < startDate) return false;
+            if (endDate && day > endDate) return false;
+            return true;
+        });
+
         let totalConnected = 0;
         let totalNoConnected = 0;
         let totalNotLifting = 0;
-        let totalUnknown = 0; // New unknown category
-        let totalActions = 0;
 
-        filteredEntries.forEach(([day, activity]) => {
-            activity.queries.forEach((query) => {
+        entries.forEach(([_, activity]) => {
+            (activity.queries || []).forEach((query) => {
                 if (query.connectionStatus && query.connectionStatus.length > 0) {
                     query.connectionStatus.forEach((statusEntry) => {
                         if (statusEntry.status === "connected") {
@@ -194,18 +222,15 @@ export default function StaffDatanew({ staffid }) {
                             totalNoConnected++;
                         } else if (statusEntry.status === "not_lifting") {
                             totalNotLifting++;
-                        } else {
-                            totalUnknown++; // Count unknown statuses
                         }
                     });
                 }
             });
         });
 
-        // Calculate Total Actions (including Unknown)
-        totalActions = totalConnected + totalNoConnected + totalNotLifting + totalUnknown;
+        const totalActions = totalConnected + totalNoConnected + totalNotLifting;
 
-        return { totalConnected, totalNoConnected, totalNotLifting, totalUnknown, totalActions, filteredEntries };
+        return { totalConnected, totalNoConnected, totalNotLifting, totalActions, filteredEntries: entries };
     };
 
 
@@ -214,12 +239,10 @@ export default function StaffDatanew({ staffid }) {
 
 
     const exportToExcel = () => {
-        // Convert filtered entries into an array of objects for better structuring
-        const formattedData = filteredEntries.map(([date, data]) => ({
+        // Convert filtered daily activity entries into an array of objects
+        const formattedData = filteredEntries.map(([date, activity]) => ({
             Date: date,
-            Connected: data.connected || 0,
-            "Not Connected": data.no_connected || 0,
-            "Not Lifting": data.not_lifting || 0,
+            TotalQueries: activity.count?.[0] || 0,
         }));
 
         // Convert JSON data to a worksheet
@@ -267,7 +290,10 @@ export default function StaffDatanew({ staffid }) {
                         <label className="font-semibold">Select Month:</label>
                         <select
                             value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            onChange={(e) => {
+                                const newMonth = e.target.value;
+                                setSelectedMonth(newMonth);
+                            }}
                             disabled={!selectedYear}
                             className="bg-gray-100 border border-gray-300 p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
                         >
@@ -285,20 +311,26 @@ export default function StaffDatanew({ staffid }) {
                         <label className="font-semibold">Start Date:</label>
                         <input
                             type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
+                            value={filterStartDate}
+                            onChange={(e) => setFilterStartDate(e.target.value)}
                             className="bg-gray-100 border border-gray-300 p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
                         />
 
                         <label className="font-semibold">End Date:</label>
                         <input
                             type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
+                            value={filterEndDate}
+                            onChange={(e) => setFilterEndDate(e.target.value)}
                             className="bg-gray-100 border border-gray-300 p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
                         />
                     </div>
                 </div>
+                <button
+                    onClick={applyFilter}
+                    className="ml-4 px-4 py-2 rounded shadow-md bg-green-500 text-white hover:bg-green-600"
+                >
+                    Apply Filter
+                </button>
                 <button
                     onClick={removeFilter}
                     disabled={!selectedYear && !selectedMonth && !startDate && !endDate}
