@@ -131,6 +131,15 @@ export default function Sidebar({ onToggleSidebar }) {
                   Report
                 </li>
               </Link>
+
+               <Link href="/main/page/fran/report" onClick={handleLinkClick}>
+                <li
+                  className={`cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md ${isActiveLink("/main/page/report") ? "bg-[#6cb049] text-white" : "hover:bg-gray-100 text-gray-700"
+                    }`}>
+                  <Gauge size={18} />
+                 Franchiese Report
+                </li>   
+              </Link>
             </ul>
 
             <ul className="flex h-full flex-col relative xl:hidden overflow-y-auto" style={{ maxHeight: "calc(100vh - 120px)" }}>

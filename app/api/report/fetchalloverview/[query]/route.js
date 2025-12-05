@@ -1,5 +1,5 @@
 export const runtime = "nodejs";
-export const preferredRegion = ["bom1"]; 
+export const preferredRegion = ["bom1"];
 import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
 import AdminModel from "@/model/Admin";
@@ -39,7 +39,13 @@ export const GET = async (request) => {
     const showClosed = searchParams.get("showClosed");
     const branch = searchParams.get("branch");
     const studentName = searchParams.get("studentName");
+    const franchise = searchParams.get("franchise");
+    let adminFilter = {};
 
+    if (franchise === "1") {
+      // Exclude admins that are franchise staff
+      adminFilter.franchisestaff = { $ne: "1" };
+    }
     // Build MongoDB query
     const queryFilter = { defaultdata: "query" };
 
@@ -62,9 +68,9 @@ export const GET = async (request) => {
         "wrong_no",
         "no_visit_branch_yet"
       ];
-    
+
       const reasonArray = reason.split(",").filter((r) => validReasons.includes(r));
-    
+
       if (reasonArray.length > 0) {
         // Fetch all queryIds matching any of the selected reasons
         const matchingAuditLogs = await AuditLog.find({
@@ -77,16 +83,16 @@ export const GET = async (request) => {
             { not_liftingsubStatus: { $in: reasonArray } }
           ]
         });
-    
+
         // Extract matching query IDs
         const matchingQueryIds = matchingAuditLogs.map((log) => log.queryId.toString());
-    
+
         if (matchingQueryIds.length > 0) {
           queryFilter._id = { $in: matchingQueryIds };
         }
       }
     }
-    
+
 
     if (fromDate && toDate) {
       const from = new Date(fromDate);
@@ -110,11 +116,11 @@ export const GET = async (request) => {
     }
     if (studentName) {
       queryFilter.$or = [
-        { studentName: { $exists: false } }, 
-        { studentName: "" } 
+        { studentName: { $exists: false } },
+        { studentName: "" }
       ];
     }
-  
+
     if (city) {
       if (city === "Not_Provided") {
         queryFilter["studentContact.city"] = "Not_Provided";
@@ -124,13 +130,13 @@ export const GET = async (request) => {
         queryFilter["studentContact.city"] = { $ne: "Jaipur" };
       }
     }
-    
+
     if (assignedName) {
       if (assignedName === "Not-Assigned") {
         // Filter for documents where `assignedTo` is exactly "Not-Assigned"
         queryFilter.assignedTo = "Not-Assigned";
       } else {
-        const admin = await AdminModel.findOne({ name: { $regex: assignedName, $options: "i" } });
+        const admin = await AdminModel.findOne({ ...adminFilter, name: { $regex: assignedName, $options: "i" } });
         if (admin) {
           queryFilter.assignedTo = admin._id;
         }
@@ -141,7 +147,7 @@ export const GET = async (request) => {
         // Filter for documents where `assignedsenthistory` contains "Not-Assigned"
         queryFilter.assignedsenthistory = { $in: [""] };
       } else {
-        const admin = await AdminModel.findOne({ name: { $regex: assignedFrom, $options: "i" } });
+        const admin = await AdminModel.findOne({ ...adminFilter, name: { $regex: assignedFrom, $options: "i" } });
         if (admin) {
           // Filter for documents where `assignedsenthistory` contains the admin's ID
           queryFilter.assignedsenthistory = { $in: [admin._id.toString()] };
@@ -150,7 +156,7 @@ export const GET = async (request) => {
     }
 
     if (userName) {
-      const admin = await AdminModel.findOne({ name: { $regex: userName, $options: "i" } });
+      const admin = await AdminModel.findOne({ ...adminFilter, name: { $regex: userName, $options: "i" } });
       if (admin) {
         queryFilter.userid = admin._id;
       }
@@ -160,10 +166,32 @@ export const GET = async (request) => {
       queryFilter.autoclosed = "close";
     }
 
+    // if (branch) {
+    //   queryFilter.branch = branch;
+    // }
     if (branch) {
-      queryFilter.branch = branch;
-    }
+      if (franchise === "1") {
+        // Franchise mode → include only franchise branches
+        queryFilter.branch = { $regex: /\(Franchise\)$/i };
+      } else {
+        // Normal mode → whatever branch user selected
+        queryFilter.branch = {
+          $eq: branch,
+          $not: /\(Franchise\)$/i,
+        };
+      }
+    } else {
+      if (franchise === "1") {
+        // Franchise mode with no branch selected → only franchise branches
+        queryFilter.branch = { $regex: /\(Franchise\)$/i };
+      } else {
+        // Normal mode → whatever branch user selected
+        queryFilter.branch = {
 
+          $not: /\(Franchise\)$/i,
+        }
+      };
+    }
     // Fetch queries and total count based on the filter
     const [queries, totalQueries] = await Promise.all([
       QueryModel.find(queryFilter).sort({ createdAt: -1 }).skip(skip).limit(limit),

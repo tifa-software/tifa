@@ -50,7 +50,16 @@ export const GET = async (request) => {
     const toDate = searchParams.get("toDate");
     const referenceId = (searchParams.get("referenceId") || "").trim();
     const suboption = (searchParams.get("suboption") || "").trim();
+    const franchise = searchParams.get("franchise");
+    let adminFilter = {};
 
+    if (franchise === "1") {
+      // Exclude admins that are franchise staff
+      adminFilter.franchisestaff = "1";
+    } else {
+      // Normal mode → exclude franchise staff
+      adminFilter.franchisestaff = { $ne: "1" };
+    }
     // Build MongoDB filter (do as much as possible in DB)
     const mongoFilter = {
       demo: true,
@@ -86,7 +95,31 @@ export const GET = async (request) => {
         mongoFilter.finalfees = parsed;
       }
     }
+if (branch) {
+  const normalizedBranch = normalizeStringForRegex(branch);
 
+  if (franchise === "1") {
+    // Franchise mode → selected branch MUST be franchise branch
+    mongoFilter.$and = [
+      { branch: normalizedBranch },
+      { branch: { $regex: /\(Franchise\)$/i } }
+    ];
+  } else {
+    // Normal mode → selected branch MUST NOT be franchise branch
+    mongoFilter.$and = [
+      { branch: normalizedBranch },
+      { branch: { $not: /\(Franchise\)$/i } }
+    ];
+  }
+} else {
+  if (franchise === "1") {
+    // Franchise mode + NO branch selected → only Franchise branches
+    mongoFilter.branch = { $regex: /\(Franchise\)$/i };
+  } else {
+    // Normal mode + NO branch selected → exclude Franchise branches
+    mongoFilter.branch = { $not: /\(Franchise\)$/i };
+  }
+}
     // Date filtering: we cannot easily filter by "derived demo date" (because demo date is stored in audit logs),
     // so we filter by createdAt or fee transaction date as a reasonable approximation.
     // This will accept queries whose createdAt or any fees.transactionDate falls into the window.
@@ -141,11 +174,11 @@ export const GET = async (request) => {
     );
 
     const adminDetailsForPage = pageAdminIds.length
-      ? await AdminModel.find({ _id: { $in: pageAdminIds } }).select("_id name").lean()
+      ? await AdminModel.find({ _id: { $in: pageAdminIds }, ...adminFilter, }).select("_id name").lean()
       : [];
 
     // Fetch all admins for dropdown (small payload). If huge, consider paginating in frontend.
-    const allAdmins = await AdminModel.find().select("_id name").lean();
+    const allAdmins = await AdminModel.find(adminFilter).select("_id name").lean();
 
     // Courses: fetch required courses for paginated queries + all courses for dropdown
     const pageCourseIds = Array.from(

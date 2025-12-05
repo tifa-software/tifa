@@ -28,7 +28,7 @@ export default function User() {
             const res = await axios.get("/api/admin/fetchallserver/admin?franchisestaff=true", {
                 params: {
                     page: currentPage,
-                    limit: 8,
+                    limit: 88,
                     search: searchTerm,
                     branch: filterBranch || "All",
                     usertype: filterStatus || "All"
