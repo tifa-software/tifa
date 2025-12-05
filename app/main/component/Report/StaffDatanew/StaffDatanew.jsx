@@ -82,11 +82,10 @@ export default function StaffDatanew({ staffid }) {
                     });
                     setData(response.data.data.userActivityReport);
                     setData1(response.data.data.userActivityReport.dailyConnectionStatus);
-                     setLoading(false);
                 } catch (error) {
                     console.error("Error fetching query data:", error);
                 } finally {
-                   
+                    setLoading(false);
                 }
             }
         };
@@ -154,40 +153,37 @@ export default function StaffDatanew({ staffid }) {
 
     useEffect(() => {
         if (data.dailyActivity) {
-            setFilteredDates(Object.entries(data.dailyActivity));
+            const allEntries = Object.entries(data.dailyActivity);
+
+            const entriesInRange = allEntries.filter(([day]) => {
+                if (startDate && day < startDate) return false;
+                if (endDate && day > endDate) return false;
+                return true;
+            });
+
+            setFilteredDates(entriesInRange);
         } else {
             setFilteredDates([]);
         }
-    }, [data.dailyActivity]);
+    }, [data.dailyActivity, startDate, endDate]);
 
     const getUserName = (id) => {
         const matchedUser = user.find((u) => u._id === id);
         return matchedUser ? matchedUser.name : "Unknown User";
     };
 
-    const yearsFromData = Array.from(
-        new Set(Object.keys(data.dailyActivity || {}).map((day) => new Date(day).getFullYear()))
-    );
     const currentYear = new Date().getFullYear();
-    const years = yearsFromData.length > 0 ? yearsFromData : [currentYear];
+    const years = (() => {
+        const startYear = 2024; // adjust if your data starts earlier
+        const result = [];
+        for (let year = startYear; year <= currentYear; year++) {
+            result.push(year);
+        }
+        return result;
+    })();
 
     const months = selectedYear
-        ? (() => {
-            const monthsFromData = Array.from(
-                new Set(
-                    Object.keys(data.dailyActivity || {})
-                        .filter((day) => new Date(day).getFullYear().toString() === selectedYear)
-                        .map((day) => new Date(day).getMonth() + 1)
-                )
-            );
-            if (monthsFromData.length > 0) return monthsFromData;
-            if (selectedYear) {
-                // Fallback to current month when no data-based months are available
-                const currentMonth = new Date().getMonth() + 1;
-                return [currentMonth];
-            }
-            return [];
-        })()
+        ? Array.from({ length: 12 }, (_, index) => index + 1) // 1-12 for all months
         : [];
 
     if (loading) {
@@ -502,7 +498,7 @@ export default function StaffDatanew({ staffid }) {
                                         {activeDay === day && (
                                             <div className="mt-2">
                                                 <p className="font-medium text-sm border px-2 bg-gray-50">
-                                                     Total Query: {activity.count[0]}
+                                                     {/* Total Query: {activity.count[0]} */}
                                                 </p>
                                                 <table className="w-full text-sm text-left rtl:text-right text-gray-600 font-sans mt-2">
                                                     <thead className="bg-[#29234b] text-white uppercase">

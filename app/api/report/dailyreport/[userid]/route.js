@@ -46,11 +46,11 @@ export const GET = async (request, context) => {
         });
         const queryIds = queries.map(q => q._id.toString());
 
-        // Fetch only logs within the requested date range for better performance
+        // Fetch only logs that have at least one history entry inside the requested date range
         const auditLogs = await AuditLog.find({
             queryId: { $in: queryIds },
-            createdAt: { $gte: filterStart, $lte: filterEnd },
-        });
+            "history.actionDate": { $gte: filterStart, $lte: filterEnd },
+        }).lean();
 
         const todayDate = todayISO;
         const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
@@ -64,11 +64,6 @@ export const GET = async (request, context) => {
             const logCreatedAt = new Date(log.createdAt);
             const logDate = logCreatedAt.toISOString().split("T")[0];
 
-            // Extra safety: ensure log itself is in range (in case createdAt filter changes later)
-            if (logCreatedAt < filterStart || logCreatedAt > filterEnd) {
-                return acc;
-            }
-            
             if (!dailyConnectionStatus[logDate]) {
                 dailyConnectionStatus[logDate] = {
                     no_connected: 0,

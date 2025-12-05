@@ -2,6 +2,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { PhoneCall, CheckCircle, Navigation, XCircle, Loader } from "lucide-react";
+import { useReactToPrint } from "react-to-print";
+import { useRef } from "react";
+import * as XLSX from "xlsx";
 import Link from "next/link";
 export default function StaffDatanew({ staffid }) {
     const [userData, setUserData] = useState(null);
@@ -13,6 +16,8 @@ export default function StaffDatanew({ staffid }) {
     const [selectedQueries, setSelectedQueries] = useState([]);
     const [loading, setLoading] = useState(true);
     const today = new Date().toISOString().split("T")[0];
+    const contentRef = useRef(null);
+    const reactToPrintFn = useReactToPrint({ contentRef });
 
 
     const [user, setUser] = useState([]);
@@ -20,12 +25,38 @@ export default function StaffDatanew({ staffid }) {
     const [selectedYear, setSelectedYear] = useState("");
     const [selectedMonth, setSelectedMonth] = useState("");
     const [filteredDates, setFilteredDates] = useState([]);
+    const [startDate, setStartDate] = useState(today); // applied start date for API
+    const [endDate, setEndDate] = useState(today);     // applied end date for API
 
-    const [startDate, setStartDate] = useState(today);
-    const [endDate, setEndDate] = useState(today);
+    // UI filter values (only applied when user clicks Apply Filter)
+    const [filterStartDate, setFilterStartDate] = useState(today);
+    const [filterEndDate, setFilterEndDate] = useState(today);
 
     const [monthlyActivity, setMonthlyActivity] = useState(null);
 
+
+    const applyFilter = () => {
+        // Priority: year/month if provided, otherwise use custom date range
+        if (selectedYear) {
+            if (selectedYear && selectedMonth) {
+                const start = new Date(Number(selectedYear), Number(selectedMonth) - 1, 1);
+                const end = new Date(Number(selectedYear), Number(selectedMonth), 0);
+                setStartDate(start.toISOString().split("T")[0]);
+                setEndDate(end.toISOString().split("T")[0]);
+            } else if (selectedYear && !selectedMonth) {
+                const start = new Date(Number(selectedYear), 0, 1);
+                const end = new Date(Number(selectedYear), 11, 31);
+                setStartDate(start.toISOString().split("T")[0]);
+                setEndDate(end.toISOString().split("T")[0]);
+            }
+        } else {
+            // No year/month selected: use custom dates from UI
+            const start = filterStartDate || today;
+            const end = filterEndDate || filterStartDate || today;
+            setStartDate(start);
+            setEndDate(end);
+        }
+    };
 
     useEffect(() => {
         const fetchAdminData = async () => {
@@ -35,8 +66,6 @@ export default function StaffDatanew({ staffid }) {
                 setAdminData(response.data._id);
             } catch (err) {
                 console.error(err.message);
-            } finally {
-                setLoading(false);
             }
         };
 
@@ -45,10 +74,12 @@ export default function StaffDatanew({ staffid }) {
 
     useEffect(() => {
         const fetchQueryData = async () => {
-            if (adminData) {
+            if (adminData && startDate && endDate) {
                 try {
                     setLoading(true);
-                    const response = await axios.get(`/api/report/dailyreport/${adminData}`);
+                    const response = await axios.get(`/api/report/dailyreport/${adminData}`, {
+                        params: { startDate, endDate },
+                    });
                     setData(response.data.data.userActivityReport);
                     setData1(response.data.data.userActivityReport.dailyConnectionStatus);
                 } catch (error) {
@@ -60,34 +91,34 @@ export default function StaffDatanew({ staffid }) {
         };
 
         fetchQueryData();
-    }, [adminData]);
+    }, [adminData, startDate, endDate]);
 
-    useEffect(() => {
-        const fetchQueries = async () => {
-            if (adminData) {
-                try {
-                    setLoading(true);
-                    const response = await axios.get(`/api/queries/fetchall-byuser/${adminData}?autoclosed=open`);
-                    const today = new Date();
-                    const tomorrow = new Date(today);
-                    tomorrow.setDate(today.getDate() + 1);
+    // useEffect(() => {
+    //     const fetchQueries = async () => {
+    //         if (adminData) {
+    //             try {
+    //                 setLoading(true);
+    //                 const response = await axios.get(`/api/queries/fetchall-byuser/${adminData}?autoclosed=open`);
+    //                 const today = new Date();
+    //                 const tomorrow = new Date(today);
+    //                 tomorrow.setDate(today.getDate() + 1);
 
-                    const filteredQueries = response.data.fetch.filter(query => {
-                        const deadline = new Date(query.deadline);
-                        return deadline <= tomorrow;
-                    });
+    //                 const filteredQueries = response.data.fetch.filter(query => {
+    //                     const deadline = new Date(query.deadline);
+    //                     return deadline <= tomorrow;
+    //                 });
 
-                    setQueries(filteredQueries);
-                } catch (error) {
-                    console.error("Error fetching query data:", error);
-                } finally {
-                    setLoading(false);
-                }
-            }
-        };
+    //                 setQueries(filteredQueries);
+    //             } catch (error) {
+    //                 console.error("Error fetching query data:", error);
+    //             } finally {
+    //                 setLoading(false);
+    //             }
+    //         }
+    //     };
 
-        fetchQueries();
-    }, [adminData]);
+    //     fetchQueries();
+    // }, [adminData]);
 
     const handleButtonClick = () => {
         const queries = data.dailyActivity?.[today]?.queries || [];
@@ -95,16 +126,14 @@ export default function StaffDatanew({ staffid }) {
         setIsModalOpen(true);
     };
     const removeFilter = () => {
-        // Reset the filter states
+        // Reset the filter states to today's date
         setSelectedYear("");
         setSelectedMonth("");
-        setStartDate("");
-        setEndDate("");
-
-        // Reset the filtered dates to an empty array
-        setFilteredDates([]);
+        setFilterStartDate(today);
+        setFilterEndDate(today);
+        setStartDate(today);
+        setEndDate(today);
     };
-
     const closeModal = () => {
         setIsModalOpen(false);
     };
@@ -124,44 +153,37 @@ export default function StaffDatanew({ staffid }) {
 
     useEffect(() => {
         if (data.dailyActivity) {
-            let filtered = Object.entries(data.dailyActivity);
+            const allEntries = Object.entries(data.dailyActivity);
 
-            if (selectedYear || selectedMonth || startDate || endDate) {
-                if (selectedYear) {
-                    filtered = filtered.filter(([day]) => new Date(day).getFullYear().toString() === selectedYear);
-                }
-                if (selectedMonth) {
-                    filtered = filtered.filter(([day]) => (new Date(day).getMonth() + 1).toString() === selectedMonth);
-                }
-                if (startDate) {
-                    filtered = filtered.filter(([day]) => new Date(day) >= new Date(startDate));
-                }
-                if (endDate) {
-                    filtered = filtered.filter(([day]) => new Date(day) <= new Date(endDate));
-                }
-                setFilteredDates(filtered);
-            } else {
-                setFilteredDates([]);
-            }
+            const entriesInRange = allEntries.filter(([day]) => {
+                if (startDate && day < startDate) return false;
+                if (endDate && day > endDate) return false;
+                return true;
+            });
+
+            setFilteredDates(entriesInRange);
+        } else {
+            setFilteredDates([]);
         }
-    }, [selectedYear, selectedMonth, startDate, endDate, data.dailyActivity]);
+    }, [data.dailyActivity, startDate, endDate]);
 
     const getUserName = (id) => {
         const matchedUser = user.find((u) => u._id === id);
         return matchedUser ? matchedUser.name : "Unknown User";
     };
 
-    const years = Array.from(
-        new Set(Object.keys(data.dailyActivity || {}).map((day) => new Date(day).getFullYear()))
-    );
+    const currentYear = new Date().getFullYear();
+    const years = (() => {
+        const startYear = 2024; // adjust if your data starts earlier
+        const result = [];
+        for (let year = startYear; year <= currentYear; year++) {
+            result.push(year);
+        }
+        return result;
+    })();
+
     const months = selectedYear
-        ? Array.from(
-            new Set(
-                Object.keys(data.dailyActivity || {})
-                    .filter((day) => new Date(day).getFullYear().toString() === selectedYear)
-                    .map((day) => new Date(day).getMonth() + 1)
-            )
-        )
+        ? Array.from({ length: 12 }, (_, index) => index + 1) // 1-12 for all months
         : [];
 
     if (loading) {
@@ -172,17 +194,22 @@ export default function StaffDatanew({ staffid }) {
         );
     }
     const calculateFilteredTotals = () => {
-        let filteredEntries = filteredDates || [];
+        // Work off dailyActivity (same data you see in the table)
+        const allEntries = Object.entries(data.dailyActivity || {});
 
-        // Initialize total values
+        // Respect applied start/end date (keys are YYYY-MM-DD strings)
+        const entries = allEntries.filter(([day]) => {
+            if (startDate && day < startDate) return false;
+            if (endDate && day > endDate) return false;
+            return true;
+        });
+
         let totalConnected = 0;
         let totalNoConnected = 0;
         let totalNotLifting = 0;
-        let totalUnknown = 0; // New unknown category
-        let totalActions = 0;
 
-        filteredEntries.forEach(([day, activity]) => {
-            activity.queries.forEach((query) => {
+        entries.forEach(([_, activity]) => {
+            (activity.queries || []).forEach((query) => {
                 if (query.connectionStatus && query.connectionStatus.length > 0) {
                     query.connectionStatus.forEach((statusEntry) => {
                         if (statusEntry.status === "connected") {
@@ -191,18 +218,15 @@ export default function StaffDatanew({ staffid }) {
                             totalNoConnected++;
                         } else if (statusEntry.status === "not_lifting") {
                             totalNotLifting++;
-                        } else {
-                            totalUnknown++; // Count unknown statuses
                         }
                     });
                 }
             });
         });
 
-        // Calculate Total Actions (including Unknown)
-        totalActions = totalConnected + totalNoConnected + totalNotLifting + totalUnknown;
+        const totalActions = totalConnected + totalNoConnected + totalNotLifting;
 
-        return { totalConnected, totalNoConnected, totalNotLifting, totalUnknown, totalActions, filteredEntries };
+        return { totalConnected, totalNoConnected, totalNotLifting, totalActions, filteredEntries: entries };
     };
 
 
@@ -210,10 +234,29 @@ export default function StaffDatanew({ staffid }) {
     const { totalConnected, totalNoConnected, totalNotLifting, totalActions, filteredEntries } = calculateFilteredTotals();
 
 
+    const exportToExcel = () => {
+        // Convert filtered daily activity entries into an array of objects
+        const formattedData = filteredEntries.map(([date, activity]) => ({
+            Date: date,
+            TotalQueries: activity.count?.[0] || 0,
+        }));
+
+        // Convert JSON data to a worksheet
+        const worksheet = XLSX.utils.json_to_sheet(formattedData);
+        const workbook = XLSX.utils.book_new();
+
+        // Append the sheet to the workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Filtered Queries");
+
+        // Save the file
+        XLSX.writeFile(workbook, "filtered_queries.xlsx");
+    };
+
+
     const todayData = data1[today] || {};
     return (
         <>
-            <div className=" mx-auto my-6">
+            <div ref={contentRef} className=" mx-auto my-6">
                 <div className="text-xl font-bold text-center text-white bg-gradient-to-r from-blue-600 to-blue-400 py-4 rounded-lg shadow-lg">
                     Staff Report of{" "}
                     <span className="text-yellow-300">{userData?.name}</span> from{" "}
@@ -221,7 +264,7 @@ export default function StaffDatanew({ staffid }) {
                 </div>
 
                 {/* Filter Section */}
-                <div className="flex justify-around gap-4 items-center mt-6 bg-gray-50 shadow-md p-4 rounded-lg">
+                <div className="flex flex-wrap justify-around gap-4 items-center mt-6 bg-gray-50 shadow-md p-4 rounded-lg">
                     <div className=" flex gap-2 items-center">
                         <label className="font-semibold">Select Year:</label>
                         <select
@@ -243,7 +286,10 @@ export default function StaffDatanew({ staffid }) {
                         <label className="font-semibold">Select Month:</label>
                         <select
                             value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(e.target.value)}
+                            onChange={(e) => {
+                                const newMonth = e.target.value;
+                                setSelectedMonth(newMonth);
+                            }}
                             disabled={!selectedYear}
                             className="bg-gray-100 border border-gray-300 p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
                         >
@@ -261,20 +307,26 @@ export default function StaffDatanew({ staffid }) {
                         <label className="font-semibold">Start Date:</label>
                         <input
                             type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
+                            value={filterStartDate}
+                            onChange={(e) => setFilterStartDate(e.target.value)}
                             className="bg-gray-100 border border-gray-300 p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
                         />
 
                         <label className="font-semibold">End Date:</label>
                         <input
                             type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
+                            value={filterEndDate}
+                            onChange={(e) => setFilterEndDate(e.target.value)}
                             className="bg-gray-100 border border-gray-300 p-2 rounded-lg shadow-sm focus:ring focus:ring-blue-300"
                         />
                     </div>
                 </div>
+                <button
+                    onClick={applyFilter}
+                    className="ml-4 px-4 py-2 rounded shadow-md bg-green-500 text-white hover:bg-green-600"
+                >
+                    Apply Filter
+                </button>
                 <button
                     onClick={removeFilter}
                     disabled={!selectedYear && !selectedMonth && !startDate && !endDate}
@@ -285,6 +337,13 @@ export default function StaffDatanew({ staffid }) {
                 >
                     Remove Filters
                 </button>
+                <button
+                    onClick={exportToExcel}
+                    className="bg-blue-500 ms-2 text-white px-4 py-2 rounded hover:bg-blue-600"
+                >
+                    Export to Excel
+                </button>
+                <button className="mt-4 ml-4 bg-green-500 text-white px-4 py-2 rounded shadow-md hover:bg-green-600" onClick={() => reactToPrintFn()}>Print</button>
                 {/* Data Section */}
                 <div className="mt-6">
                     {/* Dynamic Heading */}
@@ -295,7 +354,7 @@ export default function StaffDatanew({ staffid }) {
                     </h1>
 
                     {/* Data Cards */}
-                    <div className="grid grid-cols-4 gap-6 p-6 bg-gray-50 rounded-lg shadow-lg">
+                    <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-6 p-6 bg-gray-50 rounded-lg shadow-lg">
 
                         {/* Total Actions */}
                         <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
@@ -413,7 +472,7 @@ export default function StaffDatanew({ staffid }) {
 
                             return (
                                 <div className="text-lg font-bold border border-[#29234b] p-3 rounded">
-                                    Total Query: {grandTotal}
+                                  Total Query: {grandTotal}
                                 </div>
                             );
                         })()
@@ -439,7 +498,7 @@ export default function StaffDatanew({ staffid }) {
                                         {activeDay === day && (
                                             <div className="mt-2">
                                                 <p className="font-medium text-sm border px-2 bg-gray-50">
-                                                    Total Query: {activity.queries.length}
+                                                     {/* Total Query: {activity.count[0]} */}
                                                 </p>
                                                 <table className="w-full text-sm text-left rtl:text-right text-gray-600 font-sans mt-2">
                                                     <thead className="bg-[#29234b] text-white uppercase">
@@ -489,13 +548,15 @@ export default function StaffDatanew({ staffid }) {
                                                             .map((query, index) => (
                                                                 <tr key={index}>
                                                                     <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        <Link href={`/branch/page/allquery/${query._id}`} key={index}>{index + 1}</Link>
+                                                                        <Link href={`/main/page/allquery/${query._id}`} key={index}>{index + 1}</Link>
+
                                                                     </td>
                                                                     <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        <Link href={`/branch/page/allquery/${query._id}`} key={index}> {query.studentName}</Link>
+                                                                        <Link href={`/main/page/allquery/${query._id}`} key={index}>  {query.studentName}</Link>
+
                                                                     </td>
                                                                     <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        <Link href={`/branch/page/allquery/${query._id}`} key={index}>   {query.studentContact.phoneNumber}</Link>
+                                                                        <Link href={`/main/page/allquery/${query._id}`} key={index}>    {query.studentContact.phoneNumber}</Link>
 
 
                                                                     </td>
@@ -576,7 +637,6 @@ export default function StaffDatanew({ staffid }) {
                                                                             <span className="text-gray-500">No Status</span>
                                                                         )}
                                                                     </td>
-
 
                                                                 </tr>
                                                             ))}
