@@ -44,8 +44,10 @@ export const GET = async (request) => {
     const studentName = searchParams.get("studentName");
 
     // ------------------------ SAME FILTER LOGIC ------------------------
-    const queryFilter = { defaultdata: "query" };
-
+    const queryFilter = {
+      defaultdata: "query",
+    branch: { $not: /\(Franchise\)$/i }
+    };
     if (referenceId) {
       const escapedReferenceId = escapeRegex(decodeURIComponent(referenceId));
       queryFilter.referenceid = { $regex: escapedReferenceId, $options: "i" };
@@ -53,7 +55,7 @@ export const GET = async (request) => {
 
     if (suboption) queryFilter.suboption = { $regex: suboption, $options: "i" };
 
-    
+
 
     // ❌ REMOVE createdAt filter because stage6 filtering must control date
     // (old code for createdAt removed)
