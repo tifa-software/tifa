@@ -548,15 +548,15 @@ export default function StaffDatanew({ staffid }) {
                                                             .map((query, index) => (
                                                                 <tr key={index}>
                                                                     <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        <Link href={`/main/page/allquery/${query._id}`} key={index}>{index + 1}</Link>
+                                                                        <Link href={`/branch/page/allquery/${query._id}`} key={index}>{index + 1}</Link>
 
                                                                     </td>
                                                                     <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        <Link href={`/main/page/allquery/${query._id}`} key={index}>  {query.studentName}</Link>
+                                                                        <Link href={`/branch/page/allquery/${query._id}`} key={index}>  {query.studentName}</Link>
 
                                                                     </td>
                                                                     <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        <Link href={`/main/page/allquery/${query._id}`} key={index}>    {query.studentContact.phoneNumber}</Link>
+                                                                        <Link href={`/branch/page/allquery/${query._id}`} key={index}>    {query.studentContact.phoneNumber}</Link>
 
 
                                                                     </td>
