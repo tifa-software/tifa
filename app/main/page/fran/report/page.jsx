@@ -8,6 +8,8 @@ import Addmission from '@/app/main/component/franReport/Addmission/Addmission';
 import Admissionxlms from '@/app/main/component/franReport/Admissionxlms/Admissionxlms';
 import AdmissionBranchxlms from '@/app/main/component/franReport/AdmissionBranchxlms/AdmissionBranchxlms';
 import Xlms from '@/app/main/component/franReport/Xlms/Xlms';
+import UserPendingReport from '@/app/main/component/franReport/UserPendingReport/UserPendingReport';
+import Staff from '@/app/main/component/franReport/Staff/Staff';
 export default function BranchReportPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -96,6 +98,22 @@ export default function BranchReportPage() {
                             onClick={() => handleOpenModal(<Xlms />)}
                         >
                             Visit Counsellor Report
+                        </button>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<UserPendingReport />)}
+                        >
+                            User Pending Report
+                        </button>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<Staff />)}
+                        >
+                            Staff Daily Activity Report
                         </button>
                     </div>
                 </div>
