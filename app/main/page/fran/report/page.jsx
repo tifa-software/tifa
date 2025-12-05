@@ -3,6 +3,10 @@ import React, { useState } from 'react';
 import QueryReport from '@/app/main/component/franReport/QueryReport/QueryReport';
 import Demo from '@/app/main/component/franReport/Demo/Demo';
 import Visit from '@/app/main/component/franReport/Visit/Visit';
+import StaffReport from '@/app/main/component/franReport/StaffReport/StaffReport';
+import Addmission from '@/app/main/component/franReport/Addmission/Addmission';
+import Admissionxlms from '@/app/main/component/franReport/Admissionxlms/Admissionxlms';
+import AdmissionBranchxlms from '@/app/main/component/franReport/AdmissionBranchxlms/AdmissionBranchxlms';
 export default function BranchReportPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -53,7 +57,38 @@ export default function BranchReportPage() {
                             Visit Queries
                         </button>
                     </div>
-
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<StaffReport />)}
+                        >
+                            Staff Register
+                        </button>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<Addmission />)}
+                        >
+                            AddMission Register
+                        </button>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<Admissionxlms />)}
+                        >
+                            Addmission Counsellor  Report
+                        </button>
+                    </div>
+                    <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<AdmissionBranchxlms />)}
+                        >
+                            Addmission Branch  Report
+                        </button>
+                    </div>
                 </div>
             </div>
 
