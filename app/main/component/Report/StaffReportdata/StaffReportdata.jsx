@@ -28,13 +28,10 @@ export default function StaffReportdata({ staffid, staffName, staffBranch }) {
                 try {
                     setLoading(true);
                     const response = await axios.get(`/api/report/staffquery/${staffid}`);
-                    console.log("All Queries: ", response.data.fetch); // Log all queries
                     setAllqueries(response.data.fetch);
                     const response1 = await axios.get(`/api/report/staffsenquery/${staffid}`);
-                    console.log("Sent Queries: ", response1.data.fetch); // Log sent queries
                     setSentqueries(response1.data.fetch);
                     const response2 = await axios.get(`/api/report/staffreceivedquery/${staffid}`);
-                    console.log("Received Queries: ", response2.data.fetch); // Log received queries
                     setReceivedqueries(response2.data.fetch);
                 } catch (error) {
                     console.error('Error fetching query data:', error);
