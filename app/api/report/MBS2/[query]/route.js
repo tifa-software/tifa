@@ -1,94 +1,127 @@
 export const runtime = "nodejs";
 export const preferredRegion = ["bom1"];
+
 import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
 import AdminModel from "@/model/Admin";
 
-export const GET = async () => {
+export const GET = async (request) => {
     await dbConnect();
 
     try {
-        // FETCH LIMITED FIELDS ONLY
-        const queries = await QueryModel.find({}, {
-            studentName: 1,
-            assignedDate: 1,
-            assignedsenthistory: 1,
-            assignedreceivedhistory: 1
+        const { searchParams } = new URL(request.url);
+        const adminId = searchParams.get("adminId");
+
+        if (!adminId) {
+            return Response.json(
+                {
+                    message: "adminId is required in query params",
+                    success: false,
+                    data: { userActivityReport: [] },
+                },
+                { status: 400 }
+            );
+        }
+
+        // FIND SELECTED ADMIN
+        const admin = await AdminModel.findById(adminId, {
+            _id: 1,
+            name: 1,
+            branch: 1,
         });
 
-        const admins = await AdminModel.find({}, { _id: 1, name: 1, branch: 1 });
+        if (!admin) {
+            return Response.json(
+                {
+                    message: "Admin not found!",
+                    success: false,
+                    data: { userActivityReport: [] },
+                },
+                { status: 404 }
+            );
+        }
 
-        // ADMIN ID → NAME
-        const adminIdToName = admins.reduce((map, admin) => {
-            map[admin._id.toString()] = admin.name;
+        // FETCH ALL ADMINS JUST FOR NAME MAPPING IN HISTORY
+        const allAdmins = await AdminModel.find({}, { _id: 1, name: 1 });
+        const adminIdToName = allAdmins.reduce((map, a) => {
+            map[a._id.toString()] = a.name;
             return map;
         }, {});
 
-        // INITIALIZE COUNTERS
-        const sentReceivedCounts = {};
-        admins.forEach(admin => {
-            const id = admin._id.toString();
-            sentReceivedCounts[id] = {
-                sent: 0,
-                received: 0,
-                sentQueryDetails: [],
-                receivedQueryDetails: []
+        // FIND ONLY QUERIES WHERE THIS ADMIN IS IN SENT OR RECEIVED HISTORY
+        const queries = await QueryModel.find(
+            {
+                $or: [
+                    { assignedsenthistory: adminId },
+                    { assignedreceivedhistory: adminId },
+                ],
+            },
+            {
+                studentName: 1,
+                assignedDate: 1,
+                assignedsenthistory: 1,
+                assignedreceivedhistory: 1,
+            }
+        );
+
+        let sentQueries = 0;
+        let receivedQueries = 0;
+        const sentQueryDetails = [];
+        const receivedQueryDetails = [];
+
+        const adminIdStr = adminId.toString();
+
+        queries.forEach((query) => {
+            const sentIds = (query.assignedsenthistory || []).map((id) =>
+                id.toString()
+            );
+            const receivedIds = (query.assignedreceivedhistory || []).map(
+                (id) => id.toString()
+            );
+
+            const detail = {
+                studentName: query.studentName,
+                assignedDate: query.assignedDate,
+                assignedsenthistory: sentIds.map(
+                    (id) => adminIdToName[id] || id
+                ),
+                assignedreceivedhistory: receivedIds.map(
+                    (id) => adminIdToName[id] || id
+                ),
             };
+
+            // SENT
+            if (sentIds.includes(adminIdStr)) {
+                sentQueries++;
+                sentQueryDetails.push(detail);
+            }
+
+            // RECEIVED
+            if (receivedIds.includes(adminIdStr)) {
+                receivedQueries++;
+                receivedQueryDetails.push(detail);
+            }
         });
 
-        // PROCESS EACH QUERY
-        queries.forEach(query => {
-            admins.forEach(admin => {
-                const adminId = admin._id.toString();
-
-                // SENT HISTORY MATCH
-                if (query.assignedsenthistory.includes(adminId)) {
-                    sentReceivedCounts[adminId].sent++;
-
-                    sentReceivedCounts[adminId].sentQueryDetails.push({
-                        studentName: query.studentName,
-                        assignedDate: query.assignedDate,
-                        assignedsenthistory: query.assignedsenthistory.map(id => adminIdToName[id] || id),
-                        assignedreceivedhistory: query.assignedreceivedhistory.map(id => adminIdToName[id] || id)
-                    });
-                }
-
-                // RECEIVED HISTORY MATCH
-                if (query.assignedreceivedhistory.includes(adminId)) {
-                    sentReceivedCounts[adminId].received++;
-
-                    sentReceivedCounts[adminId].receivedQueryDetails.push({
-                        studentName: query.studentName,
-                        assignedDate: query.assignedDate,
-                        assignedsenthistory: query.assignedsenthistory.map(id => adminIdToName[id] || id),
-                        assignedreceivedhistory: query.assignedreceivedhistory.map(id => adminIdToName[id] || id)
-                    });
-                }
-            });
-        });
-
-        // FINAL REPORT
-        const userActivityReport = admins.map(admin => {
-            const id = admin._id.toString();
-            return {
+        const userActivityReport = [
+            {
                 userName: admin.name,
                 branch: admin.branch,
-                sentQueries: sentReceivedCounts[id].sent,
-                receivedQueries: sentReceivedCounts[id].received,
-                sentQueryDetails: sentReceivedCounts[id].sentQueryDetails,
-                receivedQueryDetails: sentReceivedCounts[id].receivedQueryDetails
-            };
-        });
+                sentQueries,
+                receivedQueries,
+                sentQueryDetails,
+                receivedQueryDetails,
+            },
+        ];
 
         return Response.json(
             {
                 message: "Report fetched successfully!",
                 success: true,
-                data: { userActivityReport }
+                data: { userActivityReport },
             },
             { status: 200 }
         );
-
     } catch (error) {
         console.error("Error:", error);
         return Response.json(
