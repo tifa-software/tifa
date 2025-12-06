@@ -41,6 +41,8 @@ export const GET = async (request) => {
     const studentName = (searchParams.get("studentName") || "").trim();
     const phoneNumber = (searchParams.get("phoneNumber") || "").trim();
     const staffId = sanitizeId(searchParams.get("staffId"));
+    const zeroFilter = searchParams.get("zeroFilter");
+
     const courseId = sanitizeId(searchParams.get("courseId"));
     const assignedToId = sanitizeId(searchParams.get("assignedToId"));
     const branch = (searchParams.get("branch") || "").trim();
@@ -67,6 +69,9 @@ export const GET = async (request) => {
     };
 
     if (staffId) mongoFilter.userid = staffId;
+    if (zeroFilter === "0") {
+      mongoFilter.total = { $in: [0, null] };
+    }
     if (courseId) mongoFilter.courseInterest = courseId;
     if (assignedToId) mongoFilter.assignedTo = assignedToId;
 
@@ -95,31 +100,31 @@ export const GET = async (request) => {
         mongoFilter.finalfees = parsed;
       }
     }
-if (branch) {
-  const normalizedBranch = normalizeStringForRegex(branch);
+    if (branch) {
+      const normalizedBranch = normalizeStringForRegex(branch);
 
-  if (franchise === "1") {
-    // Franchise mode → selected branch MUST be franchise branch
-    mongoFilter.$and = [
-      { branch: normalizedBranch },
-      { branch: { $regex: /\(Franchise\)$/i } }
-    ];
-  } else {
-    // Normal mode → selected branch MUST NOT be franchise branch
-    mongoFilter.$and = [
-      { branch: normalizedBranch },
-      { branch: { $not: /\(Franchise\)$/i } }
-    ];
-  }
-} else {
-  if (franchise === "1") {
-    // Franchise mode + NO branch selected → only Franchise branches
-    mongoFilter.branch = { $regex: /\(Franchise\)$/i };
-  } else {
-    // Normal mode + NO branch selected → exclude Franchise branches
-    mongoFilter.branch = { $not: /\(Franchise\)$/i };
-  }
-}
+      if (franchise === "1") {
+        // Franchise mode → selected branch MUST be franchise branch
+        mongoFilter.$and = [
+          { branch: normalizedBranch },
+          { branch: { $regex: /\(Franchise\)$/i } }
+        ];
+      } else {
+        // Normal mode → selected branch MUST NOT be franchise branch
+        mongoFilter.$and = [
+          { branch: normalizedBranch },
+          { branch: { $not: /\(Franchise\)$/i } }
+        ];
+      }
+    } else {
+      if (franchise === "1") {
+        // Franchise mode + NO branch selected → only Franchise branches
+        mongoFilter.branch = { $regex: /\(Franchise\)$/i };
+      } else {
+        // Normal mode + NO branch selected → exclude Franchise branches
+        mongoFilter.branch = { $not: /\(Franchise\)$/i };
+      }
+    }
     // Date filtering: we cannot easily filter by "derived demo date" (because demo date is stored in audit logs),
     // so we filter by createdAt or fee transaction date as a reasonable approximation.
     // This will accept queries whose createdAt or any fees.transactionDate falls into the window.

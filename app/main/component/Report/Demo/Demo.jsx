@@ -16,6 +16,7 @@ const initialFilters = {
     branch: "",
     city: "",
     finalFees: "",
+    zeroFilter: "",
 };
 
 const limitOptions = [25, 50, 100, 200];
@@ -91,6 +92,7 @@ export default function AddmissionRegister() {
                 fromDate,
                 toDate,
                 staffId: filters.staffId, // Select dropdowns are immediate
+                zeroFilter: debouncedFilters.zeroFilter, // Text inputs are debounced
                 studentName: debouncedFilters.studentName, // Text inputs are debounced
                 phoneNumber: debouncedFilters.phoneNumber,
                 courseId: filters.courseId, // Select dropdowns are immediate
@@ -137,6 +139,7 @@ export default function AddmissionRegister() {
         fromDate,
         toDate,
         filters.staffId, // Select dropdowns are immediate
+        debouncedFilters.zeroFilter, // Text inputs are debounced
         debouncedFilters.studentName, // Text inputs are debounced
         debouncedFilters.phoneNumber,
         filters.courseId, // Select dropdowns are immediate
@@ -183,6 +186,7 @@ export default function AddmissionRegister() {
         fromDate,
         toDate,
         filters.staffId, // Select dropdowns are immediate
+        debouncedFilters.zeroFilter, // Text inputs are debounced
         debouncedFilters.studentName, // Text inputs are debounced
         debouncedFilters.phoneNumber,
         filters.courseId, // Select dropdowns are immediate
@@ -260,6 +264,9 @@ export default function AddmissionRegister() {
         if (filters.staffId) {
             summary.push(`Staff: ${adminIdToName[filters.staffId] || "Unknown"}`);
         }
+        if (debouncedFilters.zeroFilter) {
+            summary.push(`Zero Filter: ${debouncedFilters.zeroFilter}`);
+        }
         if (filters.assignedToId) {
             summary.push(`Assigned To: ${adminIdToName[filters.assignedToId] || "Unknown"}`);
         }
@@ -293,6 +300,7 @@ export default function AddmissionRegister() {
         return summary.length ? summary.join(" | ") : "No filters applied.";
     }, [
         filters.staffId,
+        debouncedFilters.zeroFilter,
         filters.assignedToId,
         debouncedFilters.studentName,
         debouncedFilters.phoneNumber,
@@ -413,11 +421,11 @@ export default function AddmissionRegister() {
                         <thead className="bg-gray-900 text-white">
                             <tr className="divide-x divide-gray-800">
                                 <th className="px-2 py-3 text-center">
-                                    <input
+                                    {/* <input
                                         type="checkbox"
                                         checked={allSelected}
                                         onChange={handleSelectAll}
-                                    />
+                                    /> */}
                                 </th>
                                 <th className="px-4 py-3 text-[12px]">S/N</th>
                                 <th className="px-4 py-3 text-[12px]">
@@ -435,6 +443,7 @@ export default function AddmissionRegister() {
                                         ))}
                                     </select>
                                 </th>
+
                                 <th className="px-4 py-3 text-[12px]">
                                     Student Name
                                     <input
@@ -569,6 +578,18 @@ export default function AddmissionRegister() {
                                     />
                                 </th> */}
                                 <th className="px-4 py-3 text-[12px]">Remaining</th>
+                                <th className="px-4 py-3 text-[12px]">
+                                    Total Receive
+                                    <select
+                                        value={filters.zeroFilter}
+                                        onChange={handleFilterChange("zeroFilter")}
+                                        className="mt-2 w-full rounded border border-gray-600 bg-gray-900/50 px-2 py-1 text-[11px] text-white focus:border-blue-300 focus:outline-none"
+                                    >
+                                        <option value="">All</option>
+                                        <option value="0">0 Fees</option>
+                                       
+                                    </select>
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -645,6 +666,8 @@ export default function AddmissionRegister() {
                                                     ? `${query.remainingFees} ₹`
                                                     : "N/A"}
                                             </td>
+                                            <td className="px-4 py-3 text-[12px]">{query.total}</td>
+
                                         </tr>
                                     );
                                 })
