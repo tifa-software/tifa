@@ -112,6 +112,7 @@ export default function Page({ id }) {
                                             id: query._id,
                                             autoclosed: "open"  // Recover the query
                                         });
+                                        fetchBranchData();
 
                                         // Second API call: Update audit data with `statusCounts`
                                         const auditResponse = await axios.patch('/api/audit/update', {

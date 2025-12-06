@@ -8,6 +8,8 @@ import Loader from "@/components/Loader/Loader";
 import BulkAssign from "@/components/BulkAssign/BulkAssign";
 import { ArrowLeft, ArrowRight, Search, Trash2, CirclePlus, Filter, X, Send, XCircleIcon } from "lucide-react";
 import Image from "next/image";
+import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
+
 // Utility: build API URL with query params
 function buildApiUrl({
   type = "close",
@@ -19,6 +21,7 @@ function buildApiUrl({
   customDate = "",
   rangeStart = "",
   rangeEnd = "",
+  demo = ""
 }) {
   const params = new URLSearchParams();
   params.set("page", String(page));
@@ -33,6 +36,7 @@ function buildApiUrl({
   if (grade) params.set("grade", grade);
   if (branch) params.set("branch", branch);
   if (search) params.set("search", search);
+  if (demo) params.set("demo", demo);
   return `/api/queries/fetchallbytype/${encodeURIComponent(type)}?${params.toString()}`;
 }
 
@@ -56,10 +60,12 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterCourse, setFilterCourse] = useState(""); // branch
   const [filterByGrade, setFilterByGrade] = useState(""); // A/B/C
+  const [filterDemo, setFilterDemo] = useState(""); // demo filter
   const [deadlineFilter, setDeadlineFilter] = useState(""); // today/tomorrow/dayAfterTomorrow/past/custom/dateRange
   const [customDate, setCustomDate] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [activeQuery, setActiveQuery] = useState(null);
 
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,8 +73,17 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
 
   // Sentinel for infinite scroll
   const sentinelRef = useRef(null);
+  const [isModalOpen2, setIsModalOpen2] = useState(false);
 
-  const handleRowClick = (id) => router.push(`/main/page/allquery/${id}`);
+
+  const handleRowClick = (id) => {
+    setActiveQuery(id);
+    setIsModalOpen2(true);
+  };
+  const handleCloseModal = () => {
+    setIsModalOpen2(false);
+    setActiveQuery(null);
+  };
   const toggleFilterPopup = () => setIsFilterOpen((v) => !v);
 
   // Debounce search term
@@ -106,8 +121,8 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
       deadlineFilter === "custom" && !customDate
         ? ""
         : deadlineFilter === "dateRange" && (!startDate || !endDate)
-        ? ""
-        : deadlineFilter;
+          ? ""
+          : deadlineFilter;
 
     try {
       const url = buildApiUrl({
@@ -118,6 +133,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
         rangeStart: startDate,
         rangeEnd: endDate,
         grade: filterByGrade,
+        demo: filterDemo,
         branch: filterCourse,
         search: debouncedSearchTerm,
       });
@@ -145,7 +161,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
     } finally {
       setIsBootLoading(false);
     }
-  }, [deadlineFilter, customDate, startDate, endDate, filterByGrade, filterCourse, debouncedSearchTerm]);
+  }, [deadlineFilter, customDate, startDate, endDate, filterByGrade, filterDemo, filterCourse, debouncedSearchTerm]);
 
   // Apply filters on change
   useEffect(() => {
@@ -161,8 +177,8 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
       deadlineFilter === "custom" && !customDate
         ? ""
         : deadlineFilter === "dateRange" && (!startDate || !endDate)
-        ? ""
-        : deadlineFilter;
+          ? ""
+          : deadlineFilter;
 
     try {
       const nextPage = page + 1;
@@ -174,6 +190,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
         rangeStart: startDate,
         rangeEnd: endDate,
         grade: filterByGrade,
+        demo: filterDemo,
         branch: filterCourse,
         search: debouncedSearchTerm,
       });
@@ -190,7 +207,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
     } finally {
       setIsLoading(false);
     }
-  }, [page, isLoading, isBootLoading, hasMore, deadlineFilter, customDate, startDate, endDate, filterByGrade, filterCourse, debouncedSearchTerm]);
+  }, [page, isLoading, isBootLoading, hasMore, deadlineFilter, customDate, startDate, endDate, filterByGrade, filterDemo, filterCourse, debouncedSearchTerm]);
 
   // IntersectionObserver for sentinel
   useEffect(() => {
@@ -368,10 +385,19 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
             className="px-2 py-1 border"
           >
             <option value="">All Grades</option>
-             <option value="H">Important</option>
+            <option value="H">Important</option>
             <option value="A">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
+          </select>
+
+          <select
+            value={filterDemo}
+            onChange={(e) => setFilterDemo(e.target.value)}
+            className="px-2 py-1 border"
+          >
+            <option value="">All</option>
+            <option value="true">Demo Query</option>
           </select>
 
           <div className="relative">
@@ -536,15 +562,15 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
             {!isBootLoading &&
               queries.map((querie, index) => {
                 const matchedUser = findAdminNameById(querie.userid) || findUserNameById(querie.userid) || "Tifa Admin";
-                
+
                 // Get the last element from the arrays
-                const lastAssignedReceived = Array.isArray(querie.assignedreceivedhistory) 
+                const lastAssignedReceived = Array.isArray(querie.assignedreceivedhistory)
                   ? querie.assignedreceivedhistory[querie.assignedreceivedhistory.length - 1]
                   : querie.assignedreceivedhistory;
                 const lastAssignedSent = Array.isArray(querie.assignedsenthistory)
                   ? querie.assignedsenthistory[querie.assignedsenthistory.length - 1]
                   : querie.assignedsenthistory;
-                
+
                 const matchedassignedUser = findAdminNameById(lastAssignedReceived) || findUserNameById(lastAssignedReceived);
                 const matchedassignedsenderUser = findAdminNameById(lastAssignedSent) || findUserNameById(lastAssignedSent);
 
@@ -635,7 +661,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
                       <span className="absolute right-0 top-0 bottom-0 flex items-center">
                         {!querie.addmission &&
                           (new Date(querie.lastDeadline) < new Date() &&
-                          new Date(querie.lastDeadline).toDateString() !== new Date().toDateString() ? (
+                            new Date(querie.lastDeadline).toDateString() !== new Date().toDateString() ? (
                             <span className="inline-flex items-center px-2 text-[10px] font-semibold text-red-600 bg-red-200 rounded-full shadow-md">
                               ✖️ Today Update
                             </span>
@@ -728,6 +754,19 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
           </tbody>
         </table>
       </div>
+      {isModalOpen2 && (
+        <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
+          <div className="   h-screen w-screen  relative">
+            <button
+              className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
+              onClick={handleCloseModal}
+            >
+              &times;
+            </button>
+            <div><Queryreport55 id={activeQuery} /></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -72,6 +72,7 @@ export const GET = async (request, context) => {
   }
 
   const gradeFilter = searchParams.get("grade") || ""; // A, B, C
+  const demoFilter = searchParams.get("demo") || ""; // demo filter
   const branchFilter = searchParams.get("branch") || ""; // branch name
   const searchTerm = searchParams.get("search") || ""; // search term
 
@@ -80,15 +81,17 @@ export const GET = async (request, context) => {
     const baseQuery = {
       autoclosed: type,
       addmission: false,
-      demo: false,
-      ...(gradeFilter ? { lastgrade: gradeFilter } : {}),
-       branch: { $not: /\(Franchise\)$/i },
+      branch: { $not: /\(Franchise\)$/i },
 
-  // If user selects a specific branch, apply that exactly
-  ...(branchFilter
-    ? { branch: branchFilter }
-    : {}),
+      // 🔥 Demo Logic
+      ...(demoFilter === "true" ? { demo: true } :
+        demoFilter === "false" ? { demo: false } :
+          type !== "close" ? { demo: false } : {}),
+
+      ...(gradeFilter ? { lastgrade: gradeFilter } : {}),
+      ...(branchFilter ? { branch: branchFilter } : {}),
     };
+
 
     // Add search conditions if search term exists
     if (searchTerm) {
