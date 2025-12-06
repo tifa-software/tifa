@@ -1,10 +1,10 @@
 export const runtime = "nodejs";
-export const preferredRegion = ["bom1"]; 
+export const preferredRegion = ["bom1"];
+
 import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
 import AdminModel from "@/model/Admin";
-import AuditLog from "@/model/AuditLog";
-import CourseModel from "@/model/Courses";
+
 // Helper function to escape special characters in a regex
 const escapeRegex = (string) => {
   return string.replace(/[.*+?^=!:${}()|\[\]\/\\]/g, "\\$&"); // Escape regex special characters
@@ -29,9 +29,7 @@ export const GET = async (request) => {
     const branch = searchParams.get("branch");
     const cours = searchParams.get("cours");
 
-   
-
-    // Build MongoDB query
+    // Base filter
     const queryFilter = { defaultdata: "query" };
 
     if (referenceId) {
@@ -39,9 +37,11 @@ export const GET = async (request) => {
       const escapedReferenceId = escapeRegex(decodedReferenceId);
       queryFilter.referenceid = { $regex: escapedReferenceId, $options: "i" };
     }
+
     if (suboption) {
       queryFilter.suboption = { $regex: suboption, $options: "i" };
     }
+
     if (fromDate && toDate) {
       const from = new Date(fromDate);
       const to = new Date(toDate);
@@ -53,21 +53,28 @@ export const GET = async (request) => {
         throw new Error("Invalid date format for fromDate or toDate");
       }
     }
+
     if (admission) {
+      // admission=true / false from query string
       queryFilter.addmission = admission === "true";
     }
+
     if (grade) {
       queryFilter.lastgrade = { $regex: grade, $options: "i" };
     }
+
     if (location) {
       queryFilter.branch = { $regex: location, $options: "i" };
     }
+
     if (branch) {
       queryFilter.branch = { $regex: branch, $options: "i" };
     }
+
     if (cours) {
       queryFilter.courseInterest = { $regex: cours, $options: "i" };
     }
+
     if (city) {
       if (city.toLowerCase() === "jaipur") {
         queryFilter["studentContact.city"] = { $regex: "^Jaipur$", $options: "i" };
@@ -75,86 +82,110 @@ export const GET = async (request) => {
         queryFilter["studentContact.city"] = { $ne: "Jaipur" };
       }
     }
+
     if (assignedName) {
       if (assignedName === "Not-Assigned") {
-        // Filter for documents where `assignedTo` is exactly "Not-Assigned"
         queryFilter.assignedTo = "Not-Assigned";
       } else {
-        const admin = await AdminModel.findOne({ name: { $regex: assignedName, $options: "i" } });
+        const admin = await AdminModel.findOne({
+          name: { $regex: assignedName, $options: "i" },
+        });
         if (admin) {
           queryFilter.assignedTo = admin._id;
         }
       }
     }
 
-    if (userName) {
-      const admin = await AdminModel.findOne({ name: { $regex: userName, $options: "i" } });
+       if (userName) {
+      const decodedUserName = decodeURIComponent(userName);
+
+      const admin = await AdminModel.findOne({
+        name: { $regex: escapeRegex(decodedUserName), $options: "i" },
+      }).lean();
+
       if (admin) {
-        queryFilter.userid = admin._id;
+        // Support both ObjectId and string storage for userid
+        queryFilter.userid = { $in: [admin._id, admin._id.toString()] };
+      } else {
+        // If no admin found by this userName, force ZERO results
+        // so it doesn't look like the filter is "ignored"
+        queryFilter.userid = { $exists: false, $eq: null };
       }
     }
 
 
-  
-    // Fetch queries based on the filter
-    const queries = await QueryModel.find(queryFilter);
+    // ---- FAST COUNTS ONLY (NO FULL DATA) ----
+    const [result] = await QueryModel.aggregate([
+      { $match: queryFilter }, // apply all filters once
+      {
+        $facet: {
+          total: [{ $count: "count" }],
 
-    // Fetch admin data for mapping
-    const admins = await AdminModel.find({}, { _id: 1, name: 1 });
-    const adminMap = admins.reduce((map, admin) => {
-      map[admin._id.toString()] = admin.name;
-      return map;
-    }, {});
+          admitted: [
+            { $match: { addmission: true } },
+            { $count: "count" },
+          ],
 
-    const course = await CourseModel.find({}, { _id: 1, course_name: 1 });
-    const courseMap = course.reduce((map, course) => {
-      map[course._id.toString()] = course.course_name;
-      return map;
-    }, {});
+          pendingOpen: [
+            { $match: { addmission: false, autoclosed: "open" } },
+            { $count: "count" },
+          ],
 
-    // Fetch audit logs for all queries
-    const auditLogs = await AuditLog.find({ queryId: { $in: queries.map((query) => query._id) } });
+          demo: [
+            { $match: { demo: true } },
+            { $count: "count" },
+          ],
 
-    // Create a map of stages and history counts for each queryId
-    const auditLogMap = auditLogs.reduce((map, log) => {
-      const queryId = log.queryId.toString();
-      if (!map[queryId]) {
-        map[queryId] = { stage: log.stage, historyCount: 0 };
-      }
-      map[queryId].historyCount += log.history.length;
-      return map;
-    }, {});
+          stage6: [
+            { $match: { stage: 6 } }, // assumes QueryModel has "stage" field
+            { $count: "count" },
+          ],
 
-    // Format the queries for response
-    const formattedQueries = queries.map((query) => {
-      const auditData = auditLogMap[query._id.toString()] || { stage: 0, historyCount: 0 };
-      return {
-        ...query._doc,
-        userid: adminMap[query.userid] || query.userid,
-        assignedTo: adminMap[query.assignedTo] || query.assignedTo,
-        assignedsenthistory: query.assignedsenthistory.map((id) => adminMap[id] || id),
-        assignedreceivedhistory: query.assignedreceivedhistory.map((id) => adminMap[id] || id),
-        assignedToreq: adminMap[query.assignedToreq] || query.assignedToreq,
-        historyCount: auditData.historyCount,
-        stage: auditData.stage,
-        courseInterest: courseMap[query.courseInterest] || query.courseInterest
-      };
-    });
+          jaipur: [
+            { $match: { "studentContact.city": "Jaipur" } },
+            { $count: "count" },
+          ],
 
-    // Return filtered and formatted queries
+          nonJaipur: [
+            { $match: { "studentContact.city": { $ne: "Jaipur" } } },
+            { $count: "count" },
+          ],
+
+          closedNonAdmit: [
+            { $match: { addmission: false, autoclosed: "close" } },
+            { $count: "count" },
+          ],
+        },
+      },
+    ]);
+
+    // helper to safely get count from facet arrays
+    const getCount = (arr) => (arr && arr[0] ? arr[0].count || 0 : 0);
+
+    const counts = {
+      total: getCount(result.total), // allquery.length
+      admitted: getCount(result.admitted), // addmission == true
+      pendingOpen: getCount(result.pendingOpen), // addmission == false && autoclosed == "open"
+      demo: getCount(result.demo), // demo == true
+      stage6: getCount(result.stage6), // stage === 6
+      jaipur: getCount(result.jaipur), // studentContact.city === "Jaipur"
+      nonJaipur: getCount(result.nonJaipur), // studentContact.city !== "Jaipur"
+      closedNonAdmit: getCount(result.closedNonAdmit), // autoclosed == "close" && addmission == false
+    };
+
     return Response.json(
       {
-        message: "All data fetched!",
+        message: "Counts fetched!",
         success: true,
-        fetch: formattedQueries,
+        counts,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.log("Error on getting data list:", error);
+    console.log("Error on getting counts:", error);
     return Response.json(
       {
-        message: "Error on getting data list!",
+        message: "Error on getting counts!",
         success: false,
       },
       { status: 500 }

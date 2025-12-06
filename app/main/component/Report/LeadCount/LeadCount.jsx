@@ -110,7 +110,7 @@ export default function Lead() {
                     cours
                 },
             });
-            setAllquery(response.data.fetch);
+            setAllquery(response.data.counts);
         } catch (error) {
             console.error("Error fetching filtered data:", error);
         } finally {
@@ -323,7 +323,7 @@ export default function Lead() {
                                 <PhoneCall className='w-8 h-8 text-blue-500' />
                             </div>
                             <div className='ml-4'>
-                                <p className='text-xl font-bold text-gray-800'>{allquery.length}</p>
+                                <p className='text-xl font-bold text-gray-800'>{allquery.total}</p>
                                 <p className='text-gray-500'>Total Query</p>
                             </div>
                         </div>
@@ -333,7 +333,7 @@ export default function Lead() {
                                 <CheckCircle className='w-8 h-8 text-green-500' />
                             </div>
                             <div className='ml-4'>
-                                <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.addmission == true).length}
+                                <p className='text-xl font-bold text-gray-800'>{allquery.admitted}
                                 </p>
                                 <p className='text-gray-500'>Enrolled Queries</p>
                             </div>
@@ -344,7 +344,7 @@ export default function Lead() {
                                 <CircleDashed className='w-8 h-8 text-orange-500' />
                             </div>
                             <div className='ml-4'>
-                                <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.addmission == false && item.autoclosed === "open").length}
+                                <p className='text-xl font-bold text-gray-800'>{allquery.pendingOpen}
                                 </p>
                                 <p className='text-gray-500'>Pending Queries</p>
                             </div>
@@ -355,22 +355,22 @@ export default function Lead() {
                                 <Navigation className='w-8 h-8 text-blue-500' />
                             </div>
                             <div className='ml-4'>
-                                <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.demo == true).length}
+                                <p className='text-xl font-bold text-gray-800'>{allquery.demo}
                                 </p>
                                 <p className='text-gray-500'>Demo Queries</p>
                             </div>
                         </div>
 
-                        <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
+                        {/* <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
                             <div className='flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full'>
                                 <Locate className='w-8 h-8 text-blue-500' />
                             </div>
                             <div className='ml-4'>
-                                <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.stage === 6).length}
+                                <p className='text-xl font-bold text-gray-800'>{allquery.stage6}
                                 </p>
                                 <p className='text-gray-500'>Visited Queries</p>
                             </div>
-                        </div>
+                        </div> */}
 
 
                         <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
@@ -378,7 +378,7 @@ export default function Lead() {
                                 <Locate className='w-8 h-8 text-blue-500' />
                             </div>
                             <div className='ml-4'>
-                                <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.studentContact.city === "Jaipur").length}
+                                <p className='text-xl font-bold text-gray-800'>{allquery.jaipur}
                                 </p>
                                 <p className='text-gray-500'>Jaipur Queries</p>
                             </div>
@@ -389,7 +389,7 @@ export default function Lead() {
                                 <LocateOff className='w-8 h-8 text-gray-500' />
                             </div>
                             <div className='ml-4'>
-                                <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.studentContact.city !== "Jaipur").length}
+                                <p className='text-xl font-bold text-gray-800'>{allquery.nonJaipur}
                                 </p>
                                 <p className='text-gray-500'>Out Of Jaipur Queries</p>
                             </div>
@@ -400,8 +400,7 @@ export default function Lead() {
                                 <Trash className='w-8 h-8 text-red-500' />
                             </div>
                             <div className='ml-4'>
-                                <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.autoclosed === "close" && item.addmission === false).length
-                                }
+                                <p className='text-xl font-bold text-gray-800'>{allquery.closedNonAdmit}
                                 </p>
                                 <p className='text-gray-500'>Trash Queries</p>
                             </div>
