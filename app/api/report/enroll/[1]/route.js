@@ -41,12 +41,14 @@ export const GET = async (request) => {
         const { searchParams } = new URL(request.url);
 
         // const mongoFilters = { addmission: true };
-        const mongoFilters = {
-            $or: [
-                { addmission: true },
-                { total: { $exists: true, $gt: 0 } }
-            ]
-        };
+      const mongoFilters = {
+    $or: [
+        { addmission: true },
+        { total: { $exists: true, $gt: 0 } }
+    ],
+    branch: { $not: /\(Franchise\)$/i }   // 🚫 EXCLUDE Franchise branches
+};
+
 
         const staffId = sanitizeId(searchParams.get("staffId"));
         if (staffId) {
@@ -129,7 +131,9 @@ export const GET = async (request) => {
 
         const [allCourses, allAdmins, allReferences, total] = await Promise.all([
             CourseModel.find().select("_id course_name fees").lean(),
-            AdminModel.find().select("_id name").lean(),
+            AdminModel.find({ franchisestaff: { $ne: "1" } })
+                .select("_id name")
+                .lean(),
             ReferenceModel.find().lean(),
             QueryModel.countDocuments(mongoFilters),
         ]);
