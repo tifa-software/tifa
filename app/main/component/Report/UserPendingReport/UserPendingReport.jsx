@@ -15,6 +15,7 @@ export default function UserPendingReport() {
   const [branches, setBranches] = useState([]);
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
+  const [todayActionsMap, setTodayActionsMap] = useState({});
 
   const [branchId, setBranchId] = useState("");
   const [userId, setUserId] = useState("");
@@ -26,6 +27,25 @@ export default function UserPendingReport() {
 
   const [modalInfo, setModalInfo] = useState(null);
 
+  const fetchTodayActions = async () => {
+    try {
+      // 👉 This should be the route of the API we created earlier
+      const res = await axios.get("/api/actiontoday");
+
+      const list = res.data.data || [];
+      const map = {};
+
+      // map[adminId] = todayActions
+      list.forEach((item) => {
+        map[item.adminId] = item.todayActions || 0;
+      });
+
+      setTodayActionsMap(map);
+      console.log(map)
+    } catch (err) {
+      console.error("Failed to fetch today actions", err);
+    }
+  };
 
   const fetchBranches = async () => {
     try {
@@ -63,8 +83,11 @@ export default function UserPendingReport() {
   };
 
   useEffect(() => {
-    Promise.all([fetchBranches(), fetchUsers()]).then(() => setLoading(false));
+    Promise.all([fetchBranches(), fetchUsers(), fetchTodayActions()]).then(() =>
+      setLoading(false)
+    );
   }, []);
+
 
   useEffect(() => {
     if (!branchId) setFilteredUsers(users);
@@ -192,10 +215,13 @@ export default function UserPendingReport() {
                           <th className="px-6 py-3 text-left font-semibold">User</th>
                           <th className="px-6 py-3 text-center font-semibold">Branch</th>
                           <th className="px-6 py-3 text-center font-semibold text-blue-300">
-                            Today Pending
+                            Pending
                           </th>
                           <th className="px-6 py-3 text-center font-semibold text-yellow-300">
                             Past Due Pending
+                          </th>
+                          <th className="px-6 py-3 text-center font-semibold text-yellow-300">
+                            Today Action
                           </th>
                         </tr>
                       </thead>
@@ -233,6 +259,13 @@ export default function UserPendingReport() {
                               {t.pastDueQueries?.length}
                             </td>
 
+                            <td
+                              className="px-6 py-4 text-red-600 font-bold underline cursor-pointer text-center"
+
+                            >
+                              {todayActionsMap[t.user?._id] || 0}
+                            </td>
+
                           </tr>
                         ))}
                         {(() => {
@@ -243,6 +276,10 @@ export default function UserPendingReport() {
 
                           const totalPast = groupedByBranch[branch].reduce(
                             (sum, t) => sum + (t.pastDueQueries?.length || 0),
+                            0
+                          );
+                          const totalTodayAction = groupedByBranch[branch].reduce(
+                            (sum, t) => sum + (todayActionsMap[t.user?._id] || 0),
                             0
                           );
 
@@ -257,6 +294,10 @@ export default function UserPendingReport() {
 
                               <td className="px-6 py-4 text-center text-red-700">
                                 {totalPast}
+                              </td>
+
+                              <td className="px-6 py-4 text-center text-red-700">
+                                {totalTodayAction}
                               </td>
                             </tr>
                           );
