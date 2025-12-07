@@ -6,7 +6,7 @@ import Link from "next/link";
 import * as XLSX from "xlsx";
 import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
 import { ChevronDownSquare } from "lucide-react";
-export default function QueryReport() {
+export default function QueryReport({ initialFilters } = {}) {
   const [allquery, setAllquery] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
@@ -15,25 +15,25 @@ export default function QueryReport() {
   const [totalPages, setTotalPages] = useState(1);
 
   // Filter states
-  const [referenceId, setReferenceId] = useState("");
-  const [suboption, setSuboption] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
-  const [admission, setAdmission] = useState("");
+  const [referenceId, setReferenceId] = useState(initialFilters?.referenceId || "");
+  const [suboption, setSuboption] = useState(initialFilters?.suboption || "");
+  const [fromDate, setFromDate] = useState(initialFilters?.fromDate || "");
+  const [toDate, setToDate] = useState(initialFilters?.toDate || "");
+  const [admission, setAdmission] = useState(initialFilters?.admission || "");
   const [reson, setReson] = useState("");
-  const [grade, setGrade] = useState("");
-  const [location, setLocation] = useState("");
-  const [city, setCity] = useState("");
-  const [assignedName, setAssignedName] = useState("");
+  const [grade, setGrade] = useState(initialFilters?.grade || "");
+  const [location, setLocation] = useState(initialFilters?.location || "");
+  const [city, setCity] = useState(initialFilters?.city || "");
+  const [assignedName, setAssignedName] = useState(initialFilters?.assignedName || "");
   const [assignedFrom, setAssignedFrom] = useState("");
-  const [userName, setUserName] = useState("");
+  const [userName, setUserName] = useState(initialFilters?.userName || "");
   const [studentName, setStudentName] = useState("");
   const [referenceData, setReferenceData] = useState([]);
   const [branches, setBranches] = useState([]);
   const [user, setuser] = useState([]);
   const [selectedReference, setSelectedReference] = useState(null);
   const { data: session } = useSession();
-  const [branch, setBranch] = useState("");
+  const [branch, setBranch] = useState(initialFilters?.branch || "");
   const [showClosed, setShowClosed] = useState("");
   const options = [
     { value: "interested_but_not_proper_response", label: "Interested but not proper response" },

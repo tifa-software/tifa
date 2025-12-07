@@ -30,7 +30,11 @@ export const GET = async (request) => {
     const cours = searchParams.get("cours");
 
     // Base filter
-    const queryFilter = { defaultdata: "query" };
+    const queryFilter = {
+      defaultdata: "query",
+      branch: { $not: /\(Franchise\)$/i }   // branch does NOT end with "(Franchise)"
+    };
+
 
     if (referenceId) {
       const decodedReferenceId = decodeURIComponent(referenceId);
@@ -96,7 +100,7 @@ export const GET = async (request) => {
       }
     }
 
-       if (userName) {
+    if (userName) {
       const decodedUserName = decodeURIComponent(userName);
 
       const admin = await AdminModel.findOne({

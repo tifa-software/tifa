@@ -7,6 +7,7 @@ import Link from "next/link";
 import { PhoneCall, CheckCircle, CircleDashed, Navigation, Locate, LocateOff, Trash } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import { useRef } from "react";
+import QueryReport from "../QueryReport/QueryReport";
 export default function Lead() {
     const contentRef = useRef(null);
     const reactToPrintFn = useReactToPrint({ contentRef });
@@ -28,6 +29,8 @@ export default function Lead() {
     const [referenceData, setReferenceData] = useState([]);
     const [branches, setBranches] = useState([]);
     const [branch, setBranch] = useState("");
+
+    const [showQueryReport, setShowQueryReport] = useState(false);
 
     const [allCourses, setAllCourses] = useState([]);
     const [cours, setCours] = useState("");
@@ -164,7 +167,25 @@ export default function Lead() {
         );
     }
 
-
+    if (showQueryReport) {
+        return (
+            <QueryReport
+                initialFilters={{
+                    referenceId,
+                    suboption,
+                    fromDate,
+                    toDate,
+                    admission,
+                    grade,
+                    location,
+                    city,
+                    assignedName,
+                    userName,
+                    branch,
+                }}
+            />
+        );
+    }
 
     return (
         <div ref={contentRef} className="p-6 bg-white shadow-xl rounded-xl">
@@ -189,21 +210,7 @@ export default function Lead() {
                     </select>
                 </div>
 
-                <div className="flex flex-col bg-white px-2 py-1 rounded-lg shadow-md">
-                    <label className="font-semibold mb-2 text-gray-700">Course</label>
-                    <select
-                        value={cours}
-                        onChange={(e) => setCours(e.target.value)}
-                        className="p-2 border"
-                    >
-                        <option value="">All</option>
-                        {allCourses.map((data, index) => (
-                            <option key={index} value={data._id}>
-                                {data.course_name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                
 
                 <div className="flex flex-col bg-white px-2 py-1 rounded-lg shadow-md">
                     <label className="font-semibold mb-2 text-gray-700">Reference</label>
@@ -255,7 +262,21 @@ export default function Lead() {
                         ))}
                     </select>
                 </div>
-
+<div className="flex flex-col bg-white px-2 py-1 rounded-lg shadow-md">
+                    <label className="font-semibold mb-2 text-gray-700">Course</label>
+                    <select
+                        value={cours}
+                        onChange={(e) => setCours(e.target.value)}
+                        className="p-2 border"
+                    >
+                        <option value="">All</option>
+                        {allCourses.map((data, index) => (
+                            <option key={index} value={data._id}>
+                                {data.course_name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
                 <div className="flex flex-col bg-white px-2 py-1 rounded-lg shadow-md">
                     <label className="font-semibold mb-2 text-gray-700">City</label>
                     <select
@@ -310,6 +331,12 @@ export default function Lead() {
                 className="mt-4 ml-4 bg-green-500 text-white px-4 py-2 rounded shadow-md hover:bg-green-600"
             >
                 Print Page
+            </button>
+            <button
+                onClick={() => setShowQueryReport(true)}
+                className="mt-4 ml-4 bg-purple-500 text-white px-4 py-2 rounded shadow-md hover:bg-purple-600"
+            >
+                View Query Report
             </button>
             {gridLoading ? (
                 <div className="flex items-center justify-center w-full col-span-4">
