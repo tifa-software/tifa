@@ -41,14 +41,13 @@ export const GET = async (request) => {
         const { searchParams } = new URL(request.url);
 
         // const mongoFilters = { addmission: true };
-      const mongoFilters = {
-    $or: [
-        { addmission: true },
-        { total: { $exists: true, $gt: 0 } }
-    ],
-    branch: { $not: /\(Franchise\)$/i }   // 🚫 EXCLUDE Franchise branches
-};
-
+        const mongoFilters = {
+            $or: [
+                { addmission: true },
+                { total: { $exists: true, $gt: 0 } }
+            ],
+            branch: { $not: /\(Franchise\)$/i }   // 🚫 EXCLUDE Franchise branches
+        };
 
         const staffId = sanitizeId(searchParams.get("staffId"));
         if (staffId) {
@@ -103,33 +102,17 @@ export const GET = async (request) => {
             }
         }
 
-
-        //  const dateRange = buildDateRange(searchParams.get("fromDate"), searchParams.get("toDate"));
-        // if (dateRange) {
-        //     mongoFilters.addmissiondate = dateRange;
-        // }
-        //
+        // 👉 Date filter for firstFeeDate
         const fromDate = searchParams.get("fromDate");
         const toDate = searchParams.get("toDate");
-
-        if (fromDate || toDate) {
-            mongoFilters.fees = {
-                $elemMatch: {
-                    transactionDate: {
-                        ...(fromDate && { $gte: new Date(fromDate) }),
-                        ...(toDate && { $lte: new Date(`${toDate}T23:59:59.999Z`) }),
-                    },
-                },
-            };
-        }
-        // 
-
+        const firstFeeDateRange = buildDateRange(fromDate, toDate);
 
         const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
         const limit = Math.min(500, Math.max(10, parseInt(searchParams.get("limit") || "50", 10)));
         const skip = (page - 1) * limit;
 
-        const [allCourses, allAdmins, allReferences, total] = await Promise.all([
+        // 🔢 totalUnfiltered = only mongoFilters (without firstFeeDate)
+        const [allCourses, allAdmins, allReferences, totalUnfiltered] = await Promise.all([
             CourseModel.find().select("_id course_name fees").lean(),
             AdminModel.find({ franchisestaff: { $ne: "1" } })
                 .select("_id name")
@@ -151,45 +134,61 @@ export const GET = async (request) => {
             return acc;
         }, {});
 
-        // const queries = await QueryModel.find(mongoFilters)
-        //     .sort({ addmissiondate: -1, createdAt: -1 })
-        //     .skip(skip)
-        //     .limit(limit)
-        //     .lean();
-        const queries = await QueryModel.aggregate([
-            { $match: mongoFilters },
+        // ----------------- MAIN QUERY LIST WITH firstFeeDate FILTER -----------------
 
-            // Add a field for the FIRST fee date
-            {
-                $addFields: {
-                    firstFeeDate: {
-                        $let: {
-                            vars: {
-                                sortedFees: {
-                                    $sortArray: {
-                                        input: "$fees",
-                                        sortBy: { transactionDate: 1 }
-                                    }
+        const baseAddFirstFeeDateStage = {
+            $addFields: {
+                firstFeeDate: {
+                    $let: {
+                        vars: {
+                            sortedFees: {
+                                $sortArray: {
+                                    input: "$fees",
+                                    sortBy: { transactionDate: 1 }
                                 }
-                            },
-                            in: { $arrayElemAt: ["$$sortedFees.transactionDate", 0] }
-                        }
+                            }
+                        },
+                        in: { $arrayElemAt: ["$$sortedFees.transactionDate", 0] }
                     }
                 }
-            },
+            }
+        };
 
-            // Sorting priority: first fee date → createdAt
+        // 🔢 totalByFilter = mongoFilters + firstFeeDateRange
+        const totalByFilterAgg = await QueryModel.aggregate([
+            { $match: mongoFilters },
+            baseAddFirstFeeDateStage,
+            ...(firstFeeDateRange ? [{ $match: { firstFeeDate: firstFeeDateRange } }] : []),
+            { $count: "count" }
+        ]);
+
+        const totalByFilter = totalByFilterAgg[0]?.count || 0;
+
+        const mainPipeline = [
+            { $match: mongoFilters },
+            baseAddFirstFeeDateStage
+        ];
+
+        if (firstFeeDateRange) {
+            mainPipeline.push({
+                $match: {
+                    firstFeeDate: firstFeeDateRange
+                }
+            });
+        }
+
+        mainPipeline.push(
             {
                 $sort: {
                     firstFeeDate: -1, // Latest paid should come first
                     createdAt: -1
                 }
             },
-
             { $skip: skip },
             { $limit: limit }
-        ]);
+        );
 
+        const queries = await QueryModel.aggregate(mainPipeline);
 
         const queryIds = queries.map((query) => query._id.toString());
 
@@ -235,63 +234,67 @@ export const GET = async (request) => {
                 admissionupdatedate: admissionEntry?.actionDate || null,
             };
         });
-        // Compute accurate userCourseCounts across ALL matching documents (not just the current page)
-        // Prepare userCourseCounts object including detailed query lists
-        // 1️⃣ Group by userid + courseInterest and collect query IDs
-        const countsAgg = await QueryModel.aggregate([
+
+        // ----------------- COUNTS & GROUPING ALSO RESPECT firstFeeDate FILTER -----------------
+
+        // 1️⃣ Group by userid + courseInterest + branch
+        const countsPipeline = [
             { $match: mongoFilters },
-            {
-                $group: {
-                    _id: { userid: "$userid", courseInterest: "$courseInterest", branch: "$branch" },
-                    count: { $sum: 1 },
-                    queries: { $push: "$_id" } // collect IDs
-                }
-            }
-        ]);
+            baseAddFirstFeeDateStage,
+        ];
 
-        // 2️⃣ Fetch FULL query details for ALL needed IDs in ONE request
+        if (firstFeeDateRange) {
+            countsPipeline.push({
+                $match: {
+                    firstFeeDate: firstFeeDateRange
+                }
+            });
+        }
+
+        countsPipeline.push({
+            $group: {
+                _id: { userid: "$userid", courseInterest: "$courseInterest", branch: "$branch" },
+                count: { $sum: 1 },
+                queries: { $push: "$_id" } // collect IDs
+            }
+        });
+
+        const countsAgg = await QueryModel.aggregate(countsPipeline);
+
+        // 2️⃣ Fetch FULL query details for ALL needed IDs but ONLY selected fields
         const allQueryIds = countsAgg.flatMap(g => g.queries);
-        // Fetch FULL query details for ALL needed IDs but ONLY selected fields
-        const fullQueryDocs = await QueryModel.aggregate([
+
+        const fullQueryPipeline = [
             { $match: { _id: { $in: allQueryIds } } },
+            baseAddFirstFeeDateStage,
+        ];
 
-            {
-                $addFields: {
-                    firstFeeDate: {
-                        $let: {
-                            vars: {
-                                sortedFees: {
-                                    $sortArray: {
-                                        input: "$fees",
-                                        sortBy: { transactionDate: 1 }
-                                    }
-                                }
-                            },
-                            in: { $arrayElemAt: ["$$sortedFees.transactionDate", 0] }
-                        }
-                    }
+        if (firstFeeDateRange) {
+            fullQueryPipeline.push({
+                $match: {
+                    firstFeeDate: firstFeeDateRange
                 }
-            },
+            });
+        }
 
-            {
-                $project: {
-                    _id: 1,
-                    userid: 1,
-                    referenceid: 1,
-                    suboption: 1,
-                    branch: 1,
-                    demo: 1,
-                    studentName: 1,
-                    gender: 1,
-                    courseInterest: 1,
-                    category: 1,
-                    studentContact: 1,
-                    firstFeeDate: 1, // 👍 Now included!
-                }
+        fullQueryPipeline.push({
+            $project: {
+                _id: 1,
+                userid: 1,
+                referenceid: 1,
+                suboption: 1,
+                branch: 1,
+                demo: 1,
+                studentName: 1,
+                gender: 1,
+                courseInterest: 1,
+                category: 1,
+                studentContact: 1,
+                firstFeeDate: 1,
             }
-        ]);
+        });
 
-
+        const fullQueryDocs = await QueryModel.aggregate(fullQueryPipeline);
 
         // Convert to easy lookup map
         const queryMap = fullQueryDocs.reduce((acc, doc) => {
@@ -303,40 +306,43 @@ export const GET = async (request) => {
         const userCourseCounts = {};
 
         countsAgg.forEach(({ _id, count, queries }) => {
-            const staffId = _id.userid?.toString() || null;
-            const courseId = _id.courseInterest?.toString() || null;
+            const staffIdStr = _id.userid?.toString() || null;
+            const courseIdStr = _id.courseInterest?.toString() || null;
 
-            if (!userCourseCounts[staffId]) {
-                userCourseCounts[staffId] = {
-                    staffName: adminMap[staffId] || "Not Assigned",
+            if (!userCourseCounts[staffIdStr]) {
+                userCourseCounts[staffIdStr] = {
+                    staffName: adminMap[staffIdStr] || "Not Assigned",
                     courses: {}
                 };
             }
 
-            if (!userCourseCounts[staffId].courses[courseId]) {
-                userCourseCounts[staffId].courses[courseId] = {
-                    courseName: courseMap[courseId]?.name || "Not_Provided",
+            if (!userCourseCounts[staffIdStr].courses[courseIdStr]) {
+                userCourseCounts[staffIdStr].courses[courseIdStr] = {
+                    courseName: courseMap[courseIdStr]?.name || "Not_Provided",
                     count: 0,
                     queries: []
                 };
             }
 
-            userCourseCounts[staffId].courses[courseId].count += count;
-            userCourseCounts[staffId].courses[courseId].queries.push(
+            userCourseCounts[staffIdStr].courses[courseIdStr].count += count;
+            userCourseCounts[staffIdStr].courses[courseIdStr].queries.push(
                 ...queries.map(id => {
                     const q = queryMap[id.toString()];
                     if (!q) return null;
 
-                    const staffName = q.userid ? adminMap[q.userid.toString()] || "Not Assigned" : "Not Assigned";
+                    const staffName = q.userid
+                        ? adminMap[q.userid.toString()] || "Not Assigned"
+                        : "Not Assigned";
+
                     return {
                         ...q,
-                        staffName,     // add staffName
-                        userid: undefined // optional: remove raw userid
+                        staffName,
+                        userid: undefined // optional: hide raw userid
                     };
                 }).filter(Boolean)
             );
-
         });
+
         // 🔥 New: Group Course → Branch
         const courseBranchCounts = {};
 
@@ -345,32 +351,33 @@ export const GET = async (request) => {
                 const q = queryMap[queryId.toString()];
                 if (!q) return;
 
-                const courseId = q.courseInterest?.toString() || null;
-                const courseName = courseMap[courseId]?.name || "Not_Provided";
+                const courseIdStr = q.courseInterest?.toString() || null;
+                const courseName = courseMap[courseIdStr]?.name || "Not_Provided";
 
-                const branch = q.branch || "Not_Provided";
-                const staffName = q.userid ? adminMap[q.userid.toString()] || "Not Assigned" : "Not Assigned";
+                const branchName = q.branch || "Not_Provided";
+                const staffName = q.userid
+                    ? adminMap[q.userid.toString()] || "Not Assigned"
+                    : "Not Assigned";
+
                 if (!courseBranchCounts[courseName]) {
                     courseBranchCounts[courseName] = {};
                 }
 
-                if (!courseBranchCounts[courseName][branch]) {
-                    courseBranchCounts[courseName][branch] = {
+                if (!courseBranchCounts[courseName][branchName]) {
+                    courseBranchCounts[courseName][branchName] = {
                         count: 0,
                         queries: []
                     };
                 }
 
-                courseBranchCounts[courseName][branch].count += 1;
-                courseBranchCounts[courseName][branch].queries.push({
+                courseBranchCounts[courseName][branchName].count += 1;
+                courseBranchCounts[courseName][branchName].queries.push({
                     ...q,
-                    staffName,  // add staff name
-                    userid: undefined  // remove the raw userid if needed
+                    staffName,
+                    userid: undefined
                 });
             });
         });
-
-
 
         return Response.json(
             {
@@ -382,8 +389,11 @@ export const GET = async (request) => {
                 pagination: {
                     page,
                     limit,
-                    total,
-                    totalPages: Math.max(1, Math.ceil(total / limit)),
+                    // 👇 Now this is TOTAL AFTER ALL FILTERS (including date)
+                    total: totalByFilter,
+                    // 👇 Optional: full count without date filter (only mongoFilters)
+                    totalUnfiltered,
+                    totalPages: Math.max(1, Math.ceil(totalByFilter / limit)),
                 },
                 allAdmins,
                 allCourses,
@@ -402,4 +412,4 @@ export const GET = async (request) => {
             { status: 500 }
         );
     }
-};  
+};
