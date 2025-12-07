@@ -27,25 +27,62 @@ export async function GET(req) {
       query.date = { $lte: endDate };
     }
 
-    // User / Branch filter
+    // === Only franchisestaff: "1" ===
+    let allowedUserIds = [];
+
     if (userId) {
-      query.userId = userId;
-    } else if (branchId) {
-      const usersInBranch = await AdminModel.find({ branch: branchId }).select("_id");
-      query.userId = { $in: usersInBranch.map((u) => u._id) };
+      // Check if this user is franchisestaff = "1"
+      const staff = await AdminModel.findOne({
+        _id: userId,
+        franchisestaff: { $ne: "1" },
+      }).select("_id");
+
+      if (!staff) {
+        // If user is not franchisestaff, return empty
+        return NextResponse.json({
+          success: true,
+          message: "No tasks found for this user (not franchisestaff).",
+          data: [],
+        });
+      }
+
+      allowedUserIds = [staff._id];
+    } else {
+      // Get all franchisestaff = "1" (optionally within a branch)
+      const adminFilter = { franchisestaff: { $ne: "1" } };
+
+      if (branchId) {
+        adminFilter.branch = branchId;
+      }
+
+      const staffList = await AdminModel.find(adminFilter).select("_id");
+      allowedUserIds = staffList.map((u) => u._id);
     }
+
+    // If no franchisestaff users found, return empty
+    if (!allowedUserIds.length) {
+      return NextResponse.json({
+        success: true,
+        message: "No franchisestaff users found",
+        data: [],
+      });
+    }
+
+    // Apply user filter
+    query.userId = { $in: allowedUserIds };
 
     const dailyTasks = await DailyTaskModel.find(query)
       .populate({
         path: "userId",
-        select: "name email branch",
-        populate: { path: "branch", select: "branchName" }
+        select: "name email branch franchisestaff",
+        // if branch is not a ref, you can remove this populate
+        // populate: { path: "branch", select: "branchName" },
       })
       .populate({
         path: "todayQueries pastDueQueries completedQueries pendingTodayQueries pendingPastDueQueries",
         model: QueryModel,
         select: "studentName studentContact qualification",
-        options: { sort: { createdAt: -1 } }
+        options: { sort: { createdAt: -1 } },
       })
       .lean();
 
@@ -53,14 +90,14 @@ export async function GET(req) {
       return NextResponse.json({
         success: true,
         message: "No tasks found",
-        data: []
+        data: [],
       });
     }
 
     // === Group by user ===
     const groupedData = {};
 
-    dailyTasks.forEach(task => {
+    dailyTasks.forEach((task) => {
       const uid = task.userId?._id.toString();
 
       if (!groupedData[uid]) {
@@ -71,6 +108,7 @@ export async function GET(req) {
             name: task.userId?.name,
             email: task.userId?.email,
             branchName: task.userId?.branch || "No Branch",
+            franchisestaff: task.userId?.franchisestaff,
           },
           stats: {
             totalAssigned: 0,
@@ -85,7 +123,8 @@ export async function GET(req) {
       // Merge Stats
       groupedData[uid].stats.totalAssigned += task.stats?.totalAssigned || 0;
       groupedData[uid].stats.todayAssigned += task.stats?.todayAssigned || 0;
-      groupedData[uid].stats.pastDueAssigned += task.stats?.pastDueAssigned || 0;
+      groupedData[uid].stats.pastDueAssigned +=
+        task.stats?.pastDueAssigned || 0;
 
       // Merge Queries
       if (Array.isArray(task.todayQueries)) {
@@ -103,7 +142,6 @@ export async function GET(req) {
       message: "Daily tasks retrieved successfully",
       data: formatted,
     });
-
   } catch (error) {
     console.error(error);
     return NextResponse.json(
