@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import {
-  Menu, X, CopyPlus, ListTodo, Rocket, Gauge, LayoutDashboard, Users, LayoutList, Trash2, FileLineChart,
+  Menu, X, CopyPlus, ListTodo, Rocket, Gauge, LayoutDashboard, Users, LayoutList, Trash2, FileLineChart,MessageCircleCode
 } from "lucide-react";
 import { Menulist } from "@/constants/Menu";
 import Link from "next/link";
@@ -127,7 +127,7 @@ export default function Sidebar({ onToggleSidebar }) {
                 <li
                   className={`cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md ${isActiveLink("/main/page/report") ? "bg-[#6cb049] text-white" : "hover:bg-gray-100 text-gray-700"
                     }`}>
-                  <Gauge size={18} />
+                  <Rocket size={18} />
                   Report
                 </li>
               </Link>
@@ -136,8 +136,17 @@ export default function Sidebar({ onToggleSidebar }) {
                 <li
                   className={`cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md ${isActiveLink("/main/page/fran/report") ? "bg-[#6cb049] text-white" : "hover:bg-gray-100 text-gray-700"
                     }`}>
-                  <Gauge size={18} />
+                  <Rocket size={18} />
                  Franchiese Report
+                </li>   
+              </Link>
+
+               <Link href="/main/page/message" onClick={handleLinkClick}>
+                <li
+                  className={`cursor-pointer text-sm px-4 py-3 duration-150 flex items-center gap-x-2 rounded-md ${isActiveLink("/main/page/message") ? "bg-[#6cb049] text-white" : "hover:bg-gray-100 text-gray-700"
+                    }`}>
+                  <MessageCircleCode size={18} />
+                 Event Message
                 </li>   
               </Link>
             </ul>

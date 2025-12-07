@@ -3,7 +3,6 @@ import AdminModel from '@/model/Admin';
 import axios from 'axios';
 import { NextResponse } from 'next/server';
 
-// ENV Variables
 const WHATSAPP_API_TOKEN = process.env.WHATSAPP_API_TOKEN;
 const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID || '933988523111654';
 
@@ -16,14 +15,12 @@ export async function POST(request) {
             );
         }
 
-        // Database Connection
         await dbConnect();
 
         const today = new Date();
         const currentDay = today.getDate();
         const currentMonth = today.getMonth() + 1;
 
-        // Birthday Admin Query
         const birthdayAdmins = await AdminModel.aggregate([
             {
                 $project: {
@@ -45,7 +42,6 @@ export async function POST(request) {
 
         const sentMessages = [];
 
-        // Loop and Send WhatsApp Template Messages
         for (const admin of birthdayAdmins) {
             if (!admin.mobile) continue;
 
@@ -92,7 +88,6 @@ export async function POST(request) {
             }
         }
 
-        // Result Response
         return NextResponse.json(
             {
                 message: 'Birthday message job completed.',

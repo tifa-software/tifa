@@ -2,7 +2,6 @@
 import React from 'react';
 import Mainline from "@/components/Graph/MainLine"
 import MainBar from "@/components/Graph/MainBar"
-import MainPie from "@/components/Graph/MainPie"
 export default function Page() {
 
   return (

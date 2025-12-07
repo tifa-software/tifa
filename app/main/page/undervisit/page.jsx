@@ -61,7 +61,7 @@ export default function UnderVisit() {
     };
 
     const totalPages = Math.ceil(total / limit);
-    const gradeOptions = ["Null", "A", "B", "C"];
+    const gradeOptions = ["Null", "H", "A", "B", "C"];
 
     return (
         <div className="container mx-auto p-5">
@@ -108,7 +108,7 @@ export default function UnderVisit() {
                                                     <td className="px-6 py-2">{(page - 1) * limit + index + 1}</td>
                                                     <td className="px-6 py-2">{query.studentName}</td>
                                                     <td className="px-6 py-2">{query.studentContact.phoneNumber}</td>
-                                                    <td className="px-6 py-2">{query.grade}</td>
+                                                    <td className="px-6 py-2"> {query.grade === "H" ? "Important" : query.grade}</td>
                                                     <td className="px-6 py-2">
                                                         {new Date(query.deadline).toLocaleDateString()}
                                                     </td>
@@ -177,7 +177,12 @@ export default function UnderVisit() {
                                 onClick={() => { setPage(1); setSelectedGrade(g); }}
                                 className={`w-full py-2 px-4 my-1 rounded ${selectedGrade === g ? "bg-gray-300" : "bg-gray-100"}`}
                             >
-                                {g === "Null" ? "All" : `Grade ${g}`}
+                                {g === "Null"
+                                    ? "All"
+                                    : g === "H"
+                                        ? "Important"
+                                        : `Grade ${g}`
+                                }
                             </button>
                         ))}
                     </div>
@@ -198,7 +203,7 @@ export default function UnderVisit() {
                     </div> */}
 
                     {/* Search Filter */}
-                    
+
 
                 </div>
             </div>
