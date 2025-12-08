@@ -614,11 +614,11 @@ export default function AllQuery() {
                   deadlineDate.toDateString() === new Date(Date.now() + 48 * 60 * 60 * 1000).toDateString();
 
                 let rowCls = "";
-                if (querie.addmission) rowCls = "bg-[#6cb049] text-white";
-                else if (isToday) rowCls = "bg-red-500 text-white";
-                else if (isPast) rowCls = "text-white animate-blink";
-                else if (isTomorrow) rowCls = "bg-[#fcccba] text-black";
-                else if (isDayAfter) rowCls = "bg-[#ffe9bf] text-black";
+                if (querie.addmission) rowCls = "bg-[#fff] text-black";
+                else if (isToday) rowCls = "bg-[#fff] text-black";
+                else if (isPast) rowCls = "bg-[#fff] text-black";
+                else if (isTomorrow) rowCls = "bg-[#fff] text-black";
+                else if (isDayAfter) rowCls = "bg-[#fff] text-black";
 
                 return (
                   <React.Fragment key={querie._id}>
