@@ -167,7 +167,13 @@ export default function Header() {
                                             <Link href="/branch/page/demo">
                                                 <li
                                                     className='cursor-pointer hover:bg-gray-100 text-[14px] text-gray-700 rounded-md px-4 py-2 duration-150'>
-                                                    Demo
+                                                    Branch Demo
+                                                </li>
+                                            </Link>
+                                            <Link href="/branch/page/selfdemo">
+                                                <li
+                                                    className='cursor-pointer hover:bg-gray-100 text-[14px] text-gray-700 rounded-md px-4 py-2 duration-150'>
+                                                    Self Demo
                                                 </li>
                                             </Link>
                                             <Link href="/branch/page/important">
@@ -176,7 +182,7 @@ export default function Header() {
                                                     Important Query
                                                 </li>
                                             </Link>
-                                           
+
                                         </ul>
 
                                     </div>
