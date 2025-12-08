@@ -82,7 +82,7 @@ export default function Page({ id }) {
     if (error) {
         return (
             <div className="flex justify-center items-center w-full min-h-screen bg-gray-50">
-            <p className="text-red-500 text-lg">{error}</p>
+                <p className="text-red-500 text-lg">{error}</p>
             </div>
         );
     }

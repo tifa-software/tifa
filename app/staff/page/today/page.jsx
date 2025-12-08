@@ -67,7 +67,7 @@ export default function AllQuery() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterByGrade, setFilterByGrade] = useState("");
   const [filterAssignedFrom, setFilterAssignedFrom] = useState("");
-  const [deadlineFilter, setDeadlineFilter] = useState("today");
+  const [deadlineFilter, setDeadlineFilter] = useState("current");
   const [customDate, setCustomDate] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -472,6 +472,8 @@ export default function AllQuery() {
                     Deadline
                   </option>
                   {/* <option value="">All</option> */}
+                  <option value="current">All</option>
+
                   <option value="today">Today</option>
                   <option value="tomorrow">Tomorrow</option>
                   {/* <option value="dayAfterTomorrow">Day After Tomorrow</option> */}
@@ -576,6 +578,8 @@ export default function AllQuery() {
                 Deadline
               </option>
               {/* <option value="">All</option> */}
+                  <option value="current">All</option>
+
               <option value="today">Today</option>
               <option value="tomorrow">Tomorrow</option>
               {/* <option value="dayAfterTomorrow">Day After Tomorrow</option> */}

@@ -67,7 +67,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterCourse, setFilterCourse] = useState(""); // branch
   const [filterByGrade, setFilterByGrade] = useState(""); // A/B/C
-  const [deadlineFilter, setDeadlineFilter] = useState("today"); // today/tomorrow/dayAfterTomorrow/past/custom/dateRange
+  const [deadlineFilter, setDeadlineFilter] = useState("current"); // today/tomorrow/dayAfterTomorrow/past/custom/dateRange
   const [customDate, setCustomDate] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -407,6 +407,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
                     Deadline
                   </option>
                   {/* <option value="">All</option> */}
+                  <option value="current">All</option>
                   <option value="today">Today</option>
                   <option value="tomorrow">Tomorrow</option>
                   {/* <option value="dayAfterTomorrow">Day After Tomorrow</option> */}
@@ -513,6 +514,8 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
                 Deadline
               </option>
               {/* <option value="">All</option> */}
+                  <option value="current">All</option>
+
               <option value="today">Today</option>
               <option value="tomorrow">Tomorrow</option>
               {/* <option value="dayAfterTomorrow">Day After Tomorrow</option> */}

@@ -58,7 +58,7 @@ export const GET = async (request, context) => {
 
   const deadlineFilterParam = searchParams.get("deadlineFilter");
   const legacyDeadline = searchParams.get("deadline");
-  const supportedFilters = new Set(["today", "tomorrow", "dayAfterTomorrow", "past", "custom", "dateRange"]);
+  const supportedFilters = new Set(["today", "tomorrow", "dayAfterTomorrow", "past", "custom", "dateRange", "current"]);
 
   let dateFilter = deadlineFilterParam ?? "";
   let deadlineDate = searchParams.get("deadlineDate") || "";
@@ -325,6 +325,14 @@ export const GET = async (request, context) => {
       pipeline.push({
         $match: {
           parsedDeadline: { $gte: rangeStart, $lt: rangeEndExclusive },
+        },
+       });
+    } else if (dateFilter === "current") {
+      // 👇 PAST + TODAY + TOMORROW
+      // parsedDeadline < dayAfterTomorrowStart
+      pipeline.push({
+        $match: {
+          parsedDeadline: { $lt: dayAfterTomorrowStart },
         },
       });
     }

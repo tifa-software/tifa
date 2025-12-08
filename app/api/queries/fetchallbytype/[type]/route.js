@@ -46,7 +46,7 @@ export const GET = async (request, context) => {
 
   const deadlineFilterParam = searchParams.get("deadlineFilter");
   const legacyDeadline = searchParams.get("deadline");
-  const supportedFilters = new Set(["today", "tomorrow", "dayAfterTomorrow", "past", "custom", "dateRange"]);
+  const supportedFilters = new Set(["today", "tomorrow", "dayAfterTomorrow", "past", "custom", "dateRange", "current"]);
 
   let dateFilter = deadlineFilterParam ?? "";
   let deadlineDate = searchParams.get("deadlineDate") || "";
@@ -287,8 +287,15 @@ export const GET = async (request, context) => {
           parsedDeadline: { $gte: rangeStart, $lt: rangeEndExclusive },
         },
       });
+    } else if (dateFilter === "current") {
+      // 👇 PAST + TODAY + TOMORROW
+      // parsedDeadline < dayAfterTomorrowStart
+      pipeline.push({
+        $match: {
+          parsedDeadline: { $lt: dayAfterTomorrowStart },
+        },
+      });
     }
-
     const priorityExpression = {
       $switch: {
         branches: [
@@ -408,7 +415,7 @@ export const GET = async (request, context) => {
 
     const [aggregationResult, branches, admins] = await Promise.all([
       QueryModel.aggregate(pipeline),
-      BranchModel.find({ defaultdata: "branch" }).select("branch_name").lean(),
+      BranchModel.find({ defaultdata: "branch", franchise: { $ne: "1" } }).select("branch_name").lean(),
       AdminModel.find({ defaultdata: "admin" }).select("name _id").lean(),
     ]);
 
