@@ -1,11 +1,12 @@
 // ------------------------ SAME IMPORTS ------------------------
 export const runtime = "nodejs";
 export const preferredRegion = ["bom1"];
-
+import mongoose from "mongoose";
 import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
 import AdminModel from "@/model/Admin";
 import AuditLog from "@/model/AuditLog";
+import CourseModel from "@/model/Courses";
 
 const escapeRegex = (string) => {
   return string.replace(/[.*+?^=!:${}()|\[\]\/\\]/g, "\\$&");
@@ -45,9 +46,8 @@ export const GET = async (request) => {
     // ------------------------ SAME FILTER LOGIC ------------------------
     const queryFilter = {
       defaultdata: "query",
-      branch: { $not: /\(Franchise\)$/i },
+      branch: { $not: /\(Franchise\)$/i }
     };
-
     if (referenceId) {
       const escapedReferenceId = escapeRegex(decodeURIComponent(referenceId));
       queryFilter.referenceid = { $regex: escapedReferenceId, $options: "i" };
@@ -55,7 +55,10 @@ export const GET = async (request) => {
 
     if (suboption) queryFilter.suboption = { $regex: suboption, $options: "i" };
 
-    // ❌ createdAt filter removed – stage6 date controls the range
+
+
+    // ❌ REMOVE createdAt filter because stage6 filtering must control date
+    // (old code for createdAt removed)
 
     if (admission) queryFilter.addmission = admission === "true";
     if (grade) queryFilter.lastgrade = { $regex: grade, $options: "i" };
@@ -114,17 +117,22 @@ export const GET = async (request) => {
 
     // ---------------------------------------------------------
     //  ✔ ONLY STAGE 6
-    //  Default to current month when fromDate/toDate not provided.
+    //  Optimized and with default current-month range when
+    //  fromDate/toDate are not provided.
     // ---------------------------------------------------------
     let stageSixQueryIds = [];
 
+    // If no dates passed, default to current month
     const now = new Date();
     const defaultFrom = new Date(now.getFullYear(), now.getMonth(), 1);
     const effectiveFrom = fromDate ? new Date(fromDate) : defaultFrom;
     const effectiveTo = toDate ? new Date(toDate) : new Date();
     effectiveTo.setHours(23, 59, 59, 999);
 
-    // Narrow to logs that have stage 6 transitions in range
+
+    // First, get only those logs that have ANY history entry
+    // where stage is set to 6 within the requested date range.
+    // This narrows the working set significantly.
     const stage6Logs = await AuditLog.find(
       {
         stage: 6,
@@ -138,6 +146,9 @@ export const GET = async (request) => {
       { queryId: 1, history: 1 }
     );
 
+    // Now compute the exact stage6UpdatedDate per queryId using
+    // the same JS logic as before, but only over this reduced
+    // set of logs.
     const stage6DateMap = {};
 
     for (const log of stage6Logs) {
@@ -157,9 +168,9 @@ export const GET = async (request) => {
     if (stageSixQueryIds.length === 0) {
       return Response.json({
         success: true,
-        message: "No data for given filters",
+        fetch: [],
         courseStats: [],
-        userBranchCounts: {},
+        userCourseCounts: {},
         pagination: { total: 0, page, limit, totalPages: 1 },
       });
     }
@@ -168,14 +179,14 @@ export const GET = async (request) => {
     // Merge stage6 IDs with existing filters
     // ---------------------------------------------------------
     if (queryFilter._id?.$in) {
-      const existing = new Set(queryFilter._id.$in.map((x) => x.toString()));
-      stageSixQueryIds = stageSixQueryIds.filter((id) => existing.has(id));
+      const existing = new Set(queryFilter._id.$in.map(x => x.toString()));
+      stageSixQueryIds = stageSixQueryIds.filter(id => existing.has(id));
       if (stageSixQueryIds.length === 0) {
         return Response.json({
           success: true,
-          message: "No data after combining filters",
+          fetch: [],
           courseStats: [],
-          userBranchCounts: {},
+          userCourseCounts: {},
           pagination: { total: 0, page, limit, totalPages: 1 },
         });
       }
@@ -184,77 +195,80 @@ export const GET = async (request) => {
       queryFilter._id = { $in: stageSixQueryIds };
     }
 
-    // ---------------------------------------------------------
-    // Staff-wise course query counts (same aggregation as before)
-    // ---------------------------------------------------------
+    // Get staff-wise course query counts (aggregation used previously)
     const staffCourseStats = await QueryModel.aggregate([
       {
         $match: {
           ...queryFilter,
           courseInterest: { $exists: true, $ne: null },
           _id: { $in: stageSixQueryIds },
-          userid: { $exists: true, $ne: null }, // Ensure userid exists
-        },
+          userid: { $exists: true, $ne: null } // Ensure userid exists
+        }
       },
       {
         $lookup: {
-          from: "course2s",
-          localField: "courseInterest",
-          foreignField: "_id",
-          as: "courseInfo",
-        },
+          from: 'course2s',
+          localField: 'courseInterest',
+          foreignField: '_id',
+          as: 'courseInfo'
+        }
       },
-      { $unwind: "$courseInfo" },
+      { $unwind: '$courseInfo' },
       {
         $lookup: {
-          from: "admins",
-          localField: "userid",
-          foreignField: "_id",
-          as: "staffInfo",
-        },
+          from: 'admins',
+          localField: 'userid',
+          foreignField: '_id',
+          as: 'staffInfo'
+        }
       },
-      { $unwind: "$staffInfo" },
+      { $unwind: '$staffInfo' },
       {
         $group: {
           _id: {
-            staffId: "$userid",
-            staffName: "$staffInfo.name",
-            courseId: "$courseInfo._id",
-            courseName: "$courseInfo.course_name",
+            staffId: '$userid',
+            staffName: '$staffInfo.name',
+            courseId: '$courseInfo._id',
+            courseName: '$courseInfo.course_name'
           },
-          count: { $sum: 1 },
-        },
+          count: { $sum: 1 }
+        }
       },
       {
         $project: {
           _id: 0,
-          staffId: "$_id.staffId",
-          staffName: "$_id.staffName",
-          courseId: "$_id.courseId",
-          courseName: "$_id.courseName",
-          count: 1,
-        },
+          staffId: '$_id.staffId',
+          staffName: '$_id.staffName',
+          courseId: '$_id.courseId',
+          courseName: '$_id.courseName',
+          count: 1
+        }
       },
-      { $sort: { staffName: 1, count: -1 } },
+      { $sort: { staffName: 1, count: -1 } }
     ]);
 
+    // Format the response to group by staff
     const courseStats = staffCourseStats.reduce((acc, stat) => {
-      const staffName = stat.staffName || "Unassigned";
+      const staffName = stat.staffName || 'Unassigned';
       if (!acc[staffName]) {
         acc[staffName] = [];
       }
       acc[staffName].push({
         courseId: stat.courseId,
         courseName: stat.courseName,
-        count: stat.count,
+        count: stat.count
       });
       return acc;
     }, {});
 
-    // ---------------------------------------------------------
-    // Pagination counts (no need to fetch paginated list)
-    // ---------------------------------------------------------
-    const totalQueries = await QueryModel.countDocuments(queryFilter);
+    // Now fetch the main query results (paginated)
+    const [queries, totalQueries] = await Promise.all([
+      QueryModel.find(queryFilter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      QueryModel.countDocuments(queryFilter)
+    ]);
 
     // Get admins map
     const admins = await AdminModel.find({}, { _id: 1, name: 1 });
@@ -262,42 +276,147 @@ export const GET = async (request) => {
       admins.map((a) => [a._id.toString(), a.name])
     );
 
+    // Fetch audit logs for paginated queries
+    const auditLogs = await AuditLog.find({
+      queryId: { $in: queries.map((q) => q._id) },
+    });
+
+    // Prepare course map only for courses appearing in paginated `queries`
+    const courseIds = queries
+      .map(q => q.courseInterest)
+      .filter(id => id && mongoose.Types.ObjectId.isValid(id?.toString()))
+      .map(id => id.toString());
+
+    const courses = courseIds.length > 0 ? await CourseModel.find(
+      { _id: { $in: courseIds } },
+      { _id: 1, course_name: 1 }
+    ) : [];
+
+    const courseMap = Object.fromEntries(
+      courses.map(c => [c._id.toString(), c.course_name])
+    );
+    // ----------------------- GROUP AUDIT BY QUERY -----------------------
+    const auditLogMap = auditLogs.reduce((map, log) => {
+      const id = log.queryId.toString();
+      if (!map[id]) {
+        map[id] = {
+          stage: log.stage,
+          history: [],
+          historyCount: 0,
+        };
+      }
+
+      map[id].history.push(...log.history || []);
+      map[id].historyCount += (log.history || []).length;
+
+      return map;
+    }, {});
+
     // ---------------------------------------------------------
-    //  NEW: USER-LEVEL BRANCH COUNTS (NO PAGINATION, ONLY COUNTING)
+    //  Get stage6 updated date for final output
     // ---------------------------------------------------------
+    const getStage6UpdatedDate = (auditHistory) => {
+      if (!auditHistory || auditHistory.length === 0) return null;
+
+      for (const h of [...auditHistory].reverse()) {
+        if (
+          h.changes &&
+          h.changes.get("stage")?.newValue == 6
+        ) {
+          return h.actionDate || null;
+        }
+      }
+      return null;
+    };
+
+    // ----------------------- FORMAT FINAL RESPONSE -----------------------
+    const formatted = (queries || []).map((q) => {
+      const audit = auditLogMap[q._id.toString()] || {};
+
+      return {
+        ...q._doc,
+        userid: adminMap[q.userid?.toString()] || q.userid,
+        assignedTo: adminMap[q.assignedTo?.toString()] || q.assignedTo,
+        assignedsenthistory: (q.assignedsenthistory || []).map(
+          (id) => adminMap[id?.toString()] || id
+        ),
+        assignedreceivedhistory: (q.assignedreceivedhistory || []).map(
+          (id) => adminMap[id?.toString()] || id
+        ),
+        assignedToreq: adminMap[q.assignedToreq?.toString()] || q.assignedToreq,
+        courseInterestName: courseMap[q.courseInterest?.toString()] || null,
+        historyCount: audit.historyCount || 0,
+        stage: audit.stage || 0,
+
+        // ⭐ THIS DATE IS WHAT USER WANTS
+        stage6UpdatedDate: getStage6UpdatedDate(audit.history),
+      };
+    });
+
+    // ---------------------------------------------------------
+    //  NEW: USER-LEVEL COURSE COUNTS (NO PAGINATION)
+    //  Use ALL matching queries (based on queryFilter) to compute totals.
+    // ---------------------------------------------------------
+
+    // Fetch all matching queries (no skip/limit) but only fields required for counting
+    // NOTE: queryFilter already includes _id: { $in: stageSixQueryIds }
     const allMatchingQueries = await QueryModel.find(
       { ...queryFilter },
       {
         _id: 1,
         userid: 1,
         branch: 1,
+        courseInterest: 1,
+        referenceid: 1,
+        suboption: 1,
+        studentContact: 1,
+        studentName: 1
       }
+    );
+
+
+    // Filter only valid courseInterest ObjectIds for querying CourseModel
+    const allCourseIds = [
+      ...new Set(
+        allMatchingQueries
+          .map((q) => q.courseInterest)
+          .filter(Boolean)
+          .map((id) => id?.toString())
+          .filter((s) => mongoose.Types.ObjectId.isValid(s))
+      ),
+    ];
+
+    const allCourses = allCourseIds.length > 0 ? await CourseModel.find(
+      { _id: { $in: allCourseIds } },
+      { _id: 1, course_name: 1 }
+    ) : [];
+
+    const allCourseMap = Object.fromEntries(
+      allCourses.map(c => [c._id.toString(), c.course_name])
     );
 
     // Ensure adminMap has all users present (add missing admins)
     const allUserIds = [
-      ...new Set(
-        allMatchingQueries
-          .map((q) => q.userid)
-          .filter(Boolean)
-          .map((id) => id.toString())
-      ),
+      ...new Set(allMatchingQueries
+        .map(q => q.userid)
+        .filter(Boolean)
+        .map(id => id.toString()))
     ];
 
     if (allUserIds.length > 0) {
-      const missingAdminIds = allUserIds.filter((id) => !adminMap[id]);
+      const missingAdminIds = allUserIds.filter(id => !adminMap[id]);
       if (missingAdminIds.length > 0) {
-        const missingAdmins = await AdminModel.find(
-          { _id: { $in: missingAdminIds } },
-          { _id: 1, name: 1 }
-        );
+        const missingAdmins = await AdminModel.find({ _id: { $in: missingAdminIds } }, { _id: 1, name: 1 });
         for (const a of missingAdmins) {
           adminMap[a._id.toString()] = a.name;
         }
       }
     }
 
-    // Build the userBranchCounts object (staff x branch) with ONLY counts
+    // Build the userCourseCounts object (staff x branch) without
+    // doing an extra full AuditLog scan. XLMS frontend does not
+    // use per-query stage6updatedate, so we can omit it for
+    // significant performance gain.
     const userBranchCounts = {};
 
     for (const q of allMatchingQueries) {
@@ -311,30 +430,41 @@ export const GET = async (request) => {
       if (!userBranchCounts[staffName][branchName]) {
         userBranchCounts[staffName][branchName] = {
           count: 0,
+          queries: []
         };
       }
 
-      // Only increment count – no detailed query list
       userBranchCounts[staffName][branchName].count++;
+
+      // Push the full query info needed for drill-down modal
+      userBranchCounts[staffName][branchName].queries.push({
+        _id: q._id,
+        userid: q.userid,
+        referenceid: q.referenceid,
+        suboption: q.suboption,
+        studentName: q.studentName,
+        studentContact: q.studentContact,
+        stage6UpdatedDate: stage6DateMap[q._id.toString()] || null,
+      });
     }
 
+
     // ---------------------------------------------------------
-    // Final response (NO fetch / NO detailed list)
+    // Final response (includes userCourseCounts - NO PAGINATION)
     // ---------------------------------------------------------
     return Response.json({
       success: true,
       message: "All data fetched!",
-      courseStats: Object.entries(courseStats).map(
-        ([staffName, courses]) => ({
-          staffName,
-          courses: courses.map((c) => ({
-            courseId: c.courseId,
-            courseName: c.courseName,
-            count: c.count,
-          })),
-        })
-      ),
-      userBranchCounts, // ✅ only counts
+      fetch: formatted,
+      courseStats: Object.entries(courseStats).map(([staffName, courses]) => ({
+        staffName,
+        courses: courses.map(c => ({
+          courseId: c.courseId,
+          courseName: c.courseName,
+          count: c.count
+        }))
+      })),
+      userBranchCounts, // ⭐ NEW TOTAL COUNTS (NO PAGINATION)
       pagination: {
         total: totalQueries,
         page,
@@ -345,11 +475,7 @@ export const GET = async (request) => {
   } catch (err) {
     console.log("Error:", err);
     return Response.json(
-      {
-        success: false,
-        message: "Error on getting data list!",
-        error: err?.message,
-      },
+      { success: false, message: "Error on getting data list!", error: err?.message },
       { status: 500 }
     );
   }
