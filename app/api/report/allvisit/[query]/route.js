@@ -46,7 +46,7 @@ export const GET = async (request) => {
     // ------------------------ SAME FILTER LOGIC ------------------------
     const queryFilter = {
       defaultdata: "query",
-    branch: { $not: /\(Franchise\)$/i }
+      branch: { $not: /\(Franchise\)$/i }
     };
     if (referenceId) {
       const escapedReferenceId = escapeRegex(decodeURIComponent(referenceId));
@@ -136,6 +136,7 @@ export const GET = async (request) => {
           history: {
             $elemMatch: {
               actionDate: { $gte: from, $lte: to },
+              "changes.stage.newValue": 6,
             },
           },
         },
