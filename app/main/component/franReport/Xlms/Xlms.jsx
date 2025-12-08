@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import * as XLSX from "xlsx";
 
-const MAX_RANGE_DAYS = 7; // 1 Dec → 8 Dec (7 days diff) allowed
 
 export default function Admissionxlms() {
   const [allquery, setAllquery] = useState({});
@@ -47,11 +46,7 @@ export default function Admissionxlms() {
       return;
     }
 
-    const diff = diffInDays(fDate, tDate);
-    if (diff > MAX_RANGE_DAYS) {
-      alert("Max 8 days report allowed. (Example: 1 Dec - 8 Dec)");
-      return;
-    }
+    
 
     setLoading(true);
     try {
@@ -342,13 +337,7 @@ export default function Admissionxlms() {
                         {data?.count > 0 ? (
                           <button
                             className="text-green-700 underline font-bold hover:text-green-600 ml-2"
-                            onClick={() =>
-                              setSelectedData({
-                                user,
-                                course,
-                                queries: data.queries,
-                              })
-                            }
+                            
                           >
                             {data.count}
                           </button>
@@ -395,67 +384,7 @@ export default function Admissionxlms() {
       )}
 
       {/* Modal Details */}
-      {selectedData && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          {/* ⭐ NEW: added relative for sticky header to work nicely */}
-          <div className="bg-white w-[95%] md:w-[70%] p-4 rounded-xl shadow-lg max-h-[85vh] overflow-y-auto relative">
-            <div className="flex justify-between items-center border-b pb-2 mb-3">
-              <h2 className="text-lg font-bold text-gray-800">
-                {selectedData.course} — {selectedData.user}
-              </h2>
-              <div className=" flex gap-5">
-
-                <button
-                  onClick={exportSelectedToExcel}
-                  className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
-                >
-                  Export to Excel
-                </button>
-                <button
-                  className="text-red-600 font-bold text-xl"
-                  onClick={() => setSelectedData(null)}
-                >
-                  ✖
-                </button>
-              </div>
-            </div>
-
-            <table className="w-full border text-sm">
-              <thead className="bg-gray-200 sticky top-0 z-10">
-                <tr>
-                  <th className="border p-2">S/N</th>
-                  <th className="border p-2">Date</th>
-                  <th className="border p-2">Staff</th>
-                  <th className="border p-2">Student</th>
-                  <th className="border p-2">Branch</th>
-                  <th className="border p-2">Phone</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {selectedData.queries.sort((b, a) => new Date(b.stage6UpdatedDate) - new Date(a.stage6UpdatedDate)).map((q, index) => (
-                  <tr key={q._id} className="hover:bg-blue-50">
-                    <td className="border p-2">{index + 1}</td>
-                    <td className="border p-2"> {q.stage6UpdatedDate
-                      ? new Date(q.stage6UpdatedDate).toLocaleDateString("en-GB", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      }).replace(",", "")
-                      : "-"}</td>
-                    <td className="border p-2">{selectedData.user}</td>
-                    <td className="border p-2">{q.studentName}</td>
-                    <td className="border p-2">{selectedData.course}</td>
-                    <td className="border p-2">
-                      {q.studentContact?.phoneNumber}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+  
     </div>
   );
 }
