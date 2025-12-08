@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
-export default function UpdateQuery2({ query, audit }) {
+export default function UpdateQuery2({ query, audit, onUpdated }) {
   const { data: session } = useSession();
   const queryid = query._id;
   const userid = query.userid;
@@ -95,7 +95,9 @@ export default function UpdateQuery2({ query, audit }) {
       if (auditResponse.status === 200) {
         console.log('Audit updated successfully:', auditResponse.data);
         // router.push('./');
-        window.location.reload();
+        if (typeof onUpdated === 'function') {
+          await onUpdated();
+        }
       } else {
         console.error('Error updating audit:', auditResponse.statusText);
       }

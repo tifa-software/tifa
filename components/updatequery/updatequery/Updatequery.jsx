@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-export default function UpdateQuery({ query, audit }) {
+export default function UpdateQuery({ query, audit, onUpdated }) {
   const { data: session } = useSession();
   const queryid = query._id;
   const userid = query.userid;
@@ -126,9 +126,9 @@ export default function UpdateQuery({ query, audit }) {
           }
         }
 
-
-        // router.push("./")
-        window.location.reload();
+        if (typeof onUpdated === 'function') {
+          await onUpdated();
+        }
       } else {
         console.error('Error updating query:', response.statusText);
       }

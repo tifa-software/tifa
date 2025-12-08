@@ -18,6 +18,18 @@ export default function UpdateQuery({ isOpen, onClose, initialData = {}, refresh
 
   const id = initialData._id;
 
+  const handleUpdated = async () => {
+    try {
+      if (typeof refreshData === 'function') {
+        await refreshData();
+      }
+    } finally {
+      if (typeof onClose === 'function') {
+        onClose();
+      }
+    }
+  };
+
   useEffect(() => {
     const fetchAuditData = async () => {
       if (!id) return;
@@ -73,13 +85,13 @@ export default function UpdateQuery({ isOpen, onClose, initialData = {}, refresh
             <div className="mb-2">
               {/* <span className="font-semibold">Stage:</span> {audit.stage} */}
 
-              {audit.stage === 0 && <Updatequery query={initialData} audit={audit} />}
-              {audit.stage === 1 && <Updatequery1 query={initialData} audit={audit} />}
-              {audit.stage === 2 && <Updatequery2 query={initialData} audit={audit} />}
-              {audit.stage === 3 && <Updatequery3 query={initialData} audit={audit} />}
-              {audit.stage === 4 && <Updatequery4 query={initialData} audit={audit} />}
-              {audit.stage === 5 && <Updatequery5 query={initialData} audit={audit} />}
-              {audit.stage === 6 && <Updatequery6 query={initialData} audit={audit} />}
+              {audit.stage === 0 && <Updatequery query={initialData} audit={audit} onUpdated={handleUpdated} />}
+              {audit.stage === 1 && <Updatequery1 query={initialData} audit={audit} onUpdated={handleUpdated} />}
+              {audit.stage === 2 && <Updatequery2 query={initialData} audit={audit} onUpdated={handleUpdated} />}
+              {audit.stage === 3 && <Updatequery3 query={initialData} audit={audit} onUpdated={handleUpdated} />}
+              {audit.stage === 4 && <Updatequery4 query={initialData} audit={audit} onUpdated={handleUpdated} />}
+              {audit.stage === 5 && <Updatequery5 query={initialData} audit={audit} onUpdated={handleUpdated} />}
+              {audit.stage === 6 && <Updatequery6 query={initialData} audit={audit} onUpdated={handleUpdated} />}
 
             </div>
 

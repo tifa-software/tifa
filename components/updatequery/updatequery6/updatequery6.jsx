@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
-export default function UpdateQuery6({ query, audit }) {
+export default function UpdateQuery6({ query, audit, onUpdated }) {
   const queryid = query._id;
   const userid = query.userid;
   const [connectionOption, setConnectionOption] = useState('');
@@ -62,7 +62,9 @@ export default function UpdateQuery6({ query, audit }) {
         console.log('Fees updated successfully:', response.data);
         setIsModalOpen(false); // Close the modal after successful submission
         // router.push("./")
-        window.location.reload();
+        if (typeof onUpdated === 'function') {
+          await onUpdated();
+        }
       } else {
         console.error('Error updating fees:', response.statusText);
       }
@@ -102,7 +104,9 @@ export default function UpdateQuery6({ query, audit }) {
         console.log('Audit updated successfully:', auditResponse.data);
         // router.push("./")
 
-        window.location.reload();
+        if (typeof onUpdated === 'function') {
+          await onUpdated();
+        }
       } else {
         console.error('Error updating audit:', auditResponse.statusText);
       }
