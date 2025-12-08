@@ -88,7 +88,7 @@ export default function Page() {
   }, [adminId, adminbranch, fetchStats]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#05041f] via-[#17103a] to-[#5d1ea4] text-white px-4 py-6 sm:px-6 lg:px-10">
+    <div className="min-h-screen bg-custom text-white px-4 py-6 sm:px-6 lg:px-10">
       {/* Top section */}
       <header className="mb-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

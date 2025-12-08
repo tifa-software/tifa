@@ -22,7 +22,14 @@
   
     }
   }
-  
+  .bg-custom {
+  background-image: url('/image/9b125f83-5e49-41bf-aef0-52e169829768.webp');
+  /* Change path as needed */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
   .animate-blink {
     animation: blink 1s infinite;
   }
