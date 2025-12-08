@@ -3,6 +3,7 @@ export const preferredRegion = ["bom1"];
 
 import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
+import DailyTaskModel from "@/model/DailyTaskModel"; // 👈 add this
 
 export const GET = async (request, { params }) => {
   await dbConnect();
@@ -22,30 +23,29 @@ export const GET = async (request, { params }) => {
         $match: {
           $or: [
             { userid: userid, assignedTo: "Not-Assigned" },
-            { assignedTo: userid }
-          ]
-        }
+            { assignedTo: userid },
+          ],
+        },
       },
       {
         $group: {
           _id: null,
 
-          // ✅ totalQueries:
-          // not trash, not demo, not enroll
+          // ✅ totalQueries: not trash, not demo, not enroll
           totalQueries: {
             $sum: {
               $cond: [
                 {
                   $and: [
-                    { $ne: ["$autoclosed", "close"] },   // not trash
-                    { $ne: ["$demo", true] },            // not demo
-                    { $ne: ["$addmission", true] }       // not enroll
-                  ]
+                    { $ne: ["$autoclosed", "close"] }, // not trash
+                    { $ne: ["$demo", true] }, // not demo
+                    { $ne: ["$addmission", true] }, // not enroll
+                  ],
                 },
                 1,
-                0
-              ]
-            }
+                0,
+              ],
+            },
           },
 
           // demo (not trash)
@@ -55,13 +55,13 @@ export const GET = async (request, { params }) => {
                 {
                   $and: [
                     { $eq: ["$demo", true] },
-                    { $ne: ["$autoclosed", "close"] }
-                  ]
+                    { $ne: ["$autoclosed", "close"] },
+                  ],
                 },
                 1,
-                0
-              ]
-            }
+                0,
+              ],
+            },
           },
 
           // enroll (not trash)
@@ -71,13 +71,13 @@ export const GET = async (request, { params }) => {
                 {
                   $and: [
                     { $eq: ["$addmission", true] },
-                    { $ne: ["$autoclosed", "close"] }
-                  ]
+                    { $ne: ["$autoclosed", "close"] },
+                  ],
                 },
                 1,
-                0
-              ]
-            }
+                0,
+              ],
+            },
           },
 
           // important (not trash, grade H, not demo)
@@ -88,13 +88,13 @@ export const GET = async (request, { params }) => {
                   $and: [
                     { $eq: ["$lastgrade", "H"] },
                     { $ne: ["$autoclosed", "close"] },
-                    { $ne: ["$demo", true] }
-                  ]
+                    { $ne: ["$demo", true] },
+                  ],
                 },
                 1,
-                0
-              ]
-            }
+                0,
+              ],
+            },
           },
 
           // trash only, not demo
@@ -104,31 +104,58 @@ export const GET = async (request, { params }) => {
                 {
                   $and: [
                     { $eq: ["$autoclosed", "close"] },
-                    { $ne: ["$demo", true] }
-                  ]
+                    { $ne: ["$demo", true] },
+                  ],
                 },
                 1,
-                0
-              ]
-            }
-          }
-        }
-      }
+                0,
+              ],
+            },
+          },
+        },
+      },
     ];
 
-    const result = (await QueryModel.aggregate(pipeline))[0] || {
-      totalQueries: 0,
-      totalDemoQueries: 0,
-      totalEnrollQueries: 0,
-      totalImportantQueries: 0,
-      totalTrashQueries: 0
-    };
+    const result =
+      (await QueryModel.aggregate(pipeline))[0] || {
+        totalQueries: 0,
+        totalDemoQueries: 0,
+        totalEnrollQueries: 0,
+        totalImportantQueries: 0,
+        totalTrashQueries: 0,
+      };
+
+    // ---------------- YESTERDAY todayQueries (DailyTaskModel) ----------------
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1); // move to YESTERDAY
+
+    const yyyy = yesterday.getFullYear();
+    const mm = String(yesterday.getMonth() + 1).padStart(2, "0");
+    const dd = String(yesterday.getDate()).padStart(2, "0");
+
+    const yesterdayStr = `${yyyy}-${mm}-${dd}`;
+
+    console.log("📅 UserDash yesterdayStr:", yesterdayStr);
+
+    // DailyTaskModel: userId (ObjectId), date ("YYYY-MM-DD"), todayQueries
+    const lastDayTask = await DailyTaskModel.findOne({
+      userId: userid, // string -> ObjectId cast handled by Mongoose
+      date: yesterdayStr,
+    }).select("todayQueries date");
+
+    
+
+    const lastDayPendingCount = lastDayTask?.todayQueries.length || 0;
 
     return Response.json(
-      { success: true, userid, ...result },
+      {
+        success: true,
+        userid,
+        lastDayPendingCount, // 👈 added here
+        ...result,
+      },
       { status: 200 }
     );
-
   } catch (error) {
     console.error("Count Fetch Error:", error);
     return Response.json(
