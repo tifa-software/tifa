@@ -429,6 +429,8 @@ export default function QueryReport({ initialFilters } = {}) {
                     <option value="A">A</option>
                     <option value="B">B</option>
                     <option value="C">C</option>
+                    <option value="Null">Null</option>
+
                   </select>
                 </th>
                 <th className="px-4 py-3 text-[12px]">Assigned From

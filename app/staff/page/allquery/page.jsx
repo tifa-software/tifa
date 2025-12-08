@@ -553,6 +553,8 @@ export default function AllQuery() {
             <option value="A">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
+            <option value="Null">Null</option>
+
           </select>
 
           <div className="relative">

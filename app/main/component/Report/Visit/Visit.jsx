@@ -143,7 +143,7 @@ export default function QueryReport() {
       console.error("Error fetching filtered data:", error);
     } finally {
       setLoading(false);
-      
+
     }
   };
 
@@ -436,6 +436,8 @@ export default function QueryReport() {
                     <option value="A">A</option>
                     <option value="B">B</option>
                     <option value="C">C</option>
+                    <option value="Null">Null</option>
+
                   </select>
                 </th>
                 <th className="px-4 py-3 text-[12px]">Assigned From

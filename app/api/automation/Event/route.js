@@ -17,7 +17,6 @@ export async function POST(request) {
 
         const body = await request.json();
         const { eventName, message } = body || {};
-        console.log(eventName, message, "okok");
 
         if (!eventName || !eventName.trim()) {
             return NextResponse.json(
