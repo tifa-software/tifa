@@ -18,7 +18,6 @@ export default function Page() {
 
         <MainBar />
 
-        {/* <MainPie /> */}
         </div>
 
 
