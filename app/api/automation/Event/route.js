@@ -5,7 +5,12 @@ import { NextResponse } from 'next/server';
 
 const WHATSAPP_API_TOKEN = process.env.WHATSAPP_API_TOKEN;
 const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID || '933988523111654';
-
+function sanitizeWhatsAppText(text = '') {
+  return text
+    .replace(/[\n\r\t]+/g, ' ')   // remove newlines & tabs -> single space
+    .replace(/ {5,}/g, '    ')    // more than 4 spaces -> 4 spaces
+    .trim();
+}
 export async function POST(request) {
     try {
         if (!WHATSAPP_API_TOKEN) {
@@ -32,8 +37,8 @@ export async function POST(request) {
             );
         }
 
-        const finalEventName = eventName.trim();
-        const finalMessage = message.trim();
+      const finalEventName = sanitizeWhatsAppText(eventName);
+    const finalMessage = sanitizeWhatsAppText(message);
 
         await dbConnect();
 
