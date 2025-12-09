@@ -9,24 +9,21 @@ export const GET = async () => {
     await dbConnect();
 
     try {
-        // 🔹 Start & end of today
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
 
         const endOfDay = new Date();
         endOfDay.setHours(23, 59, 59, 999);
 
-        // 🔹 Fetch admins except franchisestaff = "1"
+        // Get all valid admins
         const admins = await AdminModel.find(
             { franchisestaff: { $ne: "1" } },
             "_id name email branch franchisestaff"
-        );
+        ).lean();
 
-        // 🔹 Count history updates matched by actionBy admin name & today's date
+        // Aggregate by `history.actionByid`
         const actionCounts = await QueryUpdateModel.aggregate([
-            { 
-                $unwind: "$history"   // expand history array 
-            },
+            { $unwind: "$history" },
             {
                 $match: {
                     "history.actionDate": { $gte: startOfDay, $lte: endOfDay }
@@ -34,24 +31,23 @@ export const GET = async () => {
             },
             {
                 $group: {
-                    _id: "$history.actionBy",
+                    _id: "$history.actionByid", // Group by the Admin ID saved in history
                     count: { $sum: 1 }
                 }
             }
         ]);
 
-        // 🔹 Convert aggregated results to map
         const countMap = new Map(
-            actionCounts.map(item => [item._id, item.count])
+            actionCounts.map(item => [item._id?.toString(), item.count])
         );
 
-        // 🔹 Final response structure
+        // Final response map
         const data = admins.map(admin => ({
-            adminId: admin._id,
+            adminId: admin._id.toString(),
             name: admin.name,
             email: admin.email,
             branch: admin.branch,
-            todayActions: countMap.get(admin.name) || 0   // default 0
+            todayActions: countMap.get(admin._id.toString()) || 0
         }));
 
         return new Response(JSON.stringify({ success: true, data }), { status: 200 });
