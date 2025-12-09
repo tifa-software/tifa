@@ -9,7 +9,6 @@ export default function Profilepic() {
     const [open, setOpen] = useState(false);
     const { data: session } = useSession();
     const profileMenuRef = useRef(null);
-
     const openbox = () => {
         setOpen(!open);
     };

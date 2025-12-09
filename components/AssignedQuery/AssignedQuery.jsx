@@ -131,6 +131,7 @@ export default function AssignedQuery({ initialData, refreshData }) {
                 message,
                 assignedToreq,
                 assignedBy: session?.user?.name,
+                actionbyemail: session?.user?.email,
             });
 
             if (queryResponse.status === 200 && auditResponse.status === 200) {

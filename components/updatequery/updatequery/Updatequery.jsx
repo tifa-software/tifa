@@ -44,6 +44,7 @@ export default function UpdateQuery({ query, audit, onUpdated }) {
     const data = {
       queryId: queryid,
       actionby: session?.user?.name,
+      actionbyemail: session?.user?.email,
       connectionStatus: selectedOption,
       message: message || subOption,
       connectedsubStatus: selectedOption === 'connected' ? subOption : undefined,

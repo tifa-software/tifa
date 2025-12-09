@@ -1,8 +1,9 @@
 export const runtime = "nodejs";
-export const preferredRegion = ["bom1"]; 
+export const preferredRegion = ["bom1"];
 import dbConnect from "@/lib/dbConnect";
 import QueryUpdateModel from "@/model/AuditLog";
-import QueryModel from "@/model/Query"; // Import the QueryModel to update deadline
+import QueryModel from "@/model/Query";
+import AdminModel from "@/model/Admin";
 
 export const PATCH = async (request) => {
     await dbConnect();
@@ -10,7 +11,6 @@ export const PATCH = async (request) => {
     try {
         const data = await request.json();
 
-        // Basic validation for queryId
         if (!data.queryId) {
             return new Response(
                 JSON.stringify({
@@ -21,7 +21,6 @@ export const PATCH = async (request) => {
             );
         }
 
-        // Fetch the existing audit document
         const audit = await QueryUpdateModel.findOne({ queryId: data.queryId });
 
         if (!audit) {
@@ -34,7 +33,18 @@ export const PATCH = async (request) => {
             );
         }
 
-        // Find changes between the existing document and the incoming data
+        // Find Admin User ID
+        let adminUser = null;
+        if (data.actionbyemail) {
+            adminUser = await AdminModel.findOne({
+                email: data.actionbyemail,
+            }).select("_id name email");
+        }
+
+        const actionById = adminUser?._id?.toString() || "system";
+        console.log("ActionByID => ", actionById);
+
+        // Track changes
         const changes = {};
         for (const key in data) {
             if (JSON.stringify(audit[key]) !== JSON.stringify(data[key])) {
@@ -45,55 +55,53 @@ export const PATCH = async (request) => {
             }
         }
 
-        // If no changes are found, return a message stating no updates were necessary
-        if (Object.keys(changes).length === 0) {
-            return new Response(
-                JSON.stringify({
-                    message: "No changes detected.",
-                    success: false,
-                }),
-                { status: 400 }
-            );
-        }
+        // Ensure actionByid change is always logged
+        changes["actionByid"] = {
+            oldValue: audit?.history?.length
+                ? audit.history[audit.history.length - 1]?.actionByid || ""
+                : "",
+            newValue: actionById,
+        };
 
-        // Add the change history with detailed information
+        // Create History Entry
         const historyEntry = {
             action: "update",
-            stage: audit.stage?.toString() || "unknown",
-            actionBy: data.actionby || "system", // Default to "system" if no actionby is provided
+            stage: data.stage || audit.stage || "unknown",
+            actionBy: data.actionby || "system",
+            actionByid: actionById,
             actionDate: new Date(),
             changes: changes,
         };
 
-        // Update the fields with the new data and push the latest history entry
+        // Update Audit & Push History
         await QueryUpdateModel.updateOne(
             { queryId: data.queryId },
             {
-                $set: data, // Update the fields with the new data
-                $push: { history: historyEntry }, // Push the latest history entry
+                $set: data,
+                $push: { history: historyEntry },
             }
         );
 
-        // Determine the last message based on the history entry
-        const lastMessage = changes.message ? changes.message.newValue : "N/A";
-
-        // Determine the deadline: use the provided one or set to tomorrow's date if not given
+        // Update deadline & Query info
         const deadline = data.deadline ? new Date(data.deadline) : new Date();
         if (!data.deadline) {
-            deadline.setDate(deadline.getDate() + 1); // Set to tomorrow if no deadline is provided
+            deadline.setDate(deadline.getDate() + 1);
         }
 
-        // Now update the deadline and last message in the related QueryModel document
+        const lastMessage = changes.message
+            ? changes.message.newValue
+            : audit.message || "N/A";
+
         await QueryModel.updateOne(
-            { _id: data.queryId }, // Find the related QueryModel document
+            { _id: data.queryId },
             {
                 $set: {
                     deadline: deadline.toISOString(),
                     lastDeadline: new Date().toISOString(),
-                    lastgrade: data.grade || "N/A",
+                    lastgrade: data.grade || audit.grade,
                     lastmessage: lastMessage,
                     lastactionby: data.actionby || "system",
-                }
+                },
             }
         );
 
@@ -105,13 +113,13 @@ export const PATCH = async (request) => {
             }),
             { status: 200 }
         );
-
     } catch (error) {
         console.error("Error updating audit or deadline:", error);
         return new Response(
             JSON.stringify({
                 message: "Error updating audit or deadline!",
                 success: false,
+                error: error.message,
             }),
             { status: 500 }
         );

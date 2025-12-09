@@ -101,65 +101,82 @@ export default function QueryHistory({ initialData }) {
 
       {audit && audit.history.length > 0 ? (
         <div className="space-y-8">
-         {
-  audit.history
-    .slice()
-    .reverse()
-    .map((entry, index) => (
-      <div
-        key={index}
-        className="bg-white shadow-md rounded-lg p-4 border border-gray-200 flex justify-between items-center"
-      >
-        {/* User and Action */}
-        <div className="flex items-center gap-4">
-          <UserCheck size={20} className="text-[#6cb049]" />
-          <span className="text-gray-800 font-semibold">
-            {getUserNameById(entry.actionBy)} {entry.action} Query
-          </span>
-        </div>
+          {
+            audit.history
+              .slice()
+              .reverse()
+              .map((entry, index) => (
+                <div
+                  key={index}
+                  className="bg-white shadow-md rounded-lg p-4 border border-gray-200 flex justify-between items-center"
+                >
+                  {/* User and Action */}
+                  <div className="flex items-center gap-4">
+                    <UserCheck size={20} className="text-[#6cb049]" />
+                    <span className="text-gray-800 font-semibold">
+                      {getUserNameById(entry.actionBy)} {entry.action} Query
+                    </span>
+                  </div>
 
-        {/* Date */}
-        <p className="text-gray-400 text-sm italic flex items-center gap-2">
-          <Clock size={14} />
-          {new Date(entry.actionDate).toLocaleString()}
-        </p>
+                  {/* Date */}
+                  <p className="text-gray-400 text-sm italic flex items-center gap-2">
+                    <Clock size={14} />
+                    {new Date(entry.actionDate).toLocaleString()}
+                  </p>
 
-        {/* Current Stage */}
-        <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
-          <strong>Stage:</strong> {getStageName(entry.stage)}
-        </span>
+                  {/* Current Stage */}
+                  <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
+                    <strong>Stage:</strong> {getStageName(entry.stage)}
+                  </span>
 
-        {/* Changes Summary */}
-        <div className="flex flex-col items-start text-sm">
-          {Object.keys(entry.changes)
-            .filter(
-              (field) =>
-                field !== 'statusCounts' &&
-                (entry.changes[field].oldValue || entry.changes[field].newValue)
-            )
-            .map((field, i) => (
-              <div key={i} className="flex gap-2 text-xs">
-                <span className="font-semibold capitalize">{field}:</span>
-                <span className="text-red-500 line-through">
-                  {formatFieldValue(entry.changes[field].oldValue)}
-                </span>
-                <span className="text-green-500">
-                  {formatFieldValue(entry.changes[field].newValue)}
-                </span>
-              </div>
-            ))}
-          {Object.keys(entry.changes)
-            .filter((field) => field !== 'statusCounts')
-            .every(
-              (field) =>
-                !entry.changes[field].oldValue && !entry.changes[field].newValue
-            ) && (
-            <span className="text-gray-400 italic text-xs">No changes</span>
-          )}
-        </div>
-      </div>
-    ))
-}
+                  {/* Changes Summary */}
+                  <div className="flex flex-col items-start text-sm">
+                    {/* show Action By */}
+                    {entry.actionBy && (
+                      <div className="flex gap-2 text-xs">
+                        <span className="font-semibold">Action By:</span>
+                        <span className="text-black">{entry.actionBy}</span>
+                      </div>
+                    )}
+
+                    {Object.keys(entry.changes)
+                      .filter((field) =>
+                        field !== "statusCounts" &&
+                        field !== "actionbyemail" &&
+                        field !== "actionByid" &&
+                        (entry.changes[field].oldValue || entry.changes[field].newValue)
+                      )
+                      .map((field, i) => (
+                        <div key={i} className="flex gap-2 text-xs">
+                          <span className="font-semibold capitalize">{field}:</span>
+                          <span className="text-red-500 line-through">
+                            {formatFieldValue(entry.changes[field].oldValue)}
+                          </span>
+                          <span className="text-green-500">
+                            {formatFieldValue(entry.changes[field].newValue)}
+                          </span>
+                        </div>
+                      ))}
+
+                    {/* if no changes */}
+                    {Object.keys(entry.changes)
+                      .filter((field) =>
+                        field !== "statusCounts" &&
+                        field !== "actionbyemail" &&
+                        field !== "actionByid"
+                      )
+                      .every(
+                        (field) =>
+                          !entry.changes[field].oldValue &&
+                          !entry.changes[field].newValue
+                      ) && (
+                        <span className="text-gray-400 italic text-xs">No changes</span>
+                      )}
+                  </div>
+
+                </div>
+              ))
+          }
 
         </div>
       ) : (

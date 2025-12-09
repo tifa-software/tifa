@@ -97,6 +97,7 @@ const QueryUpdateSchema = new Schema({
       action: String,
       stage: String,
       actionBy: String,
+      actionByid: String,
       actionDate: { type: Date, default: Date.now },
       changes: {
         type: Map,

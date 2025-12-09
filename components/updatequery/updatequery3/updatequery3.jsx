@@ -75,6 +75,8 @@ export default function UpdateQuery3({ query, audit, onUpdated }) {
     const data = {
       queryId: queryid,
       actionby: session?.user?.name,
+      actionbyemail: session?.user?.email,
+
       connectionStatus: connectionOption,
       oflinesubStatus: selectedOption,
       message: message,

@@ -39,6 +39,8 @@ export default function UpdateQuery5({ query, audit }) {
     const data = {
       queryId: queryid,
       actionby: session?.user?.name,
+      actionbyemail: session?.user?.email,
+
       connectionStatus: connectionOption,
       oflinesubStatus: selectedOption,
       message: message,
