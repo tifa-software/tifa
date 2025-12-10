@@ -187,7 +187,14 @@ export default function UnderVisit() {
                                                             <td className="px-6 py-1 font-semibold">{query.studentName}</td>
                                                             <td className="px-6 py-1"> {query.grade === "H" ? "Important" : query.grade}</td>
 
-                                                            <td className="px-6 py-1">{deadline.toLocaleDateString()}</td>
+                                                         <td className="px-6 py-1">
+  {deadline.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+  })}
+</td>
+
                                                             <td className="px-6 py-1">{query.addmission ? 'Enroll' : 'Pending'}</td>
                                                         </tr>
                                                     );
