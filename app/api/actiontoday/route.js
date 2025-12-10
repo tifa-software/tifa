@@ -15,13 +15,11 @@ export const GET = async () => {
         const endOfDay = new Date();
         endOfDay.setHours(23, 59, 59, 999);
 
-        // Get all valid admins
         const admins = await AdminModel.find(
             { franchisestaff: { $ne: "1" } },
             "_id name email branch franchisestaff"
         ).lean();
 
-        // Aggregate by `history.actionByid`
         const actionCounts = await QueryUpdateModel.aggregate([
             { $unwind: "$history" },
             {
@@ -31,7 +29,7 @@ export const GET = async () => {
             },
             {
                 $group: {
-                    _id: "$history.actionByid", // Group by the Admin ID saved in history
+                    _id: "$history.actionByid", 
                     count: { $sum: 1 }
                 }
             }
