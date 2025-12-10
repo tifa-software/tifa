@@ -41,6 +41,8 @@ export default function AddmissionRegister() {
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(50);
     const [totalCount, setTotalCount] = useState(0);
+    const [totalTrash, setTotalTrash] = useState(0);
+    const [totalEnroll, setTotalEnroll] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeQuery, setActiveQuery] = useState(null);
@@ -120,9 +122,13 @@ export default function AddmissionRegister() {
             const pagination = response.data.pagination;
             if (pagination) {
                 setTotalCount(pagination.total || 0);
+                setTotalTrash(pagination.totalTrash || 0);
+                setTotalEnroll(pagination.totalEnroll || 0);
                 setTotalPages(pagination.totalPages || 1);
             } else {
                 setTotalCount(response.data.fetch?.length || 0);
+                setTotalTrash(response.data.fetch?.length || 0);
+                setTotalEnroll(response.data.fetch?.length || 0);
                 setTotalPages(1);
             }
         } catch (fetchError) {
@@ -324,12 +330,35 @@ export default function AddmissionRegister() {
 
             <div className="mt-8 container lg:w-[98%] mx-auto space-y-6">
                 <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white/90 p-5 shadow-lg ring-1 ring-gray-100 backdrop-blur">
-                    <div>
-                        <p className="text-xs font-semibold text-gray-500 uppercase mb-1">
-                            Total Demo
-                        </p>
-                        <p className="text-3xl font-bold text-gray-900">{loading ? "…" : totalCount}</p>
-                    </div>
+                    <div className="bg-white p-4 rounded-xl shadow-sm space-y-2">
+  <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+    Summary
+  </p>
+
+  <div className="space-y-1">
+    <p className="text-sm font-medium text-gray-700 flex justify-between">
+      <span>Total Demo =</span>
+      <span className="font-bold text-gray-900">
+        {loading ? "…" : totalCount}
+      </span>
+    </p>
+
+    <p className="text-sm font-medium text-gray-700 flex justify-between">
+      <span>Total Enroll =</span>
+      <span className="font-bold text-gray-900">
+        {loading ? "…" : totalEnroll}
+      </span>
+    </p>
+
+    <p className="text-sm font-medium text-gray-700 flex justify-between">
+      <span>Total Trash =</span>
+      <span className="font-bold text-gray-900">
+        {loading ? "…" : totalTrash}
+      </span>
+    </p>
+  </div>
+</div>
+
                     <div className="flex-1 min-w-[240px]">
                         <p className="text-xs font-semibold text-gray-500 uppercase mb-1">
                             Active Filters

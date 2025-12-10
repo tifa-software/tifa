@@ -155,7 +155,16 @@ export const GET = async (request) => {
 
     // Get total count (fast because it's server side and uses indexes)
     const total = await QueryModel.countDocuments(mongoFilter);
+    const totalTrash = await QueryModel.countDocuments({
+      ...mongoFilter,
+      autoclosed: "close",
+    });
 
+    // 👉 Total Enroll (total > 0 AND autoclosed = open)
+    const totalEnroll = await QueryModel.countDocuments({
+      ...mongoFilter,
+      total: { $gt: 0 },
+    });
     // Fetch only paginated queries (lean for performance)
     const queries = await QueryModel.find(mongoFilter)
       .sort({ createdAt: -1 })
@@ -360,6 +369,8 @@ export const GET = async (request) => {
           page,
           limit,
           total,
+          totalTrash,
+          totalEnroll,
           totalPages: Math.max(1, Math.ceil(total / limit)),
         },
         allAdmins: allAdminsResponse,
