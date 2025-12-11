@@ -8,8 +8,18 @@ import { useSession } from 'next-auth/react';
 import { Citylist } from "@/constants/City";
 import Address from "@/components/Address/Address"
 
-export default function Page({ id }) {
-  
+export default function Page({ id, onClose, refreshData }) {
+    const handleUpdated = async () => {
+        try {
+            if (typeof refreshData === 'function') {
+                await refreshData();
+            }
+        } finally {
+            if (typeof onClose === 'function') {
+                onClose();
+            }
+        }
+    };
     const [branches, setBranches] = useState([]);
     const [allCourses, setAllCourses] = useState([]); // Store all courses
     const [referenceData, setReferenceData] = useState([]);
@@ -355,40 +365,15 @@ export default function Page({ id }) {
                 }
 
                 // Reset form data after successful submission
-                setFormData({
-                    userid: adminData._id,
-                    studentName: "",
-                    gender: "Not_Defined",
-                    category: "Not_Defined",
-                    // assignedTo: "Not-Assigned",
-                    assignedToreq: "",
-                    assignedreceivedhistory: "",
-                    assignedsenthistory: "",
-                    referenceid: "",
-                    suboption: "",
-                    studentContact: {
-                        phoneNumber: "",
-                        whatsappNumber: "",
-                        address: "",
-                        city: ""
-                    },
-                    courseInterest: "",
-                    deadline: "",
-                    branch: "",
-                    notes: "",
-                    finalfees: "",
-                    qualification: "",
-                    profession: "",
-                    professiontype: "",
-                    reference_name: "",
-                });
+                if (typeof onUpdated === 'function') {
+                    await onUpdated();
+                }
             }
         } catch (err) {
             setError("Failed to Add Query. Please try again.");
             console.error("Error adding query:", err);
         } finally {
             setLoading(false);
-            window.location.reload();
         }
     };
 
@@ -483,7 +468,7 @@ export default function Page({ id }) {
                                     Reference SubOption
                                 </label>
                                 <select name="suboption" value={formData.suboption} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
-                                    <option value=""  selected>Select Reference name</option>
+                                    <option value="" selected>Select Reference name</option>
                                     {referenceData
                                         .find(data => data.referencename === formData.referenceid)?.suboptions
                                         .map((suboption, subIndex) => (
@@ -687,7 +672,7 @@ export default function Page({ id }) {
                                     Select Grade
                                 </option>
                                 <option value="Null">Not Defined</option>
-                                 <option value="H">Important</option>
+                                <option value="H">Important</option>
                                 <option value="A">A</option>
                                 <option value="B">B</option>
                                 <option value="C">C</option>

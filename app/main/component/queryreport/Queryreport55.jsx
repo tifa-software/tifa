@@ -234,7 +234,8 @@ export default function Page({ id }) {
                         >
                             &times;
                         </button>
-                        <div><Update id={activeQuery} /></div>
+                        <div><Update id={activeQuery} onClose={() => setIsModalOpen2(false)} refreshData={fetchBranchData} /></div>
+
                     </div>
                 </div>
             )}
