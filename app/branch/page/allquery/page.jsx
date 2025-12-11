@@ -10,6 +10,8 @@ import { ArrowLeft, ArrowRight, Search, Trash2, CirclePlus, Filter, X, Send, XCi
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import * as XLSX from "xlsx";
+import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
+
 // Utility: build API URL with query params
 function buildApiUrl({ branchname, userid, page = 1, deadlineFilter = "", grade = "", search = "", customDate = "", rangeStart = "", rangeEnd = "", assignedFrom = "", self = "" }) {
   const params = new URLSearchParams();
@@ -71,7 +73,9 @@ export default function AllQuery() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [filterself, setFilterself] = useState("0");
-
+  const [isModalOpen2, setIsModalOpen2] = useState(false);
+  const [activeQuery, setActiveQuery] = useState(null);
+  // Modal
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
@@ -79,7 +83,14 @@ export default function AllQuery() {
   // Sentinel for infinite scroll
   const sentinelRef = useRef(null);
 
-  const handleRowClick = (id) => router.push(`/branch/page/allquery/${id}`);
+ const handleRowClick = (id) => {
+    setActiveQuery(id);
+    setIsModalOpen2(true);
+  };
+  const handleCloseModal = () => {
+    setIsModalOpen2(false);
+    setActiveQuery(null);
+  };
 
   const toggleFilterPopup = () => setIsFilterOpen((v) => !v);
 
@@ -963,6 +974,19 @@ export default function AllQuery() {
             )}
           </tbody>
         </table>
+         {isModalOpen2 && (
+                  <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
+                    <div className="   h-screen w-screen  relative">
+                      <button
+                        className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
+                        onClick={handleCloseModal}
+                      >
+                        &times;
+                      </button>
+                      <div><Queryreport55 id={activeQuery} /></div>
+                    </div>
+                  </div>
+                )}
       </div>
     </div>
   );
