@@ -1,5 +1,6 @@
 export const runtime = "nodejs";
 export const preferredRegion = ["bom1"];
+export const dynamic = "force-dynamic";  // ← IMPORTANT
 
 import dbConnect from "@/lib/dbConnect";
 import QueryUpdateModel from "@/model/AuditLog";
@@ -39,7 +40,6 @@ export const GET = async () => {
             actionCounts.map(item => [item._id?.toString(), item.count])
         );
 
-        // Final response map
         const data = admins.map(admin => ({
             adminId: admin._id.toString(),
             name: admin.name,
@@ -48,10 +48,20 @@ export const GET = async () => {
             todayActions: countMap.get(admin._id.toString()) || 0
         }));
 
-        return new Response(JSON.stringify({ success: true, data }), { status: 200 });
+        return new Response(JSON.stringify({ success: true, data }), {
+            status: 200,
+            headers: {
+                "Cache-Control": "no-store"  // ← FIX CACHE ISSUE
+            }
+        });
 
     } catch (error) {
         console.error("Error:", error);
-        return new Response(JSON.stringify({ success: false, message: "Internal server error" }), { status: 500 });
+        return new Response(JSON.stringify({ success: false, message: "Internal server error" }), { 
+            status: 500,
+            headers: {
+                "Cache-Control": "no-store"
+            }
+        });
     }
 };

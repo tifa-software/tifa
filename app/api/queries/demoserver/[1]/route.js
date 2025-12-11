@@ -106,6 +106,10 @@ export async function GET(req) {
       ...finalMongoFilter,
       addmission: true,
     });
+    const totalTrash = await QueryModel.countDocuments({
+       ...finalMongoFilter,
+      autoclosed: "close",
+    });
 
     // Pending count (based on filter)
     const totalPending = await QueryModel.countDocuments({
@@ -184,10 +188,10 @@ export async function GET(req) {
         totalCount,
         totalPages: Math.max(1, Math.ceil(totalCount / limit)),
         currentPage: page,
-
+        totalTrash,
+        totalEnroll,
         totalZeroCount,
         totalGreaterCount,
-        totalEnroll,
         totalPending,
         branchWiseCounts,
         totalBranchQueries,

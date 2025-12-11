@@ -287,6 +287,10 @@ export default function Assigned() {
               <h3 className="text-gray-500 text-sm">Fees Greater Than 0</h3>
               <p className="text-3xl font-extrabold text-green-600 mt-2">{data.totalGreaterCount}</p>
             </div>
+             <div className="bg-white shadow-sm hover:shadow-md transition rounded-xl p-6 border border-gray-100">
+              <h3 className="text-gray-500 text-sm">Total Trash</h3>
+              <p className="text-3xl font-extrabold text-green-600 mt-2">{data.totalTrash}</p>
+            </div>
 
             <div className="bg-white shadow-sm hover:shadow-md transition rounded-xl p-6 border border-gray-100">
               <h3 className="text-gray-500 text-sm">Pending</h3>
