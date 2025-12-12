@@ -32,11 +32,18 @@ export const GET = async (request) => {
 
     // If userid param provided, filter by QueryModel.userid (this takes precedence)
     if (useridParam) {
-      if (/^[0-9a-fA-F]{24}$/.test(useridParam)) {
-        baseFilter.userid = useridParam; // ObjectId string is fine for matching
-      } else {
-        baseFilter.userid = useridParam; // fallback if you stored string
+      if (useridParam) {
+        const userOr = [
+          { userid: useridParam, assignedTo: "Not-Assigned" },
+          { assignedTo: useridParam }
+        ];
+
+        // merge with existing OR clauses (date or audit filters)
+        if (!baseFilter.$or) baseFilter.$or = [];
+
+        baseFilter.$or.push(...userOr);
       }
+
     } else if (adminbranchParam) {
       // If no specific userid provided but adminbranch is, restrict queries to that branch.
       // NOTE: Change 'branch' below if QueryModel stores branch under a different field name.
@@ -78,8 +85,8 @@ export const GET = async (request) => {
             const changesDemo =
               h.changes &&
               (h.changes.demo === true ||
-               String(h.changes.demo).toLowerCase() === "true" ||
-               h.changes.demo === "1");
+                String(h.changes.demo).toLowerCase() === "true" ||
+                h.changes.demo === "1");
 
             if (!h.actionDate) continue;
             const ad = new Date(h.actionDate);
