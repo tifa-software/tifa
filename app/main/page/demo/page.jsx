@@ -5,11 +5,12 @@ import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import { useRouter } from "next/navigation";
 import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
-
+import DemoCounting from "@/components/DemoCounting/DemoCounting"
 export default function Assigned() {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeQuery, setActiveQuery] = useState(null);
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   const handleOpenModal = (queryContent) => {
     setActiveQuery(queryContent);
     setIsModalOpen(true);
@@ -77,7 +78,30 @@ export default function Assigned() {
 
   return (
     <div className="container mx-auto p-5">
+        <button
+          onClick={() => setIsDemoModalOpen(true)}
+          className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700"
+        >
+          Show Demo Count
+        </button>
       <div className="flex flex-col lg:flex-row justify-between space-y-6 lg:space-y-0 lg:space-x-6">
+        {isDemoModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-2xl relative">
+
+              {/* Close Button */}
+              <button
+                onClick={() => setIsDemoModalOpen(false)}
+                className="absolute top-2 right-2 text-gray-700 hover:text-black"
+              >
+                ✕
+              </button>
+
+              {/* Your Demo Counting Component */}
+              <DemoCounting />
+            </div>
+          </div>
+        )}
 
         {/* LIST */}
         <div className="w-full lg:w-2/3">
@@ -287,7 +311,7 @@ export default function Assigned() {
               <h3 className="text-gray-500 text-sm">Fees Greater Than 0</h3>
               <p className="text-3xl font-extrabold text-green-600 mt-2">{data.totalGreaterCount}</p>
             </div>
-             <div className="bg-white shadow-sm hover:shadow-md transition rounded-xl p-6 border border-gray-100">
+            <div className="bg-white shadow-sm hover:shadow-md transition rounded-xl p-6 border border-gray-100">
               <h3 className="text-gray-500 text-sm">Total Trash</h3>
               <p className="text-3xl font-extrabold text-green-600 mt-2">{data.totalTrash}</p>
             </div>

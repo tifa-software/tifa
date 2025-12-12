@@ -18,8 +18,8 @@ export const authOptions = {
 
         const admin = await AdminModel.findOne({ email }).lean();
         if (!admin) return null;
-        // const valid = await bcrypt.compare(password, admin.password);
-        // if (!valid) return null;
+        const valid = await bcrypt.compare(password, admin.password);
+        if (!valid) return null;
 
         return {
           id: admin._id.toString(),
