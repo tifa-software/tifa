@@ -5,7 +5,7 @@ import Loader from "@/components/Loader/Loader";
 import { useRouter } from "next/navigation";
 import { useSession } from 'next-auth/react';
 import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
-
+import DemoCounting from "@/components/DemoCountBranch/DemoCounting";
 export default function Assigned() {
   const [queries, setQueries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +15,7 @@ export default function Assigned() {
   const [adminbranch, setAdminbranch] = useState(null);
   const [selfOnly, setSelfOnly] = useState(false);
   const [adminId, setAdminId] = useState(null);
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
   const { data: session } = useSession();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -124,8 +125,30 @@ export default function Assigned() {
 
   return (
     <div className="container mx-auto p-5">
+      <button
+        onClick={() => setIsDemoModalOpen(true)}
+        className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700"
+      >
+        Show Demo Count
+      </button>
       <div className="flex flex-col lg:flex-row justify-between space-y-6 lg:space-y-0 lg:space-x-6">
-        {/* Queries List */}
+        {isDemoModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-2xl relative">
+
+              {/* Close Button */}
+              <button
+                onClick={() => setIsDemoModalOpen(false)}
+                className="absolute top-2 right-2 text-gray-700 hover:text-black"
+              >
+                ✕
+              </button>
+
+              {/* Your Demo Counting Component */}
+              <DemoCounting />
+            </div>
+          </div>
+        )}
         <div className="w-full lg:w-2/3">
           <div className="shadow-lg rounded-lg bg-white mb-6 relative">
             <div className="p-4">
@@ -135,34 +158,34 @@ export default function Assigned() {
 
               {/* Self / Branch Toggle */}
               <div className="rounded-lg bg-white shadow p-3 mb-4">
-  <h3 className="text-sm font-medium text-gray-700 mb-2">
-    View Data
-  </h3>
+                <h3 className="text-sm font-medium text-gray-700 mb-2">
+                  View Data
+                </h3>
 
-  <div className="flex bg-gray-100 rounded-full p-1">
-    <button
-      onClick={() => setSelfOnly(false)}
-      className={`flex-1 py-1.5 rounded-full text-xs transition
+                <div className="flex bg-gray-100 rounded-full p-1">
+                  <button
+                    onClick={() => setSelfOnly(false)}
+                    className={`flex-1 py-1.5 rounded-full text-xs transition
         ${!selfOnly
-          ? "bg-[#29234b] text-white font-semibold shadow"
-          : "text-gray-700 hover:bg-gray-200"
-        }`}
-    >
-      Branch (Default)
-    </button>
+                        ? "bg-[#29234b] text-white font-semibold shadow"
+                        : "text-gray-700 hover:bg-gray-200"
+                      }`}
+                  >
+                    Branch (Default)
+                  </button>
 
-    <button
-      onClick={() => setSelfOnly(true)}
-      className={`flex-1 py-1.5 rounded-full text-xs transition
+                  <button
+                    onClick={() => setSelfOnly(true)}
+                    className={`flex-1 py-1.5 rounded-full text-xs transition
         ${selfOnly
-          ? "bg-[#29234b] text-white font-semibold shadow"
-          : "text-gray-700 hover:bg-gray-200"
-        }`}
-    >
-      Self Only
-    </button>
-  </div>
-</div>
+                        ? "bg-[#29234b] text-white font-semibold shadow"
+                        : "text-gray-700 hover:bg-gray-200"
+                      }`}
+                  >
+                    Self Only
+                  </button>
+                </div>
+              </div>
 
               <div className="flex gap-4 space-x-4 text-sm text-gray-600 mb-4">
                 <p>
