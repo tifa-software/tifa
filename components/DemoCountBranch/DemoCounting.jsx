@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import { Calendar, Trash2, Users, Database } from "lucide-react";
+import { Calendar, Trash2, Users, Database, Clock } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 export default function DemoCounting({ endpoint = "/api/democountallbranch/data" }) {
@@ -228,6 +228,18 @@ export default function DemoCounting({ endpoint = "/api/democountallbranch/data"
         <StatCard title="Total" value={displayCounts.total} icon={<Database className="w-6 h-6" />} loading={loading} />
         <StatCard title="Enrolled" value={displayCounts.totalEnroll} icon={<Users className="w-6 h-6" />} loading={loading} accent="indigo" />
         <StatCard title="Trash" value={displayCounts.totalTrash} icon={<Trash2 className="w-6 h-6" />} loading={loading} accent="rose" />
+        <StatCard
+          title="Pending"
+          value={Math.max(
+            0,
+            displayCounts.total -
+            displayCounts.totalEnroll -
+            displayCounts.totalTrash
+          )}
+          icon={<Clock className="w-6 h-6" />}
+          loading={loading}
+          accent="yellow"
+        />
       </div>
     </div>
   );

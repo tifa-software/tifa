@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import { Calendar, Trash2, Users, Database } from "lucide-react";
+import { Calendar, Trash2, Users, Database ,Clock} from "lucide-react";
 
 export default function QueryCountsPanel({ endpoint = "/api/democountall/data" }) {
   const [fromDate, setFromDate] = useState("");
@@ -182,6 +182,18 @@ export default function QueryCountsPanel({ endpoint = "/api/democountall/data" }
         <StatCard title="Total" value={displayCounts.total} icon={<Database className="w-6 h-6" />} loading={loading} />
         <StatCard title="Enrolled" value={displayCounts.totalEnroll} icon={<Users className="w-6 h-6" />} loading={loading} accent="indigo" />
         <StatCard title="Trash" value={displayCounts.totalTrash} icon={<Trash2 className="w-6 h-6" />} loading={loading} accent="rose" />
+        <StatCard
+    title="Pending"
+    value={Math.max(
+      0,
+      displayCounts.total -
+      displayCounts.totalEnroll -
+      displayCounts.totalTrash
+    )}
+    icon={<Clock className="w-6 h-6" />} 
+    loading={loading}
+    accent="yellow"
+  />
       </div>
     </div>
   );
