@@ -103,7 +103,7 @@ export default function UpdateQuery({ query, audit, onUpdated }) {
       const response = await axios.patch('/api/audit/update', data);
 
       if (response.status === 200) {
-        console.log('Query updated successfully:', response.data);
+        console.log('Query 1');
 
         // Check if wrong_no was selected or any count reaches 3, then call the second API
         if (

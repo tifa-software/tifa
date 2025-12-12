@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
-export default function UpdateQuery5({ query, audit }) {
+export default function UpdateQuery5({ query, audit,onUpdated }) {
   const { data: session } = useSession();
   const queryid = query._id;
   const userid = query.userid;
@@ -66,9 +66,11 @@ export default function UpdateQuery5({ query, audit }) {
       // API call for audit update
       const auditResponse = await axios.patch('/api/audit/update', data);
       if (auditResponse.status === 200) {
-        console.log('Audit updated successfully:', auditResponse.data);
+        console.log('Audit 6', auditResponse.data);
         // router.push("./")
-
+if (typeof onUpdated === 'function') {
+          await onUpdated();
+        }
         // window.location.reload();
       } else {
         console.error('Error updating audit:', auditResponse.statusText);

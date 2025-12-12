@@ -95,7 +95,7 @@ export default function UpdateQuery2({ query, audit, onUpdated }) {
     try {
       const auditResponse = await axios.patch('/api/audit/update', data);
       if (auditResponse.status === 200) {
-        console.log('Audit updated successfully:', auditResponse.data);
+        console.log('Audit 3', auditResponse.data);
         // router.push('./');
         if (typeof onUpdated === 'function') {
           await onUpdated();

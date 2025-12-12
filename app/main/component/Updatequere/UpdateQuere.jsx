@@ -19,6 +19,7 @@ export default function UpdateQuery({ isOpen, onClose, initialData = {}, refresh
   const id = initialData._id;
 
   const handleUpdated = async () => {
+    console.log("object")
     try {
       if (typeof refreshData === 'function') {
         await refreshData();
@@ -37,7 +38,7 @@ export default function UpdateQuery({ isOpen, onClose, initialData = {}, refresh
       setError(null); // Reset error before fetching
       try {
         const response = await axios.get(`/api/audit/findsingle/${id}`);
-        console.log("Response:", response.data); // Log the response data
+        console.log("1:"); // Log the response data
         setAudit(response.data);
       } catch (error) {
         console.error("Error fetching audit data:", error);
