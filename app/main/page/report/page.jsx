@@ -14,6 +14,7 @@ import LeadCount from '../../component/Report/LeadCount/LeadCount';
 import StaffReport from '../../component/Report/StaffReport/StaffReport';
 import UserPendingReport from '../../component/Report/UserPendingReport/UserPendingReport';
 import AdmissionBranchxlms from '../../component/Report/AdmissionBranchxlms/AdmissionBranchxlms';
+import Performace from '../../component/Performance/Performace';
 export default function BranchReportPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -155,6 +156,16 @@ export default function BranchReportPage() {
                             Addmission Branch  Report
                         </button>
                     </div>
+
+                      <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<Performace />)}
+                        >
+                            Performance Report
+                        </button>
+                    </div>
+
                 </div>
             </div>
 

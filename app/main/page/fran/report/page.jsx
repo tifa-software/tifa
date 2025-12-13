@@ -10,6 +10,7 @@ import AdmissionBranchxlms from '@/app/main/component/franReport/AdmissionBranch
 import Xlms from '@/app/main/component/franReport/Xlms/Xlms';
 import UserPendingReport from '@/app/main/component/franReport/UserPendingReport/UserPendingReport';
 import Staff from '@/app/main/component/franReport/Staff/Staff';
+import FranPerformance from "@/app/main/component/FranPerformance/FranPerformance"
 export default function BranchReportPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -114,6 +115,14 @@ export default function BranchReportPage() {
                             onClick={() => handleOpenModal(<Staff />)}
                         >
                             Staff Daily Activity Report
+                        </button>
+                    </div>
+                       <div className="bg-gray-50 p-2 rounded-lg shadow-sm border">
+                        <button
+                            className="text-[#29234b] "
+                            onClick={() => handleOpenModal(<FranPerformance />)}
+                        >
+                            Performance Report
                         </button>
                     </div>
                 </div>
