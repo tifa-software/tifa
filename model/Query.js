@@ -30,7 +30,7 @@ const querySchema = new Schema({
         enum: ['Male', 'Female', 'Other', 'Not_Defined'],
 
     },
-
+ 
     category: {
         type: String,
         enum: ['General', 'ST', 'SC', 'OBC', 'Other', 'Not_Defined'],
