@@ -7,7 +7,7 @@ import { useRef } from "react";
 import * as XLSX from "xlsx";
 import Link from "next/link";
 import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
-
+import Image from "next/image";
 export default function StaffDatanew({ staffid }) {
     const [userData, setUserData] = useState(null);
     const [adminData, setAdminData] = useState(null);
@@ -108,6 +108,34 @@ export default function StaffDatanew({ staffid }) {
 
         fetchQueryData();
     }, [adminData, startDate, endDate]);
+    const [filters, setFilters] = useState({
+        studentName: "",
+        phone: "",
+        reference: "",
+        city: "",
+        address: "",
+        grade: "",
+        assignedFrom: "",
+        assignedTo: "",
+        createdDate: "",
+        enrollStatus: "",
+    });
+    const getAdminsFromQueries = (queries = []) => {
+        const ids = new Set();
+
+        queries.forEach(q => {
+            q?.assignedsenthistory?.forEach(id => ids.add(id));
+            q?.assignedreceivedhistory?.forEach(id => ids.add(id));
+        });
+
+        return Array.from(ids)
+            .map(id => user.find(u => u._id === id))
+            .filter(Boolean);
+    };
+
+    const handleFilterChange = (key, value) => {
+        setFilters(prev => ({ ...prev, [key]: value }));
+    };
 
     // useEffect(() => {
     //     const fetchQueries = async () => {
@@ -209,6 +237,7 @@ export default function StaffDatanew({ staffid }) {
             </div>
         );
     }
+
     const calculateFilteredTotals = () => {
         // Work off dailyActivity (same data you see in the table)
         const allEntries = Object.entries(data.dailyActivity || {});
@@ -511,155 +540,307 @@ export default function StaffDatanew({ staffid }) {
                                             Date: {day} {activeDay === day ? "▼" : "▶"}
                                         </button>
 
-                                        {activeDay === day && (
-                                            <div className="mt-2">
-                                                <p className="font-medium text-sm border px-2 bg-gray-50">
-                                                    {/* Total Query: {activity.count[0]} */}
-                                                </p>
-                                                <table className="w-full text-sm text-left rtl:text-right text-gray-600 font-sans mt-2">
-                                                    <thead className="bg-[#29234b] text-white uppercase">
-                                                        <tr>
-                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                                S/N
-                                                            </th>
-                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                                Student Name
-                                                            </th>
-                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                                Phone Number
-                                                            </th>
-                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                                Reference
-                                                            </th>
-                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                                City
-                                                            </th>
-                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                                Address
-                                                            </th>
-                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                                Assigned from
-                                                            </th>
-                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                                Assigned To
-                                                            </th>
-                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                                Created Date
-                                                            </th>
-                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                                Status
-                                                            </th>
-                                                            <th scope="col" className="px-4 font-medium capitalize py-2">
-                                                                Connection Status
-                                                            </th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {activity.queries
-                                                            .filter((q, i, arr) =>
-                                                                i === arr.findIndex(
-                                                                    (x) => x?.studentContact?.phoneNumber === q?.studentContact?.phoneNumber
+                                        {activeDay === day && (() => {
+                                            const adminsFromQueries = getAdminsFromQueries(activity.queries);
+
+                                            return (
+
+                                                <div className="mt-2">
+                                                    <p className="font-medium text-sm border px-2 bg-gray-50">
+                                                        {/* Total Query: {activity.count[0]} */}
+                                                    </p>
+                                                    <table className="w-full text-sm text-left rtl:text-right text-gray-600 font-sans mt-2">
+                                                        <thead className="bg-[#29234b] text-white uppercase">
+                                                            <tr className="bg-gray-100">
+                                                                <th></th>
+
+                                                                {/* Student Name */}
+                                                                <th className="px-2 py-1">
+                                                                    <input
+                                                                        className="w-full border px-2 py-1 text-xs rounded text-black"
+                                                                        placeholder="Student Name"
+                                                                        onChange={e => handleFilterChange("studentName", e.target.value)}
+                                                                    />
+                                                                </th>
+
+                                                                {/* Phone */}
+                                                                <th className="px-2 py-1">
+                                                                    <input
+                                                                        className="w-full border px-2 py-1 text-xs rounded text-black"
+                                                                        placeholder="Phone"
+                                                                        onChange={e => handleFilterChange("phone", e.target.value)}
+                                                                    />
+                                                                </th>
+
+                                                                {/* Reference */}
+                                                                <th className="px-2 py-1">
+                                                                    <select
+                                                                        className="w-full border px-2 py-1 text-xs rounded text-black"
+                                                                        onChange={e => handleFilterChange("reference", e.target.value)}
+                                                                    >
+                                                                        <option value="">All</option>
+                                                                        {[...new Set(activity.queries.map(q => q.referenceid))]
+                                                                            .filter(Boolean)
+                                                                            .map(ref => (
+                                                                                <option key={ref} value={ref}>{ref}</option>
+                                                                            ))}
+                                                                    </select>
+                                                                </th>
+
+                                                                {/* City */}
+                                                                <th className="px-2 py-1">
+                                                                    <select
+                                                                        className="w-full border px-2 py-1 text-xs rounded text-black"
+                                                                        onChange={e => handleFilterChange("city", e.target.value)}
+                                                                    >
+                                                                        <option value="">All</option>
+                                                                        {[...new Set(activity.queries.map(q => q.studentContact?.city))]
+                                                                            .filter(Boolean)
+                                                                            .map(city => (
+                                                                                <option key={city} value={city}>{city}</option>
+                                                                            ))}
+                                                                    </select>
+                                                                </th>
+
+                                                                {/* Address */}
+                                                                <th className="px-2 py-1">
+                                                                    <input
+                                                                        className="w-full border px-2 py-1 text-xs rounded text-black"
+                                                                        placeholder="Address"
+                                                                        onChange={e => handleFilterChange("address", e.target.value)}
+                                                                    />
+                                                                </th>
+
+                                                                {/* Grade */}
+                                                                <th className="px-2 py-1">
+                                                                   
+                                                                     <select
+                                                                        className="w-full border px-2 py-1 text-xs rounded text-black"
+                                                                         onChange={e => handleFilterChange("grade", e.target.value)}
+                                                                    >
+                                                                        <option value="">All</option>
+                                                                       <option value="H">Important</option>
+                                                                       <option value="A">A</option>
+                                                                       <option value="B">B</option>
+                                                                       <option value="C">C</option>
+                                                                    </select>
+                                                                </th>
+
+                                                                {/* Assigned From */}
+                                                                <th className="px-2 py-1">
+                                                                    <select
+                                                                        className="w-full border px-2 py-1 text-xs rounded text-black"
+                                                                        onChange={e => handleFilterChange("assignedFrom", e.target.value)}
+                                                                    >
+                                                                        <option value="">All</option>
+                                                                        {adminsFromQueries.map(a => (
+                                                                            <option key={a._id} value={a._id}>
+                                                                                {a.name}
+                                                                            </option>
+                                                                        ))}
+                                                                    </select>
+
+                                                                </th>
+
+                                                                {/* Assigned To */}
+                                                                <th className="px-2 py-1">
+                                                                    <select
+                                                                        className="w-full border px-2 py-1 text-xs rounded text-black"
+                                                                        onChange={e => handleFilterChange("assignedTo", e.target.value)}
+                                                                    >
+                                                                        <option value="">All</option>
+                                                                        {adminsFromQueries.map(a => (
+                                                                            <option key={a._id} value={a._id}>
+                                                                                {a.name}
+                                                                            </option>
+                                                                        ))}
+                                                                    </select>
+
+                                                                </th>
+
+                                                                {/* Created Date */}
+                                                                <th className="px-2 py-1">
+                                                                    <input
+                                                                        type="date"
+                                                                        className="w-full border px-2 py-1 text-xs rounded text-black"
+                                                                        onChange={e => handleFilterChange("createdDate", e.target.value)}
+                                                                    />
+                                                                </th>
+
+                                                                {/* Enroll Status */}
+                                                                <th className="px-2 py-1">
+                                                                    <select
+                                                                        className="w-full border px-2 py-1 text-xs rounded text-black"
+                                                                        onChange={e => handleFilterChange("enrollStatus", e.target.value)}
+                                                                    >
+                                                                        <option value="">All</option>
+                                                                        <option value="enroll">Enroll</option>
+                                                                        <option value="not">Not Enroll</option>
+                                                                    </select>
+                                                                </th>
+
+                                                                <th></th>
+                                                            </tr>
+
+                                                        </thead>
+                                                        <tbody>
+                                                            {activity.queries
+                                                                .filter((q, i, arr) =>
+                                                                    i === arr.findIndex(
+                                                                        x => x?.studentContact?.phoneNumber === q?.studentContact?.phoneNumber
+                                                                    )
                                                                 )
-                                                            )
-                                                            .map((query, index) => (
-                                                                <tr key={index}>
-                                                                    <td className="px-4 py-2 text-[12px] font-semibold" onClick={() => handleRowClick(query._id)}>
-                                                                        {index + 1}
+                                                                .filter(q => {
+                                                                    const createdDate = new Date(q.createdAt).toISOString().split("T")[0];
 
-                                                                    </td>
-                                                                    <td className="px-4 py-2 text-[12px] font-semibold" onClick={() => handleRowClick(query._id)}>
-                                                                        {query.studentName}
+                                                                    return (
+                                                                        (!filters.studentName ||
+                                                                            q.studentName?.toLowerCase().includes(filters.studentName.toLowerCase())) &&
 
-                                                                    </td>
-                                                                    <td className="px-4 py-2 text-[12px] font-semibold" onClick={() => handleRowClick(query._id)}>
-                                                                        {query.studentContact.phoneNumber}
+                                                                        (!filters.phone ||
+                                                                            q.studentContact?.phoneNumber?.includes(filters.phone)) &&
 
+                                                                        (!filters.reference ||
+                                                                            q.referenceid === filters.reference) &&
 
-                                                                    </td>
-                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        {query.referenceid !== "null" &&
-                                                                            query.referenceid !== null
-                                                                            ? query.referenceid
-                                                                            : "Not Provided"}
-                                                                        {query.suboption !== "null" && <>{query.suboption}</>}
-                                                                    </td>
-                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        {query.studentContact.city}
-                                                                    </td>
-                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        {query.studentContact.address}
-                                                                    </td>
-                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        {query.assignedsenthistory &&
-                                                                            query.assignedsenthistory.length > 0
-                                                                            ? query.assignedsenthistory
-                                                                                .map((id) => getUserName(id))
-                                                                                .join(", ")
-                                                                            : "Not Assigned"}
-                                                                    </td>
-                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        {query.assignedreceivedhistory &&
-                                                                            query.assignedreceivedhistory.length > 0
-                                                                            ? query.assignedreceivedhistory
-                                                                                .map((id) => getUserName(id))
-                                                                                .join(", ")
-                                                                            : "Not Assigned"}
-                                                                    </td>
-                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        {new Date(query.createdAt).toLocaleDateString("en-GB", {
-                                                                            day: "2-digit",
-                                                                            month: "2-digit",
-                                                                            year: "numeric",
-                                                                        })}
-                                                                    </td>
-                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                            {query.addmission ? "Enroll" : "Not Enroll"}
+                                                                        (!filters.city ||
+                                                                            q.studentContact?.city === filters.city) &&
+
+                                                                        (!filters.address ||
+                                                                            q.studentContact?.address?.toLowerCase().includes(filters.address.toLowerCase())) &&
+
+                                                                        (!filters.grade ||
+                                                                            q.lastgrade?.toLowerCase().includes(filters.grade.toLowerCase())) &&
+
+                                                                        (!filters.assignedFrom ||
+                                                                            q.assignedsenthistory?.includes(filters.assignedFrom)) &&
+
+                                                                        (!filters.assignedTo ||
+                                                                            q.assignedreceivedhistory?.includes(filters.assignedTo)) &&
+
+                                                                        (!filters.createdDate ||
+                                                                            createdDate === filters.createdDate) &&
+
+                                                                        (!filters.enrollStatus ||
+                                                                            (filters.enrollStatus === "enroll"
+                                                                                ? q.addmission
+                                                                                : !q.addmission))
+                                                                    );
+                                                                })
+                                                                .map((query, index) => (
+
+                                                                    <tr key={index}>
+                                                                        <td className="px-4 py-2 text-[12px] font-semibold" onClick={() => handleRowClick(query._id)}>
+                                                                            {index + 1}
+
                                                                         </td>
-                                                                    </td>
-                                                                    <td className="px-4 py-2 text-[12px] font-semibold">
-                                                                        {query.connectionStatus && query.connectionStatus.length > 0 ? (
-                                                                            Object.entries(
-                                                                                query.connectionStatus.reduce((acc, statusEntry) => {
-                                                                                    const statusLabel =
-                                                                                        statusEntry.status === "no_connected" ? "No Connected" :
-                                                                                            statusEntry.status === "not_lifting" ? "Not Lifting" :
-                                                                                                statusEntry.status === "connected" ? "Connected" : "Unknown";
+                                                                        <td className="px-4 py-2 text-[12px] font-semibold" onClick={() => handleRowClick(query._id)}>
+                                                                            {query.studentName}
 
-                                                                                    if (!acc[statusLabel]) {
-                                                                                        acc[statusLabel] = { count: 0, time: statusEntry.time, subStatus: {} };
-                                                                                    }
+                                                                        </td>
+                                                                        <td className="px-4 py-2 text-[12px] font-semibold" onClick={() => handleRowClick(query._id)}>
+                                                                            {query.studentContact.phoneNumber}
 
-                                                                                    acc[statusLabel].count++;
 
-                                                                                    if (statusEntry.subStatus) {
-                                                                                        acc[statusLabel].subStatus[statusEntry.subStatus] =
-                                                                                            (acc[statusLabel].subStatus[statusEntry.subStatus] || 0) + 1;
-                                                                                    }
+                                                                        </td>
+                                                                        <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                            {query.referenceid !== "null" &&
+                                                                                query.referenceid !== null
+                                                                                ? query.referenceid
+                                                                                : "Not Provided"}
+                                                                            {query.suboption !== "null" && <>{query.suboption}</>}
+                                                                        </td>
+                                                                        <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                            {query.studentContact.city}
+                                                                        </td>
+                                                                        <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                            {query.studentContact.address}
+                                                                        </td>
+                                                                        <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                            {query.lastgrade !== "H" && (
+                                                                                <span>{query.lastgrade}</span>
+                                                                            )}
 
-                                                                                    return acc;
-                                                                                }, {})
-                                                                            ).map(([status, data], index) => (
-                                                                                <div key={index} className="flex flex-col">
-                                                                                    <span className="text-gray-700">{status} ({data.count})</span>
-                                                                                    {Object.entries(data.subStatus).map(([sub, count], subIndex) => (
-                                                                                        <span key={subIndex} className="text-gray-500 ml-2">
-                                                                                            {sub}: {count}
-                                                                                        </span>
-                                                                                    ))}
-                                                                                </div>
-                                                                            ))
-                                                                        ) : (
-                                                                            <span className="text-gray-500">No Status</span>
-                                                                        )}
-                                                                    </td>
 
-                                                                </tr>
-                                                            ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        )}
+                                                                            {query.lastgrade === "H" && (
+                                                                                <span >
+                                                                                    <Image src="/image/images.jpeg" width={64.4} height={38.7} />
+                                                                                </span>
+                                                                            )}
+                                                                        </td>
+                                                                        <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                            {query.assignedsenthistory &&
+                                                                                query.assignedsenthistory.length > 0
+                                                                                ? query.assignedsenthistory
+                                                                                    .map((id) => getUserName(id))
+                                                                                    .join(", ")
+                                                                                : "Not Assigned"}
+                                                                        </td>
+                                                                        <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                            {query.assignedreceivedhistory &&
+                                                                                query.assignedreceivedhistory.length > 0
+                                                                                ? query.assignedreceivedhistory
+                                                                                    .map((id) => getUserName(id))
+                                                                                    .join(", ")
+                                                                                : "Not Assigned"}
+                                                                        </td>
+                                                                        <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                            {new Date(query.createdAt).toLocaleDateString("en-GB", {
+                                                                                day: "2-digit",
+                                                                                month: "2-digit",
+                                                                                year: "numeric",
+                                                                            })}
+                                                                        </td>
+                                                                        <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                            <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                                {query.addmission ? "Enroll" : "Not Enroll"}
+                                                                            </td>
+                                                                        </td>
+                                                                        <td className="px-4 py-2 text-[12px] font-semibold">
+                                                                            {query.connectionStatus && query.connectionStatus.length > 0 ? (
+                                                                                Object.entries(
+                                                                                    query.connectionStatus.reduce((acc, statusEntry) => {
+                                                                                        const statusLabel =
+                                                                                            statusEntry.status === "no_connected" ? "No Connected" :
+                                                                                                statusEntry.status === "not_lifting" ? "Not Lifting" :
+                                                                                                    statusEntry.status === "connected" ? "Connected" : "Unknown";
+
+                                                                                        if (!acc[statusLabel]) {
+                                                                                            acc[statusLabel] = { count: 0, time: statusEntry.time, subStatus: {} };
+                                                                                        }
+
+                                                                                        acc[statusLabel].count++;
+
+                                                                                        if (statusEntry.subStatus) {
+                                                                                            acc[statusLabel].subStatus[statusEntry.subStatus] =
+                                                                                                (acc[statusLabel].subStatus[statusEntry.subStatus] || 0) + 1;
+                                                                                        }
+
+                                                                                        return acc;
+                                                                                    }, {})
+                                                                                ).map(([status, data], index) => (
+                                                                                    <div key={index} className="flex flex-col">
+                                                                                        <span className="text-gray-700">{status} ({data.count})</span>
+                                                                                        {Object.entries(data.subStatus).map(([sub, count], subIndex) => (
+                                                                                            <span key={subIndex} className="text-gray-500 ml-2">
+                                                                                                {sub}: {count}
+                                                                                            </span>
+                                                                                        ))}
+                                                                                    </div>
+                                                                                ))
+                                                                            ) : (
+                                                                                <span className="text-gray-500">No Status</span>
+                                                                            )}
+                                                                        </td>
+
+                                                                    </tr>
+                                                                ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            );
+                                        })()}
+
                                     </div>
                                 </>
                             ))
