@@ -75,15 +75,39 @@ export default function Assigned() {
   }, [currentPage, selectedBranch, selectedDeadline, selectedEnrollStatus]);
 
 
+  const confirmRemove = async (id) => {
+  const confirmed = window.confirm(
+    "Are you sure you want to remove this from demo?"
+  );
+
+  if (!confirmed) return;
+
+  try {
+    await axios.patch("/api/queries/update", {
+      id,
+      demo: false,
+    });
+
+    // ✅ remove only that row from UI
+    setQueries((prev) => prev.filter((q) => q._id !== id));
+
+    alert("Removed from demo successfully");
+  } catch (error) {
+    console.error(error);
+    alert("Failed to remove from demo");
+  }
+};
+
+
 
   return (
     <div className="container mx-auto p-5">
-        <button
-          onClick={() => setIsDemoModalOpen(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700"
-        >
-          Show Demo Count
-        </button>
+      <button
+        onClick={() => setIsDemoModalOpen(true)}
+        className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700"
+      >
+        Show Demo Count
+      </button>
       <div className="flex flex-col lg:flex-row justify-between space-y-6 lg:space-y-0 lg:space-x-6">
         {isDemoModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -176,13 +200,35 @@ export default function Assigned() {
                               <td className="px-6 py-1 font-semibold">{index + 1}</td>
                               <td className="px-6 py-1 font-semibold">{query.studentName}</td>
                               <td className="px-6 py-1">{query.branch}</td>
-                              <td className="px-6 py-1">{deadline.toLocaleDateString()}</td>
+                              <td className="px-6 py-1">
+                                {`${String(deadline.getDate()).padStart(2, "0")}-${String(
+                                  deadline.getMonth() + 1
+                                ).padStart(2, "0")}-${String(deadline.getFullYear()).slice(-2)}`}
+                              </td>
+
                               <td className="px-6 py-1">
                                 {query.addmission ? "Enroll" : "Pending"}
                               </td>
                               <td className="px-6 py-1">
-                                {query.total}
+                                {query.total === 0 ? (
+                                  <>
+                                    {query.total}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation(); // 🛑 stop row click
+                                        confirmRemove(query._id);
+                                      }}
+                                      className="text-xs ms-2 px-3 py-1 bg-white hover:bg-red-600 hover:text-white font-semibold text-black rounded"
+                                    >
+                                      Remove
+                                    </button>
+
+                                  </>
+                                ) : (
+                                  query.total
+                                )}
                               </td>
+
                             </tr>
                           );
                         })
