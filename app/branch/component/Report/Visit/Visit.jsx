@@ -4,6 +4,7 @@ import Loader from "@/components/Loader/Loader";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ChevronDownSquare } from "lucide-react"
+import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
 
 export default function Visit() {
   const [queries, setQueries] = useState([]);
@@ -30,7 +31,16 @@ export default function Visit() {
   const [referenceId, setReferenceId] = useState("");
   const [referenceData, setReferenceData] = useState([]);
   const [selectedReference, setSelectedReference] = useState(null);
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeQuery, setActiveQuery] = useState(null);
+  const handleRowClick = (queryContent) => {
+    setActiveQuery(queryContent);
+    setIsModalOpen(true);
+  };
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setActiveQuery(null);
+  };
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -206,9 +216,7 @@ export default function Visit() {
   }, [filters, queries, fromDate, toDate, referenceId, suboption]);
 
 
-  const handleRowClick = (id) => {
-    router.push(`/branch/page/allquery/${id}`);
-  };
+  
   
   const removeFilter = () => {
     setFilters({
@@ -470,6 +478,19 @@ export default function Visit() {
           </div>
         </div>
       </div>
+       {isModalOpen && (
+              <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
+                <div className="   h-screen w-screen  relative">
+                  <button
+                    className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
+                    onClick={handleCloseModal}
+                  >
+                    &times;
+                  </button>
+                  <div><Queryreport55 id={activeQuery} /></div>
+                </div>
+              </div>
+            )}
     </>
   );
 }

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
 import { ChevronDownSquare } from "lucide-react"
 import { useSession } from "next-auth/react";
+import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
 
 export default function Visit() {
     const [queries, setQueries] = useState([]);
@@ -34,6 +35,17 @@ export default function Visit() {
     const [referenceData, setReferenceData] = useState([]);
     const [selectedReference, setSelectedReference] = useState(null);
 
+      const [isModalOpen, setIsModalOpen] = useState(false);
+    
+    const [activeQuery, setActiveQuery] = useState(null);
+    const handleRowClick = (queryContent) => {
+        setActiveQuery(queryContent);
+        setIsModalOpen(true);
+    };
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setActiveQuery(null);
+    };
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
@@ -187,9 +199,7 @@ export default function Visit() {
         setFilters((prev) => ({ ...prev, [key]: value }));
     };
 
-    const handleRowClick = (id) => {
-        router.push(`/branch/page/allquery/${id}`);
-    };
+
 
     const exportToExcel = () => {
         const worksheet = XLSX.utils.json_to_sheet(filteredQueries);
@@ -203,7 +213,7 @@ export default function Visit() {
         const reference = referenceData.find((data) => data.referencename === selectedName);
         setSelectedReference(reference || null);
     };
-    
+
     const removeFilter = () => {
         setFilters({
             studentName: "",
@@ -476,6 +486,19 @@ export default function Visit() {
                     </div>
                 </div>
             </div>
+            {isModalOpen && (
+                <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
+                    <div className="   h-screen w-screen  relative">
+                        <button
+                            className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
+                            onClick={handleCloseModal}
+                        >
+                            &times;
+                        </button>
+                        <div><Queryreport55 id={activeQuery} /></div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
