@@ -12,6 +12,7 @@ import UserPendingReport from '@/app/main/component/franReport/UserPendingReport
 import Staff from '@/app/main/component/franReport/Staff/Staff';
 import FranPerformance from "@/app/main/component/FranPerformance/FranPerformance"
 import Lead from '../LeadCount/LeadCount';
+import LeadTransfer from '../LeadTransfer/LeadTransfer';
 export default function BranchReportPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
