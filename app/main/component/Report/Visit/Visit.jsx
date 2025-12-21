@@ -21,6 +21,7 @@ export default function QueryReport() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [admission, setAdmission] = useState("");
+  const [number, setNumber] = useState("");
   const [grade, setGrade] = useState("");
   const [location, setLocation] = useState("");
   const [city, setCity] = useState("");
@@ -113,6 +114,7 @@ export default function QueryReport() {
           fromDate,
           toDate,
           admission,
+          number,
           grade,
           location,
           branch,
@@ -155,7 +157,7 @@ export default function QueryReport() {
   // Reset to first page when filters change
   useEffect(() => {
     setPage(1);
-  }, [referenceId, studentName, suboption, fromDate, branch, toDate, admission, grade, location, city, assignedName, assignedFrom, userName, showClosed]);
+  }, [referenceId, studentName, suboption, fromDate, branch, toDate, number, admission, grade, location, city, assignedName, assignedFrom, userName, showClosed]);
 
   const removeFilter = () => {
     // Reset all filter variables to their default values
@@ -164,6 +166,7 @@ export default function QueryReport() {
     setFromDate("");
     setToDate("");
     setAdmission("");
+    setNumber("");
     setGrade("");
     setBranch("");
     setLocation("");
@@ -207,6 +210,7 @@ export default function QueryReport() {
     if (toDate) filters.push(`To Date: ${toDate}`);
     if (admission) filters.push(`Admission: ${admission === "true" ? "Enroll" : "Not Enroll"}`);
     if (grade) filters.push(`Grade: ${grade}`);
+    if (number) filters.push(`Contact No: ${number}`);
     if (location) filters.push(`Branch: ${location}`);
     if (city) filters.push(`City: ${city}`);
     if (assignedName) filters.push(`Assigned To: ${assignedName}`);
@@ -363,7 +367,18 @@ export default function QueryReport() {
                     <label htmlFor="nullCheck" className="text-[12px]">Null</label>
                   </div>
                 </th>
-                <th className="px-4 py-3 text-[12px]">Phone No.</th>
+                <th className="px-4 py-3 text-[12px]">
+                  <input
+                    type="number"
+                    value={number}
+                    onChange={(e) => setNumber(e.target.value)}
+
+                    placeholder="Contact number"
+                    className="w-32 ms-2 text-gray-800 border focus:ring-0 focus:outline-none"
+                    min="0"
+                  />
+
+                </th>
                 <th className="px-4 py-3 text-[12px]">Contacts</th>
                 <th className="px-4 py-3 text-[12px] ">Reference
                   <select

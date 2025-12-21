@@ -34,6 +34,7 @@ export const GET = async (request) => {
     const toDate = searchParams.get("toDate");
     const admission = searchParams.get("admission");
     const grade = searchParams.get("grade");
+    const number = searchParams.get("number");
     const location = searchParams.get("location");
     const city = searchParams.get("city");
     const assignedName = searchParams.get("assignedName");
@@ -62,6 +63,12 @@ export const GET = async (request) => {
 
     if (admission) queryFilter.addmission = admission === "true";
     if (grade) queryFilter.lastgrade = { $regex: grade, $options: "i" };
+    if (number) {
+      queryFilter["studentContact.phoneNumber"] = {
+        $regex: number,
+        $options: "i",
+      };
+    }
     if (location) queryFilter.branch = { $regex: location, $options: "i" };
 
     if (studentName) {
