@@ -83,7 +83,10 @@ export default function Page({ params }) {
             setLoading(true);
             const response = await axios.get(`/api/queries/find-single-byid/${id}`);
             const existingData = response.data.query;
-            setFormData(existingData);
+             setFormData((prev) => ({
+                ...prev,
+                ...existingData,   // includes branch
+            }));
         } catch (err) {
             console.error("Error fetching data for ID:", err);
             setError("Failed to load data.");
@@ -225,7 +228,7 @@ export default function Page({ params }) {
             return {
                 ...prevFormData,
                 [name]: value,
-                branch: adminbranch // Automatically set branch for any other form changes as well
+                // branch: adminbranch // Automatically set branch for any other form changes as well
             };
         });
     };
@@ -886,15 +889,30 @@ export default function Page({ params }) {
                                 </div>
 
 
-                                <div className="sm:col-span-6 col-span-12">
+                              <div className="sm:col-span-6 col-span-12">
                                     <label htmlFor="branch" className="block text-[15px] text-gray-700">
                                         Branch
                                     </label>
-                                    <select name="branch" disabled ref={(el) => (inputRefs.current[12] = el)} // Assign ref
-                                        onKeyDown={(e) => handleKeyDown(e, 12)} value={formData.branch} id="" onChange={handleChange} className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200  placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm">
-                                        <option value={adminbranch} disabled selected>{adminbranch}</option>
 
+                                    <select
+                                        name="branch"
+                                        ref={(el) => (inputRefs.current[12] = el)} // Assign ref
+                                        onKeyDown={(e) => handleKeyDown(e, 12)}
+                                        value={formData.branch}
+                                        onChange={handleChange}
+                                        className="block w-full px-2 py-2 text-gray-500 bg-white border border-gray-200 placeholder:text-gray-400 focus:border-[#6cb049] focus:outline-none focus:ring-[#6cb049] sm:text-sm"
+                                    >
+                                        <option value="" disabled>
+                                            Select Branch 
+                                        </option>
+
+                                        {branches.map((branch, index) => (
+                                            <option key={index} value={branch.branch_name}>
+                                                {branch.branch_name}
+                                            </option>
+                                        ))}
                                     </select>
+
                                     {errors.branch && (
                                         <p className="text-red-500 text-[8px] mt-1">{errors.branch}</p>
                                     )}

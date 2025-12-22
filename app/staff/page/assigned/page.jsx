@@ -70,7 +70,7 @@ export default function Assigned() {
         if (!selectedQuery) return;
 
         try {
-            const data = { id: selectedQuery._id, assignedTo: adminId, assignedTostatus: false }; // Update status to "Accepted"
+            const data = { id: selectedQuery._id, assignedTo: adminId, assignedTostatus: false , branch: adminData}; // Update status to "Accepted"
             const response = await axios.patch('/api/queries/update', data);
 
             if (response.status === 200) {
