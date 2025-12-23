@@ -9,7 +9,10 @@ import AssignedQuery from "@/components/AssignedQuery/AssignedQuery";
 import QueryHistory from "@/components/QueryHistory/QueryHistory";
 import Fees from "@/components/fees/Fees";
 import Update from "@/app/main/component/queryreport/Update/Update";
+import { useSession } from 'next-auth/react';
+
 export default function Page({ id }) {
+    const { data: session } = useSession();
 
     const [query, setQuery] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -18,6 +21,8 @@ export default function Page({ id }) {
     const [dataLoaded, setDataLoaded] = useState(false);
     const [courses, setCourses] = useState([]); // State to store courses
     const [courseName, setCourseName] = useState(""); // State to store the course name
+    const [adminId, setAdminId] = useState(null);
+    const [adminstatus, setAdminstatus] = useState(null);
 
     const [isModalOpen2, setIsModalOpen2] = useState(false);
     const [activeQuery, setActiveQuery] = useState(null);
@@ -29,11 +34,30 @@ export default function Page({ id }) {
         setIsModalOpen2(false);
         setActiveQuery(null);
     };
+    useEffect(() => {
+        const fetchAdminData = async () => {
+            try {
+                const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
+                setAdminId(response.data._id); // Make sure response.data contains branch and _id
+                setAdminstatus(response.data.usertype)
+
+
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (session?.user?.email) fetchAdminData();
+    }, [session]);
     const fetchBranchData = useCallback(async () => {
         try {
             setLoading(true);
             const response = await axios.get(`/api/queries/find-single-byid/${id}`);
             setQuery(response.data.query);
+
+
         } catch (error) {
             console.error("Error fetching query data:", error);
             setError("Failed to fetch query data.");
@@ -91,64 +115,71 @@ export default function Page({ id }) {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 p-6 bg-gray-50 min-h-screen">
             {/* Left Sidebar */}
             <div className="col-span-1 bg-white shadow-lg rounded-lg p-6">
-                {query.autoclosed !== "close" && (
-                    <button onClick={() => handleOpenModal(`${query._id}`)}>
-                        Edit
-                    </button>
-                    // <Link href={`/main/page/update/${query._id}`}>
-                    //     <Edit size={15} className=" mb-2 text-[#29234b]" />
-                    // </Link>
-                )}
+               
                 <div className="sticky top-5">
                     <div className="flex flex-col">
-                        <button
-                            onClick={async () => {
-                                if (query.autoclosed === "close") {
-                                    const confirmRecover = confirm("Are you sure you want to recover this query?");
-                                    if (!confirmRecover) return;
-                                    try {
-                                        // First API call: Update `autoclosed` to "open"
-                                        const newApiResponse = await axios.patch('/api/queries/update', {
-                                            id: query._id,
-                                            autoclosed: "open"  // Recover the query
-                                        });
-                                        fetchBranchData();
+                       
+                        {((query.assignedTo === "Not-Assigned" && query.userid === adminId) || query.assignedTo === adminId || adminstatus == "2") ? (
+                            <>
+                                {query.autoclosed !== "close" && (
+                                    <button onClick={() => handleOpenModal(`${query._id}`)}>
+                                        Edit
+                                    </button>
+                                )}
+                                <button
+                                    onClick={async () => {
+                                        if (query.autoclosed === "close") {
+                                            const confirmRecover = confirm("Are you sure you want to recover this query?");
+                                            if (!confirmRecover) return;
+                                            try {
+                                                // First API call: Update `autoclosed` to "open"
+                                                const newApiResponse = await axios.patch('/api/queries/update', {
+                                                    id: query._id,
+                                                    autoclosed: "open"  // Recover the query
+                                                });
 
-                                        // Second API call: Update audit data with `statusCounts`
-                                        const auditResponse = await axios.patch('/api/audit/update', {
-                                            queryId: query._id,
-                                            statusCounts: {
-                                                busy: 0,
-                                                call_back: 0,
-                                                switch_off: 0,
-                                                network_error: 0,
-                                                interested_but_not_proper_response: 0,
-                                                no_visit_branch_yet: 0,
-                                                not_confirmed_yet: 0,
-                                                not_proper_response: 0
+                                                // Second API call: Update audit data with `statusCounts`
+                                                const auditResponse = await axios.patch('/api/audit/update', {
+                                                    queryId: query._id,
+                                                    statusCounts: {
+                                                        busy: 0,
+                                                        call_back: 0,
+                                                        switch_off: 0,
+                                                        network_error: 0,
+                                                        interested_but_not_proper_response: 0,
+                                                        no_visit_branch_yet: 0,
+                                                        not_confirmed_yet: 0,
+                                                        not_proper_response: 0
+                                                    }
+                                                });
+
+                                                // Optionally, refresh data after the update
+                                                fetchBranchData();
+
+                                                console.log("Query recovered and audit updated:", newApiResponse.data, auditResponse.data);
+                                            } catch (error) {
+                                                console.error("Error updating query or audit:", error);
                                             }
-                                        });
+                                        } else {
+                                            // Open the modal if query.autoclosed is not "close"
+                                            setIsModalOpen(true);
+                                        }
+                                    }}
+                                    className="mb-1 bg-[#29234b] w-full py-1 rounded-md text-white transition duration-300 ease-in-out hover:bg-[#3a2b6f] focus:outline-none focus:ring-2 focus:ring-[#ffbe98] focus:ring-opacity-50"
+                                >
+                                    {query.autoclosed === "close" ? "Recover Query" : "Update"}
+                                </button>
 
-                                        // Optionally, refresh data after the update
-                                        fetchBranchData();
 
-                                        console.log("Query recovered and audit updated:", newApiResponse.data, auditResponse.data);
-                                    } catch (error) {
-                                        console.error("Error updating query or audit:", error);
-                                    }
-                                } else {
-                                    // Open the modal if query.autoclosed is not "close"
-                                    setIsModalOpen(true);
-                                }
-                            }}
-                            className="mb-1 bg-[#29234b] w-full py-1 rounded-md text-white transition duration-300 ease-in-out hover:bg-[#3a2b6f] focus:outline-none focus:ring-2 focus:ring-[#ffbe98] focus:ring-opacity-50"
-                        >
-                            {query.autoclosed === "close" ? "Recover Query" : "Update"}
-                        </button>
-                        {query.autoclosed !== "close" && (
-                            <AssignedQuery refreshData={fetchBranchData} initialData={query} />
+                                {query.autoclosed !== "close" && (
+                                    <AssignedQuery refreshData={fetchBranchData} initialData={query} />
+                                )}
+                                {query.autoclosed !== "close" && <Fees id={query._id} />}
+                            </>) : (
+                            <p className="text-red-500 text-center mt-4">
+                                You are Not assigned to update this.
+                            </p>
                         )}
-
                     </div>
                     {query.autoclosed !== "close" && <Fees id={query._id} />}
 
