@@ -1,489 +1,601 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
-import { ChevronDownSquare } from "lucide-react"
-import { useSession } from "next-auth/react";
 import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
+import { useSession } from 'next-auth/react';
 
-export default function Visit() {
-    const [queries, setQueries] = useState([]);
-    const [filteredQueries, setFilteredQueries] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const { data: session } = useSession();
+const initialFilters = {
+    staffId: "",
+    studentName: "",
+    phoneNumber: "",
+    courseId: "",
+    assignedToId: "",
+    branch: "",
+    city: "",
+    finalFees: "",
+};
 
-    const [filters, setFilters] = useState({
-        branch: "",
-        studentName: "",
-        contact: "",
-        course: "",
-        assignedTo: "",
-        city: "",
-    });
-    const [courses, setCourses] = useState({});
-    const [coursesfee, setCoursesfee] = useState({});
-    const [user, setUser] = useState({});
+const limitOptions = [25, 50, 100, 200];
+
+export default function AddmissionRegister() {
     const router = useRouter();
-    const [fromDate, setFromDate] = useState("");
-    const [toDate, setToDate] = useState("");
-    const [adminData, setAdminData] = useState(null);
-
-    const [suboption, setSuboption] = useState("");
-    const [referenceId, setReferenceId] = useState("");
-    const [referenceData, setReferenceData] = useState([]);
-    const [selectedReference, setSelectedReference] = useState(null);
-
-      const [isModalOpen, setIsModalOpen] = useState(false);
-    
+    const [queries, setQueries] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeQuery, setActiveQuery] = useState(null);
-    const handleRowClick = (queryContent) => {
+    const handleOpenModal = (queryContent) => {
         setActiveQuery(queryContent);
         setIsModalOpen(true);
     };
+    const { data: session } = useSession();
+
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setActiveQuery(null);
     };
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            try {
 
-                const referenceResponse = await axios.get("/api/reference/fetchall/reference");
-                setReferenceData(referenceResponse.data.fetch);
-            } catch (error) {
-                console.error("Error fetching data:", error);
-                toast.error("Error fetching data");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, []);
+    const [adminList, setAdminList] = useState([]);
+    const [courseList, setCourseList] = useState([]);
+    const [referenceData, setReferenceData] = useState([]);
+    const [adminData, setAdminData] = useState("");
 
     useEffect(() => {
         const fetchAdminData = async () => {
-            if (!session?.user?.email) return;
-
-            setLoading(true);
             try {
-                const response = await axios.get(`/api/admin/find-admin-byemail/${session.user.email}`);
-                setAdminData(response.data.branch);
+                const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
+                setAdminData(response.data.branch); // Make sure response.data contains branch and _id
             } catch (err) {
-                console.error("Error fetching admin data:", err.message);
+                setError(err.message);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchAdminData();
+        if (session?.user?.email) fetchAdminData();
     }, [session]);
+    const [filters, setFilters] = useState(initialFilters);
+    const [referenceId, setReferenceId] = useState("");
+    const [suboption, setSuboption] = useState("");
+    const [fromDate, setFromDate] = useState("");
+    const [toDate, setToDate] = useState("");
 
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(50);
+    const [totalCount, setTotalCount] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
 
-    useEffect(() => {
-        const fetchQueryData = async () => {
-            if (!adminData) return;
-            try {
-                setLoading(true);
-                const response = await axios.get(`/api/branchreport/enroll/${adminData}`);
-                setQueries(response.data.fetch);
-                setFilteredQueries(response.data.fetch);
-            } catch (error) {
-                console.error("Error fetching query data:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const selectedReference = useMemo(
+        () => referenceData.find((ref) => ref.referencename === referenceId) || null,
+        [referenceData, referenceId]
+    );
 
-        fetchQueryData();
-    }, [adminData]);
+    const adminIdToName = useMemo(() => {
+        return adminList.reduce((acc, admin) => {
+            acc[admin._id] = admin.name;
+            return acc;
+        }, {});
+    }, [adminList]);
 
-    useEffect(() => {
-        const fetchCourses = async () => {
-            try {
-                const response = await axios.get(`/api/course/fetchall/courses`);
-                const courseMapping = response.data.fetch.reduce((acc, course) => {
-                    acc[course._id] = course.course_name;
-                    return acc;
-                }, {});
-                setCourses(courseMapping);
+    const courseIdToName = useMemo(() => {
+        return courseList.reduce((acc, course) => {
+            acc[course._id] = course.course_name;
+            return acc;
+        }, {});
+    }, [courseList]);
 
-                const coursesfeeMapping = response.data.fetch.reduce((acc, coursesfee) => {
-                    const enrollPercent = parseFloat(coursesfee.enrollpercent) || 0;
-                    const enrollmentFee = coursesfee.fees * (enrollPercent / 100);
+    const fetchAdmissionReport = useCallback(async () => {
+        setLoading(true);
+        setError("");
+        try {
+            const params = {
+                page,
+                limit,
+                referenceId,
+                suboption,
+                fromDate,
+                toDate,
+                staffId: filters.staffId,
+                studentName: filters.studentName,
+                phoneNumber: filters.phoneNumber,
+                courseId: filters.courseId,
+                assignedToId: filters.assignedToId,
+                branch: adminData,
+                city: filters.city,
+                finalFees: filters.finalFees,
+            };
 
-                    acc[coursesfee._id] = {
-                        totalFee: coursesfee.fees,
-                        enrollPercent: enrollPercent,
-                        enrollmentFee: enrollmentFee.toFixed(),
-                    };
-                    return acc;
-                }, {});
-
-                setCoursesfee(coursesfeeMapping);
-            } catch (error) {
-                console.error("Error fetching courses:", error.message);
-            }
-        };
-
-        fetchCourses();
-    }, []);
-
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const response = await axios.get('/api/admin/fetchall/admin');
-                const userMapping = response.data.fetch.reduce((acc, user) => {
-                    acc[user._id] = user.name;
-                    return acc;
-                }, {});
-                setUser(userMapping);
-            } catch (error) {
-                console.error("Error fetching user:", error.message);
-            }
-        };
-
-        fetchUserData();
-    }, []);
-
-    useEffect(() => {
-        const filtered = queries.filter((query) => {
-            const courseFeeDetails = coursesfee[query.courseInterest] || {};
-            const remainingFees = courseFeeDetails.totalFee - query.total;
-
-            const referenceName = query.referenceid || "Unknown Reference";
-            const referenceSuboption = query.suboption || "";
-            const admissionDate = query.addmissiondate ? new Date(query.addmissiondate) : null;
-            const from = fromDate ? new Date(fromDate) : null;
-            const to = toDate ? new Date(toDate) : null;
-
-
-            const isWithinDateRange =
-                (!from || (admissionDate && admissionDate >= from)) &&
-                (!to || (admissionDate && admissionDate <= new Date(to.setHours(23, 59, 59, 999))));
-
-
-            const actualFinalFees =
-                query.finalfees && query.finalfees > 0
-                    ? parseFloat(query.finalfees)
-                    : parseFloat(courseFeeDetails.totalFee || 0);
-
-            const finalFeesFilter = filters.finalfees ? parseFloat(filters.finalfees) : null;
-
-            return (
-                (!filters.branch || query.branch.toLowerCase().includes(filters.branch.toLowerCase())) &&
-                (!filters.staffName || query.staffName.toLowerCase().includes(filters.staffName.toLowerCase())) &&
-                (!filters.studentName || query.studentName?.toLowerCase().includes(filters.studentName.toLowerCase())) &&
-                (!filters.contact || query.studentContact.phoneNumber.includes(filters.contact)) &&
-                (!filters.course || (courses[query.courseInterest] || "").toLowerCase().includes(filters.course.toLowerCase())) &&
-                (!filters.assignedTo || (user[query.assignedTo] || user[query.userid] || "").toLowerCase().includes(filters.assignedTo.toLowerCase())) &&
-                (!filters.city || query.studentContact.city.toLowerCase().includes(filters.city.toLowerCase())) &&
-                (!filters.fees || remainingFees.toString().includes(filters.fees)) &&
-                (!finalFeesFilter || actualFinalFees === finalFeesFilter) &&
-                (referenceId ? referenceName === referenceId : true) &&
-                (suboption ? referenceSuboption === suboption : true) &&
-                isWithinDateRange
+            const cleanedParams = Object.fromEntries(
+                Object.entries(params).filter(
+                    ([, value]) => value !== "" && value !== null && value !== undefined
+                )
             );
-        });
 
-        setFilteredQueries(filtered);
-    }, [filters, queries, courses, user, coursesfee, fromDate, toDate, referenceId, suboption]);
+            const response = await axios.get("/api/report/enroll/5", {
+                params: cleanedParams,
+            });
 
+            setQueries(response.data.fetch || []);
+            setAdminList(response.data.allAdmins || []);
+            setCourseList(response.data.allCourses || []);
+            setReferenceData(response.data.allReferences || []);
 
+            const pagination = response.data.pagination;
+            if (pagination) {
+                setTotalCount(pagination.total || 0);
+                setTotalPages(pagination.totalPages || 1);
+            } else {
+                setTotalCount(response.data.fetch?.length || 0);
+                setTotalPages(1);
+            }
+        } catch (fetchError) {
+            console.error("Error fetching admission data:", fetchError);
+            setError("Unable to fetch data. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    }, [
+        page,
+        limit,
+        referenceId,
+        suboption,
+        fromDate,
+        toDate,
+        filters.staffId,
+        filters.studentName,
+        filters.phoneNumber,
+        filters.courseId,
+        filters.assignedToId,
+        adminData,
+        filters.city,
+        filters.finalFees,
+    ]);
 
+    useEffect(() => {
+        if (!adminData) return;
 
+        fetchAdmissionReport();
+    }, [fetchAdmissionReport]);
 
-    const handleFilterChange = (key, value) => {
+    useEffect(() => {
+        setPage(1);
+    }, [
+        referenceId,
+        suboption,
+        fromDate,
+        toDate,
+        filters.staffId,
+        filters.studentName,
+        filters.phoneNumber,
+        filters.courseId,
+        filters.assignedToId,
+        adminData,
+        filters.city,
+        filters.finalFees,
+    ]);
+
+    const handleFilterChange = (key) => (event) => {
+        const value = event.target.value;
         setFilters((prev) => ({ ...prev, [key]: value }));
     };
 
+    const handleReferenceChange = (event) => {
+        const value = event.target.value;
+        setReferenceId(value);
+        setSuboption("");
+    };
 
 
     const exportToExcel = () => {
-        const worksheet = XLSX.utils.json_to_sheet(filteredQueries);
+        const worksheet = XLSX.utils.json_to_sheet(queries);
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Queries");
-        XLSX.writeFile(workbook, "queries.xlsx");
-    };
-    const handleReferenceChange = (e) => {
-        const selectedName = e.target.value;
-        setReferenceId(selectedName);
-        const reference = referenceData.find((data) => data.referencename === selectedName);
-        setSelectedReference(reference || null);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Admission Report");
+        XLSX.writeFile(workbook, "admission-report.xlsx");
     };
 
     const removeFilter = () => {
-        setFilters({
-            studentName: "",
-            phoneNumber: "",
-            courseInterest: "",
-            assignedTo: "",
-            staffName: "",
-            branch: "",
-            city: "",
-            enroll: "",
-        });
-        setFromDate(null);
-        setToDate(null);
-        setReferenceId(null);
-        setSuboption(null);
+        setFilters(initialFilters);
+        setReferenceId("");
+        setSuboption("");
+        setFromDate("");
+        setToDate("");
+        setPage(1);
     };
+
+    const handleLimitChange = (event) => {
+        setLimit(Number(event.target.value));
+        setPage(1);
+    };
+
+    const handlePageChange = (newPage) => {
+        if (newPage < 1 || newPage > totalPages) return;
+        setPage(newPage);
+    };
+
+    const safeTotalPages = Math.max(1, totalPages);
+    const displayedFrom = totalCount === 0 ? 0 : (page - 1) * limit + 1;
+    const displayedTo = Math.min(totalCount, (page - 1) * limit + queries.length);
+
+    const filterSummary = useMemo(() => {
+        const summary = [];
+        if (filters.staffId) {
+            summary.push(`Staff: ${adminIdToName[filters.staffId] || "Unknown"}`);
+        }
+        if (filters.assignedToId) {
+            summary.push(`Assigned To: ${adminIdToName[filters.assignedToId] || "Unknown"}`);
+        }
+        if (filters.studentName) {
+            summary.push(`Student: ${filters.studentName}`);
+        }
+        if (filters.phoneNumber) {
+            summary.push(`Phone: ${filters.phoneNumber}`);
+        }
+        if (filters.courseId) {
+            summary.push(`Course: ${courseIdToName[filters.courseId] || "Selected"}`);
+        }
+        if (referenceId) {
+            summary.push(`Reference: ${referenceId}`);
+        }
+        if (suboption) {
+            summary.push(`Suboption: ${suboption}`);
+        }
+        if (filters.branch) {
+            summary.push(`Branch: ${filters.branch}`);
+        }
+        if (filters.city) {
+            summary.push(`City: ${filters.city}`);
+        }
+        if (fromDate || toDate) {
+            summary.push(`Date: ${fromDate || "..."} → ${toDate || "..."}`);
+        }
+        if (filters.finalFees) {
+            summary.push(`Final Fees: ${filters.finalFees}`);
+        }
+        return summary.length ? summary.join(" | ") : "No filters applied.";
+    }, [
+        filters.staffId,
+        filters.assignedToId,
+        filters.studentName,
+        filters.phoneNumber,
+        filters.courseId,
+        filters.branch,
+        filters.city,
+        filters.finalFees,
+        referenceId,
+        suboption,
+        fromDate,
+        toDate,
+        adminIdToName,
+        courseIdToName,
+    ]);
 
     return (
         <>
-            <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
+            <div className="text-3xl font-bold text-center text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 py-4 rounded-t-xl shadow-md">
                 Admission Report
             </div>
-            <div className="container mx-auto p-5">
-                <div className="flex flex-col lg:flex-row justify-between space-y-6 lg:space-y-0 lg:space-x-6">
-                    <div className="w-full">
-                        <h1 className="text-lg font-semibold mb-4">Total Queries: {filteredQueries.length}</h1>
-                        <div className="shadow-lg rounded-lg bg-white mb-6">
 
-                            <div className="p-4">
-                                <button
-                                    onClick={removeFilter}
-                                    className="mb-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
-                                >
-                                    Remove Filters
-                                </button>
-                                <div className="relative overflow-y-auto">
-                                    <table className="min-w-full text-xs text-left text-gray-600 font-sans">
-                                        <thead className="bg-[#29234b] text-white uppercase">
-                                            <tr>
-                                                <th className="px-6 py-4">S/N</th>
-
-                                                <th className="px-6 py-4">
-
-                                                    <input
-                                                        type="text"
-                                                        className="w-full mt-1 text-black px-2 py-1 rounded"
-                                                        placeholder="Staff Name"
-                                                        onChange={(e) =>
-                                                            handleFilterChange("staffName", e.target.value)
-                                                        }
-                                                    />
-                                                </th>
-                                                <th className="px-6 py-4">
-
-                                                    <input
-                                                        type="text"
-                                                        placeholder=" Student Name"
-                                                        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
-                                                        onChange={(e) => handleFilterChange("studentName", e.target.value)}
-                                                    />
-                                                </th>
-                                                <th className="px-6 py-4">
-
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Contact No"
-                                                        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
-                                                        onChange={(e) => handleFilterChange("contact", e.target.value)}
-                                                    />
-                                                </th>
-                                                <th className="px-6 py-4">
-
-                                                    <input
-                                                        type="text"
-                                                        placeholder=" Interested Course"
-                                                        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
-                                                        onChange={(e) => handleFilterChange("course", e.target.value)}
-                                                    />
-                                                </th>
-                                                <th className="px-4 py-3 text-[12px]">Reference
-                                                    <select
-                                                        value={referenceId}
-                                                        onChange={handleReferenceChange}
-                                                        className=" w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
-                                                    >
-                                                        <option value="">All</option>
-                                                        {referenceData.map((data) => (
-                                                            <option key={data._id} value={data.referencename}>
-                                                                {data.referencename}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-
-
-                                                    {selectedReference?.referencename === "Online" && selectedReference.suboptions?.length > 0 && (
-
-
-                                                        <select
-                                                            value={suboption}
-                                                            onChange={(e) => setSuboption(e.target.value)}
-                                                            className=" w-5 ms-2  text-gray-800  border focus:ring-0 focus:outline-none"
-                                                        >
-                                                            <option value="">All</option>
-                                                            {selectedReference.suboptions.map((suboption, index) => (
-                                                                <option key={index} value={suboption.name}>
-                                                                    {suboption.name}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-
-                                                    )}
-                                                </th>
-                                                <th className="px-6 py-4">
-
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Assigned To"
-                                                        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
-                                                        onChange={(e) => handleFilterChange("assignedTo", e.target.value)}
-                                                    />
-                                                </th>
-                                                <th className="px-6 py-4">
-
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Branch"
-                                                        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
-                                                        onChange={(e) => handleFilterChange("branch", e.target.value)}
-                                                    />
-                                                </th>
-                                                <th className="px-6 py-4">
-
-                                                    <input
-                                                        type="text"
-                                                        placeholder="City"
-                                                        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
-                                                        onChange={(e) => handleFilterChange("city", e.target.value)}
-                                                    />
-                                                </th>
-                                                <th className="px-4 py-3 text-[12px] relative group flex">Admission Date <ChevronDownSquare className=" ms-2" />
-                                                    <div className=" absolute bg-white p-2 hidden group-hover:block">
-
-                                                        <div>
-
-                                                            <input
-                                                                type="date"
-                                                                value={fromDate}
-                                                                onChange={(e) => setFromDate(e.target.value)}
-                                                                className=" text-gray-800  border focus:ring-0 focus:outline-none"
-                                                            />
-                                                        </div>
-                                                        <p className=" text-black text-center">To</p>
-                                                        <div>
-
-                                                            <input
-                                                                type="date"
-                                                                value={toDate}
-                                                                onChange={(e) => setToDate(e.target.value)}
-                                                                className=" text-gray-800  border focus:ring-0 focus:outline-none"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </th>
-                                                <th className="px-6 py-4">Total Fees</th>
-                                                <th className="px-6 py-4">
-                                                    <input
-                                                        type="number"
-                                                        placeholder="Final Fees"
-                                                        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
-                                                        onChange={(e) => handleFilterChange("finalfees", e.target.value)}
-                                                    />
-                                                </th>
-
-                                                <th className="px-6 py-4">
-
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Remaining Fees"
-                                                        className="mt-1 w-full text-black text-sm border rounded px-2 py-1"
-                                                        onChange={(e) => handleFilterChange("fees", e.target.value)}
-                                                    />
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {loading ? (
-                                                <tr>
-                                                    <td colSpan="9" className="px-6 py-4 text-center">
-                                                        <div className="flex items-center justify-center h-full">
-                                                            <Loader />
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ) : filteredQueries.length > 0 ? (
-                                                filteredQueries
-                                                    .sort((a, b) => {
-                                                        // Check if the dates exist and compare
-                                                        const dateA = a.addmissiondate ? new Date(a.addmissiondate) : null;
-                                                        const dateB = b.addmissiondate ? new Date(b.addmissiondate) : null;
-
-                                                        if (dateA && dateB) {
-                                                            return dateB - dateA; // Sort by most recent date first
-                                                        }
-                                                        if (!dateA && dateB) {
-                                                            return 1; // Move N/A dates to the bottom
-                                                        }
-                                                        if (dateA && !dateB) {
-                                                            return -1; // Move rows with dates to the top
-                                                        }
-                                                        return 0; // Keep order if both are N/A
-                                                    })
-                                                    .map((query, index) => {
-                                                        const courseName = courses[query.courseInterest] || "Unknown Course";
-                                                        const coursesfeen = coursesfee[query.courseInterest] || "N/A";
-                                                        const UserName = user[query.assignedTo] || user[query.userid] || "Unknown User";
-                                                        return (
-                                                            <tr
-                                                                key={query._id}
-                                                                className="border-b cursor-pointer transition-colors duration-200 hover:opacity-90"
-                                                                onClick={() => handleRowClick(query._id)}
-                                                            >
-                                                                <td className="px-6 py-1 font-semibold">{index + 1}</td>
-                                                                <td className="px-6 py-1 font-semibold">{query.staffName}</td>
-                                                                <td className="px-6 py-1 font-semibold">{query.studentName}</td>
-                                                                <td className="px-6 py-1 font-semibold">{query.studentContact.phoneNumber}</td>
-                                                                <td className="px-6 py-1 font-semibold">{courseName}</td>
-                                                                <td className="px-6 py-1">{query.referenceid} {query.suboption !== "null" && <>{query.suboption}</>}</td>
-                                                                <td className="px-6 py-1 font-semibold">{UserName}</td>
-                                                                <td className="px-6 py-1">{query.branch}</td>
-                                                                <td className="px-6 py-1">{query.studentContact.city}</td>
-                                                                <td className="px-6 py-1">
-                                                                    {query.addmissiondate
-                                                                        ? new Intl.DateTimeFormat('en-GB', {
-                                                                            day: 'numeric',
-                                                                            month: 'long',
-                                                                            year: 'numeric',
-                                                                        }).format(new Date(query.addmissiondate))
-                                                                        : 'N/A'}
-                                                                </td>
-
-                                                                <td className="px-6 py-1">{coursesfeen.totalFee ? `${coursesfeen.totalFee} ₹` : "N/A"}</td>
-                                                                <td className="px-6 py-1">
-                                                                    {query.finalfees > 0 ? (
-                                                                        query.finalfees
-                                                                    ) : (
-                                                                        <>
-                                                                            {coursesfeen.totalFee ? `${coursesfeen.totalFee} ₹` : "N/A"}
-                                                                        </>
-                                                                    )}
-                                                                </td>
-
-                                                                <td className="px-6 py-1">{coursesfeen.totalFee - query.total} ₹</td>
-                                                            </tr>
-                                                        );
-                                                    })
-                                            ) : (
-                                                <tr>
-                                                    <td colSpan="9" className="px-6 py-4 text-center text-gray-500">
-                                                        No queries available
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-
-                                    </table>
-                                </div>
-
-                            </div>
+            <div className="mt-8 container lg:w-[98%] mx-auto space-y-6">
+                <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white/90 p-5 shadow-lg ring-1 ring-gray-100 backdrop-blur">
+                    <div>
+                        <p className="text-xs font-semibold text-gray-500 uppercase mb-1">
+                            Total Admissions
+                        </p>
+                        <p className="text-3xl font-bold text-gray-900">{loading ? "…" : totalCount}</p>
+                    </div>
+                    <div className="flex-1 min-w-[240px]">
+                        <p className="text-xs font-semibold text-gray-500 uppercase mb-1">
+                            Active Filters
+                        </p>
+                        <div className="rounded-xl border border-dashed border-blue-200 bg-blue-50/80 px-4 py-3 text-sm text-blue-900">
+                            {filterSummary}
                         </div>
                     </div>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={removeFilter}
+                            className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition hover:border-gray-300 hover:bg-gray-50"
+                        >
+                            Clear Filters
+                        </button>
+                        <button
+                            onClick={exportToExcel}
+                            className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:bg-blue-500"
+                        >
+                            Export
+                        </button>
+                    </div>
+                </section>
+
+                <section className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-700">
+                    <span>
+                        Showing {displayedFrom}-{displayedTo} of {totalCount} results
+                    </span>
+                    <div className="flex items-center gap-2">
+                        <span>Rows:</span>
+                        <select
+                            value={limit}
+                            onChange={handleLimitChange}
+                            className="border rounded px-2 py-1 text-gray-800 focus:outline-none focus:ring-0"
+                        >
+                            {limitOptions.map((size) => (
+                                <option key={size} value={size}>
+                                    {size}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => handlePageChange(page - 1)}
+                            disabled={page === 1}
+                            className={`px-3 py-1 rounded border ${page === 1
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                : "bg-white text-gray-700 hover:bg-gray-50"
+                                }`}
+                        >
+                            Previous
+                        </button>
+                        <span>
+                            Page {page} of {safeTotalPages}
+                        </span>
+                        <button
+                            onClick={() => handlePageChange(page + 1)}
+                            disabled={page >= safeTotalPages}
+                            className={`px-3 py-1 rounded border ${page >= safeTotalPages
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                : "bg-white text-gray-700 hover:bg-gray-50"
+                                }`}
+                        >
+                            Next
+                        </button>
+                    </div>
+                </section>
+
+                {error && (
+                    <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+                        {error}
+                    </p>
+                )}
+
+                <div className="shadow-xl rounded-2xl border border-gray-200 bg-white overflow-x-auto max-h-[75vh] overflow-y-auto scroll-smooth">
+                    <table className="min-w-full text-left text-[12px] font-light border-collapse">
+                        <thead className="bg-gray-900 text-white">
+                            <tr className="divide-x divide-gray-800">
+                                <th className="px-4 py-3 text-[12px]">S/N</th>
+                                <th className="px-4 py-3 text-[12px]">
+                                    Staff Name
+                                    <select
+                                        value={filters.staffId}
+                                        onChange={handleFilterChange("staffId")}
+                                        className="mt-2 w-full rounded border border-gray-600 bg-gray-900/50 px-2 py-1 text-[11px] text-white focus:border-blue-300 focus:outline-none"
+                                    >
+                                        <option value="">All</option>
+                                        {adminList.map((admin) => (
+                                            <option key={admin._id} value={admin._id}>
+                                                {admin.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </th>
+                                <th className="px-4 py-3 text-[12px]">
+                                    Student Name
+                                    <input
+                                        type="text"
+                                        value={filters.studentName}
+                                        onChange={handleFilterChange("studentName")}
+                                        placeholder="Search"
+                                        className="mt-2 w-full rounded border border-gray-600 bg-gray-900/50 px-2 py-1 text-[11px] text-white placeholder:text-gray-400 focus:border-blue-300 focus:outline-none"
+                                    />
+                                </th>
+                                <th className="px-4 py-3 text-[12px]">
+                                    Contact No
+                                    <input
+                                        type="text"
+                                        value={filters.phoneNumber}
+                                        onChange={handleFilterChange("phoneNumber")}
+                                        placeholder="Phone"
+                                        className="mt-2 w-full rounded border border-gray-600 bg-gray-900/50 px-2 py-1 text-[11px] text-white placeholder:text-gray-400 focus:border-blue-300 focus:outline-none"
+                                    />
+                                </th>
+                                <th className="px-4 py-3 text-[12px]">
+                                    Course
+                                    <select
+                                        value={filters.courseId}
+                                        onChange={handleFilterChange("courseId")}
+                                        className="mt-2 w-full rounded border border-gray-600 bg-gray-900/50 px-2 py-1 text-[11px] text-white focus:border-blue-300 focus:outline-none"
+                                    >
+                                        <option value="">All</option>
+                                        {courseList.map((course) => (
+                                            <option key={course._id} value={course._id}>
+                                                {course.course_name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </th>
+                                <th className="px-4 py-3 text-[12px]">
+                                    Reference
+                                    <select
+                                        value={referenceId}
+                                        onChange={handleReferenceChange}
+                                        className="mt-2 w-full rounded border border-gray-600 bg-gray-900/50 px-2 py-1 text-[11px] text-white focus:border-blue-300 focus:outline-none"
+                                    >
+                                        <option value="">All</option>
+                                        {referenceData.map((ref) => (
+                                            <option key={ref._id} value={ref.referencename}>
+                                                {ref.referencename}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {selectedReference?.suboptions?.length > 0 && (
+                                        <select
+                                            value={suboption}
+                                            onChange={(event) => setSuboption(event.target.value)}
+                                            className="mt-2 w-full rounded border border-gray-600 bg-gray-900/50 px-2 py-1 text-[11px] text-white focus:border-blue-300 focus:outline-none"
+                                        >
+                                            <option value="">All Suboptions</option>
+                                            {selectedReference.suboptions.map((option, index) => (
+                                                <option key={`${selectedReference._id}-${index}`} value={option.name}>
+                                                    {option.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
+                                </th>
+                                <th className="px-4 py-3 text-[12px]">
+                                    Assigned To
+                                    <select
+                                        value={filters.assignedToId}
+                                        onChange={handleFilterChange("assignedToId")}
+                                        className="mt-2 w-full rounded border border-gray-600 bg-gray-900/50 px-2 py-1 text-[11px] text-white focus:border-blue-300 focus:outline-none"
+                                    >
+                                        <option value="">All</option>
+                                        {adminList.map((admin) => (
+                                            <option key={admin._id} value={admin._id}>
+                                                {admin.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </th>
+                                <th className="px-4 py-3 text-[12px]">
+                                    Branch
+                                   
+                                </th>
+                                <th className="px-4 py-3 text-[12px]">
+                                    City
+                                    <input
+                                        type="text"
+                                        value={filters.city}
+                                        onChange={handleFilterChange("city")}
+                                        placeholder="City"
+                                        className="mt-2 w-full rounded border border-gray-600 bg-gray-900/50 px-2 py-1 text-[11px] text-white placeholder:text-gray-400 focus:border-blue-300 focus:outline-none"
+                                    />
+                                </th>
+                                <th className="px-4 py-3 text-[12px] relative group">
+                                    Admission Date
+                                    <div className="mt-2 flex flex-col gap-2 text-gray-800">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] text-gray-300">From</span>
+                                            <input
+                                                type="date"
+                                                value={fromDate}
+                                                onChange={(event) => setFromDate(event.target.value)}
+                                                className="flex-1 rounded border border-gray-600 bg-gray-900/50 px-2 py-1 text-[11px] text-white focus:border-blue-300 focus:outline-none"
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] text-gray-300">To</span>
+                                            <input
+                                                type="date"
+                                                value={toDate}
+                                                onChange={(event) => setToDate(event.target.value)}
+                                                className="flex-1 rounded border border-gray-600 bg-gray-900/50 px-2 py-1 text-[11px] text-white focus:border-blue-300 focus:outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                </th>
+                                <th className="px-4 py-3 text-[12px]">Total Fees</th>
+                                <th className="px-4 py-3 text-[12px]">
+                                    Final Fees
+                                    <input
+                                        type="number"
+                                        value={filters.finalFees}
+                                        onChange={handleFilterChange("finalFees")}
+                                        placeholder="Exact amount"
+                                        className="mt-2 w-full rounded border border-gray-600 bg-gray-900/50 px-2 py-1 text-[11px] text-white placeholder:text-gray-400 focus:border-blue-300 focus:outline-none"
+                                    />
+                                </th>
+                                <th className="px-4 py-3 text-[12px]">Remaining</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={13} className="px-6 py-10 text-center">
+                                        <div className="flex items-center justify-center">
+                                            <Loader />
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : queries.length === 0 ? (
+                                <tr>
+                                    <td colSpan={13} className="px-6 py-10 text-center text-gray-500">
+                                        No admissions found for selected filters.
+                                    </td>
+                                </tr>
+                            ) : (
+                                queries.map((query, index) => (
+                                    <tr
+                                        key={query._id}
+                                        className="odd:bg-gray-50 even:bg-white hover:bg-blue-50 transition-colors cursor-pointer"
+                                        onClick={() => handleOpenModal(`${query._id}`)}
+                                    >
+                                        <td className="px-4 py-3 text-[12px] font-semibold">
+                                            {(page - 1) * limit + index + 1}
+                                        </td>
+                                        <td className="px-4 py-3 text-[12px]">{query.staffName}</td>
+                                        <td className="px-4 py-3 text-[12px]">{query.studentName || "N/A"}</td>
+                                        <td className="px-4 py-3 text-[12px]">
+                                            {query.studentContact?.phoneNumber || "N/A"}
+                                        </td>
+                                        <td className="px-4 py-3 text-[12px]">{query.courseName}</td>
+                                        <td className="px-4 py-3 text-[12px]">
+                                            {query.referenceid}
+                                            {query.suboption && query.suboption !== "null" && (
+                                                <span className="ml-1 text-gray-500">({query.suboption})</span>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3 text-[12px]">{query.assignedToName}</td>
+                                        <td className="px-4 py-3 text-[12px]">{query.branch}</td>
+                                        <td className="px-4 py-3 text-[12px]">
+                                            {query.studentContact?.city || "N/A"}
+                                        </td>
+                                        {/* <td className="px-4 py-3 text-[12px]">
+                                            {query.addmissiondate
+                                                ? new Intl.DateTimeFormat("en-GB", {
+                                                    day: "numeric",
+                                                    month: "short",
+                                                    year: "numeric",
+                                                }).format(new Date(query.addmissiondate))
+                                                : "N/A"}
+                                        </td> */}
+                                        <td className="px-4 py-3 text-[12px]">
+                                            {query.fees && query.fees.length > 0 ? (
+                                                new Intl.DateTimeFormat("en-GB", {
+                                                    day: "numeric",
+                                                    month: "short",
+                                                    year: "numeric",
+                                                }).format(
+                                                    new Date(
+                                                        [...query.fees]
+                                                            .sort((a, b) => new Date(a.transactionDate) - new Date(b.transactionDate))[0]
+                                                            .transactionDate
+                                                    )
+                                                )
+                                            ) : (
+                                                "N/A"
+                                            )}
+                                        </td>
+
+                                        <td className="px-4 py-3 text-[12px]">
+                                            {query.totalFees != null ? `${query.totalFees} ₹` : "N/A"}
+                                        </td>
+                                        <td className="px-4 py-3 text-[12px]">
+                                            {query.finalFeesUsed != null ? `${query.finalFeesUsed} ₹` : "N/A"}
+                                        </td>
+                                        <td className="px-4 py-3 text-[12px]">
+                                            {typeof query.remainingFees === "number"
+                                                ? `${query.remainingFees} ₹`
+                                                : "N/A"}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
             {isModalOpen && (

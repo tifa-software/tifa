@@ -5,7 +5,13 @@ import Loader from "@/components/Loader/Loader";
 import { useSession } from 'next-auth/react';
 import Link from "next/link";
 import { PhoneCall, CheckCircle, CircleDashed, Navigation, Locate, LocateOff, Trash } from "lucide-react";
+import { useReactToPrint } from "react-to-print";
+import { useRef } from "react";
+import QueryReport from "../QueryReport/QueryReport";
 export default function Lead() {
+    const contentRef = useRef(null);
+    const reactToPrintFn = useReactToPrint({ contentRef });
+
     const [allquery, setAllquery] = useState([]);
     const [loading, setLoading] = useState(true);
     const [gridLoading, setGridLoading] = useState(true);
@@ -23,10 +29,28 @@ export default function Lead() {
     const [referenceData, setReferenceData] = useState([]);
     const [branches, setBranches] = useState([]);
     const [branch, setBranch] = useState("");
+    const { data: session } = useSession();
+
+    const [showQueryReport, setShowQueryReport] = useState(false);
 
     const [allCourses, setAllCourses] = useState([]);
     const [cours, setCours] = useState("");
+    const [adminData, setAdminData] = useState("");
 
+    useEffect(() => {
+        const fetchAdminData = async () => {
+            try {
+                const response = await axios.get(`/api/admin/find-admin-byemail/${session?.user?.email}`);
+                setAdminData(response.data.branch); // Make sure response.data contains branch and _id
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (session?.user?.email) fetchAdminData();
+    }, [session]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -47,35 +71,13 @@ export default function Lead() {
     const [user, setuser] = useState([]);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [selectedReference, setSelectedReference] = useState(null);
-    const { data: session } = useSession();
-
-    const [adminData, setAdminData] = useState(null);
-
-    useEffect(() => {
-        const fetchAdminData = async () => {
-            try {
-                const response = await axios.get(
-                    `/api/admin/find-admin-byemail/${session?.user?.email}`
-                );
-                setAdminData(response.data.branch);
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (session?.user?.email) fetchAdminData();
-    }, [session]);
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                if (adminData) {
-                    const userResponse = await axios.get(`/api/admin/fetchall-bybranch/${adminData}`);
-                    setuser(userResponse.data.fetch);
-                }
+                const userResponse = await axios.get("/api/admin/fetchall/admin");
+                setuser(userResponse.data.fetch);
                 const branchesResponse = await axios.get("/api/branch/fetchall/branch");
                 setBranches(branchesResponse.data.fetch);
                 const referenceResponse = await axios.get("/api/reference/fetchall/reference");
@@ -88,7 +90,7 @@ export default function Lead() {
             }
         };
         fetchData();
-    }, [adminData]);
+    }, []);
 
     const removeFilter = () => {
         setReferenceId(""); // Reset ReferenceId filter
@@ -101,17 +103,16 @@ export default function Lead() {
         setCity("");        // Reset City filter
         setAssignedName(""); // Reset Assigned Name filter
         setUserName("");    // Reset UserName filter
-        setBranch("");      // Reset Branch filter
+
         setCours("");       // Reset Course filter
         setTimeout(() => {
             fetchFilteredData("");
         }, 0);
     };
-
     const fetchFilteredData = async () => {
         setGridLoading(true);
         try {
-            const response = await axios.get("/api/branchreport/lead/query", {
+            const response = await axios.get("/api/report/lead/query", {
                 params: {
                     referenceId,
                     suboption,
@@ -123,12 +124,11 @@ export default function Lead() {
                     city,
                     assignedName,
                     userName,
-                    branch,
-                    cours,
-                    adminData
+                    branch: adminData,
+                    cours
                 },
             });
-            setAllquery(response.data.fetch);
+            setAllquery(response.data.counts);
         } catch (error) {
             console.error("Error fetching filtered data:", error);
         } finally {
@@ -137,9 +137,9 @@ export default function Lead() {
     };
 
     useEffect(() => {
-        if (adminData) {  // Ensure adminData is available before fetching
-            fetchFilteredData();
-        }
+        if (!adminData) return;
+
+        fetchFilteredData();
     }, [adminData]);
 
 
@@ -151,6 +151,22 @@ export default function Lead() {
 
 
 
+    const getFilterSummary = () => {
+        const filters = [];
+        if (referenceId) filters.push(`Reference: ${referenceId}`);
+        if (suboption) filters.push(`Suboption: ${suboption}`);
+        if (fromDate) filters.push(`From Date: ${fromDate}`);
+        if (toDate) filters.push(`To Date: ${toDate}`);
+        if (admission) filters.push(`Admission: ${admission === "true" ? "Enroll" : "Not Enroll"}`);
+        if (grade) filters.push(`Grade: ${grade}`);
+        if (location) filters.push(`Branch: ${location}`);
+        if (city) filters.push(`City: ${city}`);
+        if (assignedName) filters.push(`Assigned Name: ${assignedName}`);
+        if (userName) filters.push(`Creater Name: ${userName}`);
+        if (branch) filters.push(`Branch Name: ${branch}`);
+        if (cours) filters.push(`Courses `);
+        return filters.length > 0 ? filters.join(" | ") : "No filters applied.";
+    };
 
 
     const handleReferenceChange = (e) => {
@@ -168,10 +184,28 @@ export default function Lead() {
         );
     }
 
-
+    if (showQueryReport) {
+        return (
+            <QueryReport
+                initialFilters={{
+                    referenceId,
+                    suboption,
+                    fromDate,
+                    toDate,
+                    admission,
+                    grade,
+                    location,
+                    city,
+                    assignedName,
+                    userName,
+                    branch,
+                }}
+            />
+        );
+    }
 
     return (
-        <div className="p-6 bg-white shadow-xl rounded-xl">
+        <div ref={contentRef} className="p-6 bg-white shadow-xl rounded-xl">
             <div className="text-3xl font-bold text-center text-white bg-blue-600 py-4 rounded-t-xl shadow-md">
                 Lead Report
             </div>
@@ -193,21 +227,7 @@ export default function Lead() {
                     </select>
                 </div>
 
-                <div className="flex flex-col bg-white px-2 py-1 rounded-lg shadow-md">
-                    <label className="font-semibold mb-2 text-gray-700">Course</label>
-                    <select
-                        value={cours}
-                        onChange={(e) => setCours(e.target.value)}
-                        className="p-2 border"
-                    >
-                        <option value="">All</option>
-                        {allCourses.map((data, index) => (
-                            <option key={index} value={data._id}>
-                                {data.course_name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+
 
                 <div className="flex flex-col bg-white px-2 py-1 rounded-lg shadow-md">
                     <label className="font-semibold mb-2 text-gray-700">Reference</label>
@@ -259,7 +279,21 @@ export default function Lead() {
                         ))}
                     </select>
                 </div>
-
+                <div className="flex flex-col bg-white px-2 py-1 rounded-lg shadow-md">
+                    <label className="font-semibold mb-2 text-gray-700">Course</label>
+                    <select
+                        value={cours}
+                        onChange={(e) => setCours(e.target.value)}
+                        className="p-2 border"
+                    >
+                        <option value="">All</option>
+                        {allCourses.map((data, index) => (
+                            <option key={index} value={data._id}>
+                                {data.course_name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
                 <div className="flex flex-col bg-white px-2 py-1 rounded-lg shadow-md">
                     <label className="font-semibold mb-2 text-gray-700">City</label>
                     <select
@@ -300,15 +334,26 @@ export default function Lead() {
                 </div>
 
             </div>
-
-            <button onClick={fetchFilteredData} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600">
-                Apply Filters
-            </button>
             <button
                 onClick={removeFilter}
                 className="ml-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600 transition duration-200"
             >
                 Remove Filters
+            </button>
+            <button onClick={fetchFilteredData} className="mt-4 ml-4 bg-blue-500 text-white px-4 py-2 rounded shadow-md hover:bg-blue-600">
+                Apply Filters
+            </button>
+            <button
+                onClick={() => reactToPrintFn()}
+                className="mt-4 ml-4 bg-green-500 text-white px-4 py-2 rounded shadow-md hover:bg-green-600"
+            >
+                Print Page
+            </button>
+            <button
+                onClick={() => setShowQueryReport(true)}
+                className="mt-4 ml-4 bg-purple-500 text-white px-4 py-2 rounded shadow-md hover:bg-purple-600"
+            >
+                View Query Report
             </button>
             {gridLoading ? (
                 <div className="flex items-center justify-center w-full col-span-4">
@@ -322,7 +367,7 @@ export default function Lead() {
                                 <PhoneCall className='w-8 h-8 text-blue-500' />
                             </div>
                             <div className='ml-4'>
-                                <p className='text-xl font-bold text-gray-800'>{allquery.length}</p>
+                                <p className='text-xl font-bold text-gray-800'>{allquery.total}</p>
                                 <p className='text-gray-500'>Total Query</p>
                             </div>
                         </div>
@@ -332,7 +377,7 @@ export default function Lead() {
                                 <CheckCircle className='w-8 h-8 text-green-500' />
                             </div>
                             <div className='ml-4'>
-                                <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.addmission == true).length}
+                                <p className='text-xl font-bold text-gray-800'>{allquery.admitted}
                                 </p>
                                 <p className='text-gray-500'>Enrolled Queries</p>
                             </div>
@@ -343,7 +388,7 @@ export default function Lead() {
                                 <CircleDashed className='w-8 h-8 text-orange-500' />
                             </div>
                             <div className='ml-4'>
-                                <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.addmission == false && item.autoclosed === "open").length}
+                                <p className='text-xl font-bold text-gray-800'>{allquery.pendingOpen}
                                 </p>
                                 <p className='text-gray-500'>Pending Queries</p>
                             </div>
@@ -354,22 +399,22 @@ export default function Lead() {
                                 <Navigation className='w-8 h-8 text-blue-500' />
                             </div>
                             <div className='ml-4'>
-                                <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.demo == true).length}
+                                <p className='text-xl font-bold text-gray-800'>{allquery.demo}
                                 </p>
                                 <p className='text-gray-500'>Demo Queries</p>
                             </div>
                         </div>
 
-                        <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
+                        {/* <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
                             <div className='flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full'>
                                 <Locate className='w-8 h-8 text-blue-500' />
                             </div>
                             <div className='ml-4'>
-                                <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.stage === 6).length}
+                                <p className='text-xl font-bold text-gray-800'>{allquery.stage6}
                                 </p>
                                 <p className='text-gray-500'>Visited Queries</p>
                             </div>
-                        </div>
+                        </div> */}
 
 
                         <div className="flex items-center bg-white p-4 rounded-lg shadow-md">
@@ -377,7 +422,7 @@ export default function Lead() {
                                 <Locate className='w-8 h-8 text-blue-500' />
                             </div>
                             <div className='ml-4'>
-                                <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.studentContact.city === "Jaipur").length}
+                                <p className='text-xl font-bold text-gray-800'>{allquery.jaipur}
                                 </p>
                                 <p className='text-gray-500'>Jaipur Queries</p>
                             </div>
@@ -388,7 +433,7 @@ export default function Lead() {
                                 <LocateOff className='w-8 h-8 text-gray-500' />
                             </div>
                             <div className='ml-4'>
-                                <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.studentContact.city !== "Jaipur").length}
+                                <p className='text-xl font-bold text-gray-800'>{allquery.nonJaipur}
                                 </p>
                                 <p className='text-gray-500'>Out Of Jaipur Queries</p>
                             </div>
@@ -399,8 +444,7 @@ export default function Lead() {
                                 <Trash className='w-8 h-8 text-red-500' />
                             </div>
                             <div className='ml-4'>
-                                <p className='text-xl font-bold text-gray-800'>{allquery.filter(item => item.autoclosed === "close" && item.addmission === false).length
-                                }
+                                <p className='text-xl font-bold text-gray-800'>{allquery.closedNonAdmit}
                                 </p>
                                 <p className='text-gray-500'>Trash Queries</p>
                             </div>

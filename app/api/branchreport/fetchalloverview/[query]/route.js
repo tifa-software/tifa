@@ -1,5 +1,5 @@
 export const runtime = "nodejs";
-export const preferredRegion = ["bom1"]; 
+export const preferredRegion = ["bom1"];
 import dbConnect from "@/lib/dbConnect";
 import QueryModel from "@/model/Query";
 import AdminModel from "@/model/Admin";
@@ -17,6 +17,14 @@ export const GET = async (request) => {
     // Parse query parameters
     const { searchParams } = new URL(request.url);
     const referenceId = searchParams.get("referenceId");
+    const pageParam = parseInt(searchParams.get("page") || "1", 10);
+    const limitParam = parseInt(searchParams.get("limit") || "50", 10);
+    const page = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
+    const limit =
+      Number.isNaN(limitParam) || limitParam < 1
+        ? 50
+        : Math.min(limitParam, 200);
+    const skip = (page - 1) * limit;
     const suboption = searchParams.get("suboption");
     const fromDate = searchParams.get("fromDate");
     const toDate = searchParams.get("toDate");
@@ -29,11 +37,17 @@ export const GET = async (request) => {
     const assignedFrom = searchParams.get("assignedFrom");
     const userName = searchParams.get("userName");
     const showClosed = searchParams.get("showClosed");
-    const adminData = searchParams.get("adminData");
+    const branch = searchParams.get("branch");
     const studentName = searchParams.get("studentName");
+    const franchise = searchParams.get("franchise");
+    let adminFilter = {};
 
+    if (franchise === "1") {
+      // Exclude admins that are franchise staff
+      adminFilter.franchisestaff = { $ne: "1" };
+    }
     // Build MongoDB query
-    const queryFilter = { defaultdata: "query", branch: adminData };
+    const queryFilter = { defaultdata: "query" };
 
     if (referenceId) {
       const decodedReferenceId = decodeURIComponent(referenceId);
@@ -55,26 +69,30 @@ export const GET = async (request) => {
         "no_visit_branch_yet"
       ];
 
-      if (validReasons.includes(reason)) {
-        // Get all queryIds matching the reason in the audit logs
+      const reasonArray = reason.split(",").filter((r) => validReasons.includes(r));
+
+      if (reasonArray.length > 0) {
+        // Fetch all queryIds matching any of the selected reasons
         const matchingAuditLogs = await AuditLog.find({
           $or: [
-            { connectedsubStatus: reason },
-            { connectionStatus: reason },
-            { onlinesubStatus: reason },
-            { oflinesubStatus: reason },
-            { ready_visit: reason },
-            { not_liftingsubStatus: reason }
+            { connectedsubStatus: { $in: reasonArray } },
+            { connectionStatus: { $in: reasonArray } },
+            { onlinesubStatus: { $in: reasonArray } },
+            { oflinesubStatus: { $in: reasonArray } },
+            { ready_visit: { $in: reasonArray } },
+            { not_liftingsubStatus: { $in: reasonArray } }
           ]
         });
 
-        // Extract the query IDs and filter the main query
+        // Extract matching query IDs
         const matchingQueryIds = matchingAuditLogs.map((log) => log.queryId.toString());
-        queryFilter._id = { $in: matchingQueryIds };
-      } else {
-        throw new Error("Invalid reason filter value");
+
+        if (matchingQueryIds.length > 0) {
+          queryFilter._id = { $in: matchingQueryIds };
+        }
       }
     }
+
 
     if (fromDate && toDate) {
       const from = new Date(fromDate);
@@ -98,11 +116,10 @@ export const GET = async (request) => {
     }
     if (studentName) {
       queryFilter.$or = [
-        { studentName: { $exists: false } }, 
-        { studentName: "" } 
+        { studentName: { $exists: false } },
+        { studentName: "" }
       ];
     }
-
 
     if (city) {
       if (city === "Not_Provided") {
@@ -113,12 +130,13 @@ export const GET = async (request) => {
         queryFilter["studentContact.city"] = { $ne: "Jaipur" };
       }
     }
+
     if (assignedName) {
       if (assignedName === "Not-Assigned") {
         // Filter for documents where `assignedTo` is exactly "Not-Assigned"
         queryFilter.assignedTo = "Not-Assigned";
       } else {
-        const admin = await AdminModel.findOne({ name: { $regex: assignedName, $options: "i" } });
+        const admin = await AdminModel.findOne({ ...adminFilter, name: { $regex: assignedName, $options: "i" } });
         if (admin) {
           queryFilter.assignedTo = admin._id;
         }
@@ -129,7 +147,7 @@ export const GET = async (request) => {
         // Filter for documents where `assignedsenthistory` contains "Not-Assigned"
         queryFilter.assignedsenthistory = { $in: [""] };
       } else {
-        const admin = await AdminModel.findOne({ name: { $regex: assignedFrom, $options: "i" } });
+        const admin = await AdminModel.findOne({ ...adminFilter, name: { $regex: assignedFrom, $options: "i" } });
         if (admin) {
           // Filter for documents where `assignedsenthistory` contains the admin's ID
           queryFilter.assignedsenthistory = { $in: [admin._id.toString()] };
@@ -138,7 +156,7 @@ export const GET = async (request) => {
     }
 
     if (userName) {
-      const admin = await AdminModel.findOne({ name: { $regex: userName, $options: "i" } });
+      const admin = await AdminModel.findOne({ ...adminFilter, name: { $regex: userName, $options: "i" } });
       if (admin) {
         queryFilter.userid = admin._id;
       }
@@ -148,9 +166,37 @@ export const GET = async (request) => {
       queryFilter.autoclosed = "close";
     }
 
+    // if (branch) {
+    //   queryFilter.branch = branch;
+    // }
+    if (branch) {
+      if (franchise === "1") {
+        // Franchise mode → include only franchise branches
+        queryFilter.branch = { $regex: /\(Franchise\)$/i };
+      } else {
+        // Normal mode → whatever branch user selected
+        queryFilter.branch = {
+          $eq: branch,
+          $not: /\(Franchise\)$/i,
+        };
+      }
+    } else {
+      if (franchise === "1") {
+        // Franchise mode with no branch selected → only franchise branches
+        queryFilter.branch = { $regex: /\(Franchise\)$/i };
+      } else {
+        // Normal mode → whatever branch user selected
+        queryFilter.branch = {
 
-    // Fetch queries based on the filter
-    const queries = await QueryModel.find(queryFilter);
+          $not: /\(Franchise\)$/i,
+        }
+      };
+    }
+    // Fetch queries and total count based on the filter
+    const [queries, totalQueries] = await Promise.all([
+      QueryModel.find(queryFilter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      QueryModel.countDocuments(queryFilter),
+    ]);
 
     // Fetch admin data for mapping
     const admins = await AdminModel.find({}, { _id: 1, name: 1 });
@@ -239,6 +285,12 @@ export const GET = async (request) => {
         message: "All data fetched!",
         success: true,
         fetch: formattedQueries,
+        pagination: {
+          total: totalQueries,
+          page,
+          limit,
+          totalPages: limit > 0 ? Math.max(1, Math.ceil(totalQueries / limit)) : 1,
+        },
       },
       { status: 200 }
     );
