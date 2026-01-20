@@ -6,9 +6,10 @@ import Link from "next/link";
 import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import BulkAssign from "@/components/BulkAssign/BulkAssign";
-import { ArrowLeft, ArrowRight, Search, Trash2, CirclePlus, Filter, X, Send, XCircleIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Search, Trash2, CirclePlus, Filter, X, Send, XCircleIcon, Download } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import * as XLSX from "xlsx";
 
 // Utility: build API URL with query params
 function buildApiUrl({ userid, page = 1, deadlineFilter = "", grade = "", search = "", customDate = "", rangeStart = "", rangeEnd = "", assignedFrom = "" }) {
@@ -45,6 +46,7 @@ export default function AllQuery() {
   const [isBootLoading, setIsBootLoading] = useState(false);
   const [admins, setAdmins] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
+  const [isExporting, setIsExporting] = useState(false);
 
   // ---- UI state ----
   const [searchTerm, setSearchTerm] = useState("");
@@ -99,6 +101,46 @@ export default function AllQuery() {
       return found?.name || "";
     },
     [admins]
+  );
+
+  const mapQueryToExportRow = useCallback(
+    (querie, index) => {
+      const matchedUser = findAdminNameById(querie.userid) || "Tifa Admin";
+
+      const lastAssignedReceived = Array.isArray(querie.assignedreceivedhistory)
+        ? querie.assignedreceivedhistory[querie.assignedreceivedhistory.length - 1]
+        : querie.assignedreceivedhistory;
+      const lastAssignedSent = Array.isArray(querie.assignedsenthistory)
+        ? querie.assignedsenthistory[querie.assignedsenthistory.length - 1]
+        : querie.assignedsenthistory;
+
+      const matchedassignedUser = findAdminNameById(lastAssignedReceived) || "";
+      const matchedassignedsenderUser = findAdminNameById(lastAssignedSent) || "";
+
+      const updatedAtDate = (() => {
+        const d = new Date(querie.updatedAt);
+        if (isNaN(d.getTime())) return querie.updatedAt || "";
+        const dd = String(d.getDate()).padStart(2, "0");
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const yy = String(d.getFullYear()).slice(-2);
+        return `${dd}-${mm}-${yy}`;
+      })();
+
+      return {
+        "N/O": index + 1,
+        "Staff Name": matchedUser,
+        "Student Name": querie.studentName || "",
+        Reference: querie.referenceid === "JOB" ? "Job Require" : querie.referenceid || "",
+        Branch: Array.isArray(querie.branch) ? querie.branch.join(", ") : querie.branch || "",
+        "Phone Number": querie?.studentContact?.phoneNumber || "",
+        Grade: querie.lastgrade || "",
+        "Assigned From": matchedassignedsenderUser,
+        "Assigned To": matchedassignedUser,
+        "Trash Date": updatedAtDate,
+        Address: querie?.studentContact?.address || "",
+      };
+    },
+    [findAdminNameById]
   );
 
   // --- Filter → (Re)load from server (page=1) ---
@@ -241,6 +283,81 @@ export default function AllQuery() {
   };
 
   const handleremovebulk = () => setIsModalOpen(false);
+
+  const handleExportAllQueries = useCallback(async () => {
+    if (isExporting) return;
+    if (!adminData) return;
+    setIsExporting(true);
+
+    const effectiveDeadlineFilter =
+      deadlineFilter === "custom" && !customDate
+        ? ""
+        : deadlineFilter === "dateRange" && (!startDate || !endDate)
+          ? ""
+          : deadlineFilter;
+
+    try {
+      const collected = [];
+      let currentPage = 1;
+      let totalPagesLocal = 1;
+
+      while (currentPage <= totalPagesLocal) {
+        const url = buildApiUrl({
+          userid: adminData,
+          page: currentPage,
+          deadlineFilter: effectiveDeadlineFilter,
+          customDate,
+          rangeStart: startDate,
+          rangeEnd: endDate,
+          grade: filterByGrade,
+          search: debouncedSearchTerm,
+          assignedFrom: filterAssignedFrom,
+        });
+
+        const res = await fetch(url, { cache: "no-store" });
+        const json = await res.json();
+        const newData = json?.data ?? [];
+        collected.push(...newData);
+
+        const serverTotalPages = json?.totalPages;
+        if (typeof serverTotalPages === "number" && serverTotalPages > 0) {
+          totalPagesLocal = serverTotalPages;
+        } else if (!newData.length) {
+          break;
+        }
+
+        currentPage += 1;
+      }
+
+      if (!collected.length) {
+        alert("No queries available to export.");
+        return;
+      }
+
+      const rows = collected.map((querie, index) => mapQueryToExportRow(querie, index));
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Queries");
+      const today = new Date().toISOString().split("T")[0];
+      XLSX.writeFile(workbook, `staff-trash-queries-${today}.xlsx`);
+    } catch (error) {
+      console.error("Failed to export all queries:", error);
+      alert("Failed to export queries. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  }, [
+    isExporting,
+    adminData,
+    deadlineFilter,
+    customDate,
+    startDate,
+    endDate,
+    filterByGrade,
+    debouncedSearchTerm,
+    filterAssignedFrom,
+    mapQueryToExportRow,
+  ]);
 
   if (adminLoading) {
     return (

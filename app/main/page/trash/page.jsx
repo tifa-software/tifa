@@ -6,8 +6,9 @@ import Link from "next/link";
 import axios from "axios";
 import Loader from "@/components/Loader/Loader";
 import BulkAssign from "@/components/BulkAssign/BulkAssign";
-import { ArrowLeft, ArrowRight, Search, Trash2, CirclePlus, Filter, X, Send, XCircleIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Search, Trash2, CirclePlus, Filter, X, Send, XCircleIcon, Download } from "lucide-react";
 import Image from "next/image";
+import * as XLSX from "xlsx";
 import Queryreport55 from "@/app/main/component/queryreport/Queryreport55"
 
 // Utility: build API URL with query params
@@ -52,6 +53,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
   const [branchOptions, setBranchOptions] = useState([]); // branches from API
   const [admins, setAdmins] = useState([]); // admins from API
   const [totalCount, setTotalCount] = useState(0); // total count from backend
+  const [isExporting, setIsExporting] = useState(false);
 
   // ---- UI state ----
   const [searchTerm, setSearchTerm] = useState("");
@@ -109,6 +111,46 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
       return found?.name || "";
     },
     [admins]
+  );
+
+  const mapQueryToExportRow = useCallback(
+    (querie, index) => {
+      const matchedUser = findAdminNameById(querie.userid) || findUserNameById(querie.userid) || "Tifa Admin";
+
+      const lastAssignedReceived = Array.isArray(querie.assignedreceivedhistory)
+        ? querie.assignedreceivedhistory[querie.assignedreceivedhistory.length - 1]
+        : querie.assignedreceivedhistory;
+      const lastAssignedSent = Array.isArray(querie.assignedsenthistory)
+        ? querie.assignedsenthistory[querie.assignedsenthistory.length - 1]
+        : querie.assignedsenthistory;
+
+      const matchedassignedUser = findAdminNameById(lastAssignedReceived) || findUserNameById(lastAssignedReceived) || "";
+      const matchedassignedsenderUser = findAdminNameById(lastAssignedSent) || findUserNameById(lastAssignedSent) || "";
+
+      const updatedAtDate = (() => {
+        const d = new Date(querie.updatedAt);
+        if (isNaN(d.getTime())) return querie.updatedAt || "";
+        const dd = String(d.getDate()).padStart(2, "0");
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const yy = String(d.getFullYear()).slice(-2);
+        return `${dd}-${mm}-${yy}`;
+      })();
+
+      return {
+        "N/O": index + 1,
+        "Staff Name": matchedUser,
+        "Student Name": querie.studentName || "",
+        Reference: querie.referenceid === "JOB" ? "Job Require" : querie.referenceid || "",
+        Branch: Array.isArray(querie.branch) ? querie.branch.join(", ") : querie.branch || "",
+        "Phone Number": querie?.studentContact?.phoneNumber || "",
+        Grade: querie.lastgrade || "",
+        "Assigned From": matchedassignedsenderUser,
+        "Assigned To": matchedassignedUser,
+        "Trash Date": updatedAtDate,
+        Address: querie?.studentContact?.address || "",
+      };
+    },
+    [findAdminNameById, findUserNameById]
   );
 
   // --- Filter → (Re)load from server (page=1) ---
@@ -254,6 +296,81 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
 
   const handleremovebulk = () => setIsModalOpen(false);
 
+  const handleExportAllQueries = useCallback(async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+
+    const effectiveDeadlineFilter =
+      deadlineFilter === "custom" && !customDate
+        ? ""
+        : deadlineFilter === "dateRange" && (!startDate || !endDate)
+          ? ""
+          : deadlineFilter;
+
+    try {
+      const collected = [];
+      let currentPage = 1;
+      let totalPagesLocal = 1;
+
+      while (currentPage <= totalPagesLocal) {
+        const url = buildApiUrl({
+          type: "close",
+          page: currentPage,
+          deadlineFilter: effectiveDeadlineFilter,
+          customDate,
+          rangeStart: startDate,
+          rangeEnd: endDate,
+          grade: filterByGrade,
+          demo: filterDemo,
+          branch: filterCourse,
+          search: debouncedSearchTerm,
+        });
+
+        const res = await fetch(url, { cache: "no-store" });
+        const json = await res.json();
+        const newData = json?.data ?? [];
+        collected.push(...newData);
+
+        const serverTotalPages = json?.totalPages;
+        if (typeof serverTotalPages === "number" && serverTotalPages > 0) {
+          totalPagesLocal = serverTotalPages;
+        } else if (!newData.length) {
+          break;
+        }
+
+        currentPage += 1;
+      }
+
+      if (!collected.length) {
+        alert("No queries available to export.");
+        return;
+      }
+
+      const rows = collected.map((querie, index) => mapQueryToExportRow(querie, index));
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Queries");
+      const today = new Date().toISOString().split("T")[0];
+      XLSX.writeFile(workbook, `trash-queries-${today}.xlsx`);
+    } catch (error) {
+      console.error("Failed to export all queries:", error);
+      alert("Failed to export queries. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
+  }, [
+    isExporting,
+    deadlineFilter,
+    customDate,
+    startDate,
+    endDate,
+    filterByGrade,
+    filterDemo,
+    filterCourse,
+    debouncedSearchTerm,
+    mapQueryToExportRow,
+  ]);
+
   return (
     <div className="container lg:w-[95%] mx-auto py-5">
       {/* Filters + Actions */}
@@ -358,6 +475,15 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
                   disabled={selectedqueries.length === 0}
                 >
                   <Trash2 size={16} />
+                </button>
+
+                <button
+                  className="text-green-600 border border-green-600 rounded-md px-3 py-2 flex items-center justify-center gap-1 text-sm disabled:opacity-60"
+                  onClick={handleExportAllQueries}
+                  disabled={isBootLoading || isExporting}
+                >
+                  <Download size={16} />
+                  {isExporting ? "Exporting..." : "Export"}
                 </button>
               </div>
             </div>
@@ -468,6 +594,15 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
             disabled={selectedqueries.length === 0}
           >
             <Trash2 size={16} />
+          </button>
+
+          <button
+            className="text-green-600 border border-green-600 rounded-md px-3 py-2 flex items-center justify-center gap-1 text-sm disabled:opacity-60"
+            onClick={handleExportAllQueries}
+            disabled={isBootLoading || isExporting}
+          >
+            <Download size={16} />
+            {isExporting ? "Exporting..." : "Export"}
           </button>
 
           {/* <button
