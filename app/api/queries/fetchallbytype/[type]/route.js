@@ -46,7 +46,7 @@ export const GET = async (request, context) => {
 
   const deadlineFilterParam = searchParams.get("deadlineFilter");
   const legacyDeadline = searchParams.get("deadline");
-  const supportedFilters = new Set(["today", "tomorrow", "dayAfterTomorrow", "past", "custom", "dateRange", "current"]);
+  const supportedFilters = new Set(["today", "tomorrow", "dayAfterTomorrow", "past", "custom", "dateRange", "current", "noDeadline"]);
 
   let dateFilter = deadlineFilterParam ?? "";
   let deadlineDate = searchParams.get("deadlineDate") || "";
@@ -60,6 +60,7 @@ export const GET = async (request, context) => {
       dateFilter = "custom";
       deadlineDate = legacyDeadline;
     }
+
   }
 
   if (dateFilter !== "custom") {
@@ -295,154 +296,161 @@ export const GET = async (request, context) => {
           parsedDeadline: { $lt: dayAfterTomorrowStart },
         },
       });
-    }
-    const priorityExpression = {
-      $switch: {
-        branches: [
-          {
-            case: {
-              $and: [
-                { $ne: ["$parsedDeadline", null] },
-                { $gte: ["$parsedDeadline", todayStart] },
-                { $lt: ["$parsedDeadline", tomorrowStart] },
-              ],
-            },
-            then: 0,
-          },
-          {
-            case: {
-              $and: [
-                { $ne: ["$parsedDeadline", null] },
-                { $lt: ["$parsedDeadline", todayStart] },
-              ],
-            },
-            then: 1,
-          },
-          {
-            case: {
-              $and: [
-                { $ne: ["$parsedDeadline", null] },
-                { $gte: ["$parsedDeadline", tomorrowStart] },
-              ],
-            },
-            then: 2,
-          },
-        ],
-        default: 3,
-      },
-    };
-
-    const sortKeyExpression = {
-      $switch: {
-        branches: [
-          {
-            case: {
-              $and: [
-                { $eq: ["$priority", 1] },
-                { $ne: ["$parsedDeadline", null] },
-              ],
-            },
-            then: {
-              $multiply: [-1, { $toLong: "$parsedDeadline" }],
-            },
-          },
-          {
-            case: {
-              $and: [
-                { $in: ["$priority", [0, 2]] },
-                { $ne: ["$parsedDeadline", null] },
-              ],
-            },
-            then: { $toLong: "$parsedDeadline" },
-          },
-        ],
-        default: Number.MAX_SAFE_INTEGER,
-      },
-    };
-
-    pipeline.push({
-      $facet: {
-        data: [
-          { $addFields: { priority: priorityExpression } },
-          { $addFields: { sortKey: sortKeyExpression } },
-          { $sort: { priority: 1, sortKey: 1, _id: 1 } },
-          { $skip: skip },
-          { $limit: limit },
-          {
-            $project: {
-              priority: 0,
-              sortKey: 0,
-              parsedDeadline: 0,
-              autoclosed: 0,
-              demo: 0,
-              addhistory: 0,
-            },
-          },
-          {
-            $project: {
-              _id: 1,
-              userid: 1,
-              assignedreceivedhistory: 1,
-              assignedsenthistory: 1,
-              studentName: 1,
-              referenceid: 1,
-              branch: 1,
-              lastgrade: 1,
-              deadline: 1,
-              addmission: 1,
-              lastDeadline: 1,
-              lastactionby: 1,
-              lastmessage: 1,
-              notes: 1,
-              updatedAt: 1,
-              "studentContact.phoneNumber": 1,
-              "studentContact.address": 1,
-            },
-          },
-        ],
-        totalCount: [{ $count: "count" }],
-      },
-    });
-
-    pipeline.push({
-      $project: {
-        data: "$data",
-        total: {
-          $ifNull: [{ $arrayElemAt: ["$totalCount.count", 0] }, 0],
-        },
-      },
-    });
-
-    const [aggregationResult, branches, admins] = await Promise.all([
-      QueryModel.aggregate(pipeline),
-      BranchModel.find({ defaultdata: "branch", franchise: { $ne: "1" } }).select("branch_name").lean(),
-      AdminModel.find({ defaultdata: "admin" }).select("name _id").lean(),
-    ]);
-
-    const { data = [], total = 0 } = aggregationResult?.[0] || {};
-
-    return Response.json(
-      {
-        message: "Filtered data fetched successfully!",
-        success: true,
-        page,
-        total,
-        totalPages: Math.ceil(total / limit),
-        data,
-        branches: branches.map((b) => b.branch_name),
-        admins,
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("Error fetching data:", error);
-    return Response.json(
-      {
-        message: "Error fetching data list!",
-        success: false,
-        error: String(error),
-      },
-      { status: 500 }
-    );
+    } else if (dateFilter === "noDeadline") {
+      pipeline.push({
+        $match: {
+          parsedDeadline: null
+        }
+      });
+    
   }
+    const priorityExpression = {
+    $switch: {
+      branches: [
+        {
+          case: {
+            $and: [
+              { $ne: ["$parsedDeadline", null] },
+              { $gte: ["$parsedDeadline", todayStart] },
+              { $lt: ["$parsedDeadline", tomorrowStart] },
+            ],
+          },
+          then: 0,
+        },
+        {
+          case: {
+            $and: [
+              { $ne: ["$parsedDeadline", null] },
+              { $lt: ["$parsedDeadline", todayStart] },
+            ],
+          },
+          then: 1,
+        },
+        {
+          case: {
+            $and: [
+              { $ne: ["$parsedDeadline", null] },
+              { $gte: ["$parsedDeadline", tomorrowStart] },
+            ],
+          },
+          then: 2,
+        },
+      ],
+      default: 3,
+    },
+  };
+
+  const sortKeyExpression = {
+    $switch: {
+      branches: [
+        {
+          case: {
+            $and: [
+              { $eq: ["$priority", 1] },
+              { $ne: ["$parsedDeadline", null] },
+            ],
+          },
+          then: {
+            $multiply: [-1, { $toLong: "$parsedDeadline" }],
+          },
+        },
+        {
+          case: {
+            $and: [
+              { $in: ["$priority", [0, 2]] },
+              { $ne: ["$parsedDeadline", null] },
+            ],
+          },
+          then: { $toLong: "$parsedDeadline" },
+        },
+      ],
+      default: Number.MAX_SAFE_INTEGER,
+    },
+  };
+
+  pipeline.push({
+    $facet: {
+      data: [
+        { $addFields: { priority: priorityExpression } },
+        { $addFields: { sortKey: sortKeyExpression } },
+        { $sort: { priority: 1, sortKey: 1, _id: 1 } },
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $project: {
+            priority: 0,
+            sortKey: 0,
+            parsedDeadline: 0,
+            autoclosed: 0,
+            demo: 0,
+            addhistory: 0,
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            userid: 1,
+            assignedreceivedhistory: 1,
+            assignedsenthistory: 1,
+            studentName: 1,
+            referenceid: 1,
+            branch: 1,
+            lastgrade: 1,
+            deadline: 1,
+            addmission: 1,
+            lastDeadline: 1,
+            lastactionby: 1,
+            lastmessage: 1,
+            notes: 1,
+            updatedAt: 1,
+            "studentContact.phoneNumber": 1,
+            "studentContact.address": 1,
+          },
+        },
+      ],
+      totalCount: [{ $count: "count" }],
+    },
+  });
+
+  pipeline.push({
+    $project: {
+      data: "$data",
+      total: {
+        $ifNull: [{ $arrayElemAt: ["$totalCount.count", 0] }, 0],
+      },
+    },
+  });
+
+  const [aggregationResult, branches, admins] = await Promise.all([
+    QueryModel.aggregate(pipeline),
+    BranchModel.find({ defaultdata: "branch", franchise: { $ne: "1" } }).select("branch_name").lean(),
+    AdminModel.find({ defaultdata: "admin" }).select("name _id").lean(),
+  ]);
+
+  const { data = [], total = 0 } = aggregationResult?.[0] || {};
+
+  return Response.json(
+    {
+      message: "Filtered data fetched successfully!",
+      success: true,
+      page,
+      total,
+      totalPages: Math.ceil(total / limit),
+      data,
+      branches: branches.map((b) => b.branch_name),
+      admins,
+    },
+    { status: 200 }
+  );
+} catch (error) {
+  console.error("Error fetching data:", error);
+  return Response.json(
+    {
+      message: "Error fetching data list!",
+      success: false,
+      error: String(error),
+    },
+    { status: 500 }
+  );
+}
 };

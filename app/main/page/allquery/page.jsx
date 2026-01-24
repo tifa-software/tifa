@@ -420,6 +420,7 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
                   <option value="tomorrow">Tomorrow</option>
                   <option value="dayAfterTomorrow">Day After Tomorrow</option>
                   <option value="past">Past Date</option>
+                  <option value="noDeadline">No Deadline</option>
                   <option value="custom">Custom Date</option>
                   <option value="dateRange">Date-to-Date</option>
                 </select>
@@ -525,6 +526,8 @@ export default function AllQueryClient({ initialQueries, initialPage, totalPages
               <option value="tomorrow">Tomorrow</option>
               <option value="dayAfterTomorrow">Day After Tomorrow</option>
               <option value="past">Past Date</option>
+              <option value="noDeadline">No Deadline</option>
+
               <option value="custom">Custom Date</option>
               <option value="dateRange">Date-to-Date</option>
             </select>
