@@ -58,7 +58,7 @@ export const GET = async (request, context) => {
 
   const deadlineFilterParam = searchParams.get("deadlineFilter");
   const legacyDeadline = searchParams.get("deadline");
-  const supportedFilters = new Set(["today", "tomorrow", "dayAfterTomorrow", "past", "custom", "dateRange", "current"]);
+  const supportedFilters = new Set(["today", "tomorrow", "dayAfterTomorrow", "past", "custom", "dateRange", "current","noDeadline"]);
 
   let dateFilter = deadlineFilterParam ?? "";
   let deadlineDate = searchParams.get("deadlineDate") || "";
@@ -335,7 +335,14 @@ export const GET = async (request, context) => {
           parsedDeadline: { $lt: dayAfterTomorrowStart },
         },
       });
-    }
+    } else if (dateFilter === "noDeadline") {
+      pipeline.push({
+        $match: {
+          parsedDeadline: null
+        }
+      });
+    
+  }
 
     const priorityExpression = {
       $switch: {
