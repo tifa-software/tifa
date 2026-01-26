@@ -478,6 +478,7 @@ export default function AllQuery() {
                   <option value="tomorrow">Tomorrow</option>
                   <option value="dayAfterTomorrow">Day After Tomorrow</option>
                   <option value="past">Past Date</option>
+                  <option value="noDeadline">No Deadline</option>
                   <option value="custom">Custom Date</option>
                   <option value="dateRange">Date-to-Date</option>
                 </select>
@@ -582,6 +583,8 @@ export default function AllQuery() {
               <option value="tomorrow">Tomorrow</option>
               <option value="dayAfterTomorrow">Day After Tomorrow</option>
               <option value="past">Past Date</option>
+              <option value="noDeadline">No Deadline</option>
+
               <option value="custom">Custom Date</option>
               <option value="dateRange">Date-to-Date</option>
             </select>
@@ -814,7 +817,7 @@ export default function AllQuery() {
                         className="px-4 py-2 text-[12px]"
                       >
                         <div className="flex items-center gap-2 whitespace-nowrap">
-                           {querie.lastgrade !== "H" && (
+                          {querie.lastgrade !== "H" && (
                             <span>{querie.lastgrade}</span>
                           )}
 
@@ -945,19 +948,19 @@ export default function AllQuery() {
           </tbody>
         </table>
       </div>
-       {isModalOpen2 && (
-                <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
-                  <div className="   h-screen w-screen  relative">
-                    <button
-                      className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
-                      onClick={handleCloseModal}
-                    >
-                      &times;
-                    </button>
-                    <div><Queryreport55 id={activeQuery} /></div>
-                  </div>
-                </div>
-              )}
+      {isModalOpen2 && (
+        <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
+          <div className="   h-screen w-screen  relative">
+            <button
+              className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
+              onClick={handleCloseModal}
+            >
+              &times;
+            </button>
+            <div><Queryreport55 id={activeQuery} /></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -83,7 +83,7 @@ export default function AllQuery() {
   // Sentinel for infinite scroll
   const sentinelRef = useRef(null);
 
- const handleRowClick = (id) => {
+  const handleRowClick = (id) => {
     setActiveQuery(id);
     setIsModalOpen2(true);
   };
@@ -611,7 +611,7 @@ export default function AllQuery() {
               <option value="tomorrow">Tomorrow</option>
               <option value="dayAfterTomorrow">Day After Tomorrow</option>
               <option value="past">Past Date</option>
-                  <option value="noDeadline">No Deadline</option>
+              <option value="noDeadline">No Deadline</option>
 
               <option value="custom">Custom Date</option>
               <option value="dateRange">Date-to-Date</option>
@@ -978,19 +978,19 @@ export default function AllQuery() {
             )}
           </tbody>
         </table>
-         {isModalOpen2 && (
-                  <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
-                    <div className="   h-screen w-screen  relative">
-                      <button
-                        className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
-                        onClick={handleCloseModal}
-                      >
-                        &times;
-                      </button>
-                      <div><Queryreport55 id={activeQuery} /></div>
-                    </div>
-                  </div>
-                )}
+        {isModalOpen2 && (
+          <div className="fixed bg-white inset-0 z-50 flex items-center justify-center  overflow-auto">
+            <div className="   h-screen w-screen  relative">
+              <button
+                className="absolute top-0 text-3xl bg-red-200 hover:bg-red-600 rounded-bl-full w-16 flex justify-center items-center  right-0 border text-white"
+                onClick={handleCloseModal}
+              >
+                &times;
+              </button>
+              <div><Queryreport55 id={activeQuery} /></div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
