@@ -169,12 +169,20 @@ export default function AddmissionRegister() {
     };
 
  
+  
+
+    
     const exportToExcel = () => {
-        const worksheet = XLSX.utils.json_to_sheet(queries);
+        const updatedData = queries.map((item) => ({
+          ...item,
+          studentContact: item?.studentContact?.phoneNumber || ""
+        }));
+    
+        const worksheet = XLSX.utils.json_to_sheet(updatedData);
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Admission Report");
-        XLSX.writeFile(workbook, "admission-report.xlsx");
-    };
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Queries");
+        XLSX.writeFile(workbook, "queries.xlsx");
+      };
 
     const removeFilter = () => {
         setFilters(initialFilters);

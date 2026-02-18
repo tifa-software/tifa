@@ -195,13 +195,18 @@ export default function QueryReport() {
     setPage(1);
   };
 
+ 
   const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(allquery);
+    const updatedData = allquery.map((item) => ({
+      ...item,
+      studentContact: item?.studentContact?.phoneNumber || ""
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(updatedData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Queries");
     XLSX.writeFile(workbook, "queries.xlsx");
   };
-
   const getFilterSummary = () => {
     const filters = [];
     if (referenceId) filters.push(`Reference: ${referenceId}`);
