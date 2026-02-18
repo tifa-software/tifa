@@ -191,20 +191,16 @@ export default function QueryReport({ initialFilters } = {}) {
   };
 
   const exportToExcel = () => {
-  const formattedData = allquery.map((item, index) => ({
-    "S/N": index + 1,
-    "Student Name": item.studentName || "",
-    "Phone": item.phone || item.student?.phone || "",
-    "Reference": item.referenceId || "",
-    "Branch": item.branch || "",
-    "Created At": item.createdAt || ""
-  }));
+    const updatedData = allquery.map((item) => ({
+      ...item,
+      phoneNumber: item?.studentContact?.phoneNumber || ""
+    }));
 
-  const worksheet = XLSX.utils.json_to_sheet(formattedData);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Queries");
-  XLSX.writeFile(workbook, "queries.xlsx");
-};
+    const worksheet = XLSX.utils.json_to_sheet(updatedData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Queries");
+    XLSX.writeFile(workbook, "queries.xlsx");
+  };
 
 
   const getFilterSummary = () => {
