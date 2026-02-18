@@ -193,7 +193,7 @@ export default function QueryReport({ initialFilters } = {}) {
   const exportToExcel = () => {
     const updatedData = allquery.map((item) => ({
       ...item,
-      phoneNumber: item?.studentContact?.phoneNumber || ""
+      studentContact: item?.studentContact?.phoneNumber || ""
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(updatedData);
